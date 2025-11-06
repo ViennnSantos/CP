@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Button Test</title>
+</head>
+<body>
+    <h1>Address Management Diagnostic Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+
+        function addResult(test, passed, details = '') {
+            const div = document.createElement('div');
+            div.style.padding = '10px';
+            div.style.margin = '5px 0';
+            div.style.border = '1px solid ' + (passed ? 'green' : 'red');
+            div.style.backgroundColor = passed ? '#e8f5e9' : '#ffebee';
+            div.innerHTML = `
+                <strong>${passed ? '✅' : '❌'} ${test}</strong><br>
+                ${details ? '<small>' + details + '</small>' : ''}
+            `;
+            results.appendChild(div);
+        }
+
+        // Test 1: Check if JS file path is correct
+        addResult('File Path Check', true, 'Checking /RADS-TOOLING/assets/JS/address_management.js');
+
+        fetch('/RADS-TOOLING/assets/JS/address_management.js')
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                addResult(
+                    'File Loads (HTTP ' + response.status + ')',
+                    response.ok,
+                    'Content-Type: ' + contentType
+                );
+
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        addResult('Response Body Preview', false, text.substring(0, 200));
+                    });
+                }
+
+                if (contentType && !contentType.includes('javascript') && !contentType.includes('application/javascript')) {
+                    addResult('MIME Type Check', false, 'Expected JavaScript but got: ' + contentType);
+                } else {
+                    addResult('MIME Type Check', true, contentType);
+                }
+
+                return response.text();
+            })
+            .then(text => {
+                if (text) {
+                    const hasShowAddressForm = text.includes('function showAddressForm');
+                    const hasWindowExpose = text.includes('window.showAddressForm');
+
+                    addResult('showAddressForm function exists in file', hasShowAddressForm);
+                    addResult('window.showAddressForm exposed', hasWindowExpose);
+                }
+            })
+            .catch(err => {
+                addResult('Network Error', false, err.message);
+            });
+
+        // Test 2: Load the script and check if function is available
+        const script = document.createElement('script');
+        script.src = '/RADS-TOOLING/assets/JS/address_management.js';
+        script.onload = () => {
+            setTimeout(() => {
+                addResult('Script onload event fired', true);
+                addResult(
+                    'showAddressForm globally available',
+                    typeof window.showAddressForm === 'function',
+                    'typeof showAddressForm = ' + typeof window.showAddressForm
+                );
+                addResult(
+                    'editAddress globally available',
+                    typeof window.editAddress === 'function',
+                    'typeof editAddress = ' + typeof window.editAddress
+                );
+                addResult(
+                    'deleteAddress globally available',
+                    typeof window.deleteAddress === 'function',
+                    'typeof deleteAddress = ' + typeof window.deleteAddress
+                );
+            }, 100);
+        };
+        script.onerror = (err) => {
+            addResult('Script Load Error', false, 'Failed to load script');
+        };
+        document.head.appendChild(script);
+
+    </script>
+</body>
+</html>
