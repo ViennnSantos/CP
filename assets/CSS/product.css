@@ -1,0 +1,384 @@
+/* ================== VARS ================== */
+:root{
+  --bg:#f6f8fb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --line:#e2e8f0;
+
+  --blue:#2f5b88;          /* active blue to match header */
+  --blue-100:#f0f5fc;
+  --blue-600:#1e3a8a;
+
+  --card:#fff;
+  --shadow:0 4px 14px rgba(2, 6, 23, .06);
+}
+
+/* ================== CATEGORY ROW (inside header) ================== */
+.navbar-container--cats{
+  display:block;                 /* override default flex space-between */
+  padding:0 2rem;
+  max-width:1400px; margin:0 auto;
+}
+
+.navbar-cats{
+  display:flex; justify-content:center; align-items:center;
+  gap:1rem; flex-wrap:wrap;
+  padding:12px 0 14px;
+}
+
+/* Match header tabs behavior */
+.navbar-cats .nav-menu-item{
+  background:transparent !important;
+  color:#2c3e50 !important;
+  border-radius:12px;
+  padding:.60rem 1.20rem;
+  transition:all .2s ease;
+}
+.navbar-cats .nav-menu-item:not(.active):hover{
+  background:rgba(255,255,255,.85);
+  color:var(--blue) !important;
+}
+.navbar-cats .nav-menu-item.active,
+.navbar-cats .nav-menu-item.active:link,
+.navbar-cats .nav-menu-item.active:visited,
+.navbar-cats .nav-menu-item.active:hover,
+.navbar-cats .nav-menu-item.active:focus{
+  background:var(--blue) !important;
+  color:#fff !important;
+}
+
+/* ================== PRODUCTS GRID ================== */
+.products-wrap{ max-width:1200px; margin:20px auto; padding:0 20px; }
+
+.rt-grid{
+  display:grid; gap:18px;
+  grid-template-columns:repeat(3,1fr);
+}
+@media (max-width:1024px){ .rt-grid{ grid-template-columns:repeat(2,1fr);} }
+@media (max-width:640px){  .rt-grid{ grid-template-columns:1fr;} }
+
+.rt-empty{
+  grid-column:1 / -1;
+  border:1px dashed var(--line);
+  border-radius:14px;
+  padding:36px; text-align:center; color:var(--muted); background:var(--card);
+}
+
+/* ================== CARD ================== */
+.rt-card{
+  border-radius:14px; overflow:hidden; background:var(--card);
+  box-shadow:var(--shadow);
+  display:flex; flex-direction:column;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.rt-card:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(2,6,23,.08); }
+
+/* Fixed image area */
+.rt-imgwrap{
+  position:relative;
+  height:220px;                  /* tweak to 240px if gusto mo */
+  background:#f1f5f9;
+  border-bottom:1px solid var(--line);
+}
+.rt-imgwrap img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+/* Single left icon (customize) */
+.rt-left-ico{ position:absolute; top:8px; left:8px; }
+.rt-ico{
+  border:1px solid var(--line);
+  background:#ffffffea;
+  padding:6px;
+  border-radius:10px;
+  cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:transform .12s ease;
+}
+.rt-ico:active{ transform:translateY(1px); }
+.rt-ico .material-symbols-rounded{ font-size:18px; line-height:1; }
+
+/* Text area */
+.rt-content{ padding:12px; }
+.rt-name{ font-weight:700; }
+.rt-desc{ color:var(--muted); font-size:12px; margin-top:3px; height:30px; overflow:hidden; }
+.rt-price{ margin-top:8px; font-weight:700; }
+
+/* Bottom CTAs */
+.rt-cta{ display:flex; gap:8px; margin-top:10px; }
+.rt-btn{
+  flex:1;
+  border:none;
+  border-radius:999px;
+  padding:9px 12px;
+  font-weight:700;
+  cursor:pointer;
+  transition:transform .1s ease, filter .15s ease;
+}
+.rt-btn.main{ background:var(--blue); color:#fff; }
+.rt-btn.ghost{ background:var(--blue-100); color:var(--blue-600); }
+.rt-btn:hover{ filter:brightness(.98); }
+.rt-btn:active{ transform:translateY(1px); }
+
+/* ================== UTIL ================== */
+.rt-skeleton{
+  background:linear-gradient(90deg,#f2f4f8,#eef2f7 30%,#f2f4f8 60%);
+  animation:shimmer 1.2s infinite linear;
+}
+@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+
+/* ================== LOGIN MODAL BUTTONS ================== */
+/* Default = ghost (white); Blue only on hover/focus */
+#rtLoginModal .rt-btn{
+  background:#fff;
+  color:var(--blue);
+  border:1px solid rgba(47,91,136,.35);
+  border-radius:999px;
+  padding:10px 18px;
+  font-weight:700;
+  text-decoration:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:background .15s ease, color .15s ease, box-shadow .15s ease, transform .1s ease;
+}
+#rtLoginModal .rt-btn.main,
+#rtLoginModal .rt-btn.ghost{ /* neutralize globals */
+  background:#fff; color:var(--blue);
+}
+#rtLoginModal .rt-btn:hover,
+#rtLoginModal .rt-btn:focus-visible{
+  background:var(--blue);
+  color:#fff;
+  box-shadow:0 0 0 4px rgba(47,91,136,.12);
+  outline:0;
+}
+#rtLoginModal .rt-btn:active{ transform:translateY(1px); }
+
+/* Modal container (keep mo kung meron ka na) */
+.rt-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.5);z-index:2000}
+.rt-modal.open{display:flex}
+.rt-modal__box{position:relative;width:min(420px,92vw);background:#fff;border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(2,6,23,.15);text-align:center}
+
+/* X button (upper-right) */
+.rt-modal__x{
+  position:absolute; top:10px; right:10px;
+  width:36px; height:36px; border-radius:999px;
+  border:1px solid var(--blue); background:#fff; color:var(--blue);
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+  box-shadow:0 2px 6px rgba(2,6,23,.08);
+}
+.rt-modal__x:hover{ background:var(--blue); color:#fff; }
+.rt-modal__x:active{ transform:translateY(1px); }
+
+/* Title + text + icon helpers */
+.rt-modal__icon{font-size:48px;color:var(--blue);margin-bottom:8px}
+.rt-modal__title{margin:0 0 8px;font-weight:700}
+.rt-modal__text{color:var(--muted);margin:0 0 16px}
+
+/* Buttons row (reuse existing rt-btn styles) */
+.rt-modal__actions{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.rt-modal__actions .rt-btn{ text-decoration:none; display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:999px; font-weight:700; border:1px solid transparent; cursor:pointer; }
+.rt-modal__actions .rt-btn.main{ background:var(--blue); color:#fff; border-color:var(--blue); }
+.rt-modal__actions .rt-btn.ghost{ background:#fff; color:var(--blue); border:1px solid var(--blue); }
+/* hover/active (walang default highlight hangga't di hinahover/click) */
+.rt-modal__actions .rt-btn:hover{ filter:brightness(.98); }
+.rt-modal__actions .rt-btn.main:active{ background:#fff; color:var(--blue); }
+.rt-modal__actions .rt-btn.ghost:active{ background:var(--blue); color:#fff; }
+/* no focus ring */
+.rt-modal__actions .rt-btn:focus,
+.rt-modal__actions .rt-btn:focus-visible{ outline:0; box-shadow:none; }
+
+.rt-modal__box{ position:relative; }
+.rt-modal__x{
+  position:absolute; top:10px; right:10px;
+  border:0; background:#fff; padding:6px; border-radius:999px;
+  box-shadow:0 2px 8px rgba(2,6,23,.10); cursor:pointer;
+}
+.rt-modal__x:hover{ background:#f5f7fb; }
+.rt-modal__x .material-symbols-rounded{ font-size:20px; color:var(--blue); }
+
+.rt-modal__actions .rt-btn.main,
+.rt-modal__actions .rt-btn.main:link,
+.rt-modal__actions .rt-btn.main:visited{
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+}
+
+.rt-modal__actions .rt-btn.ghost,
+.rt-modal__actions .rt-btn.ghost:link,
+.rt-modal__actions .rt-btn.ghost:visited{
+  background:#fff;
+  color: var(--blue);
+  border:1px solid var(--blue);
+}
+
+/* ===== FINAL: Login modal buttons ===== */
+
+/* base style ng mga button sa modal */
+#rtLoginModal .rt-modal__actions .rt-btn{
+  text-decoration:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:10px 18px;
+  border-radius:999px; font-weight:700; cursor:pointer;
+  border:1px solid rgba(47,91,136,.35);
+  background:#fff;                 /* default = ghost */
+  color:var(--blue);
+  transition:background .15s ease, color .15s ease, box-shadow .15s ease, transform .1s ease;
+}
+
+/* Login = blue by default */
+#rtLoginModal .rt-modal__actions .rt-btn.main{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+
+/* Sign up = ghost by default */
+#rtLoginModal .rt-modal__actions .rt-btn.ghost{
+  background:#fff;
+  color:var(--blue);
+  border-color:var(--blue);
+}
+
+/* hover/focus states */
+#rtLoginModal .rt-modal__actions .rt-btn:hover,
+#rtLoginModal .rt-modal__actions .rt-btn:focus-visible{
+  box-shadow:0 0 0 4px rgba(47,91,136,.12);
+  outline:0;
+}
+#rtLoginModal .rt-modal__actions .rt-btn.main:hover{ filter:brightness(.98); }
+#rtLoginModal .rt-modal__actions .rt-btn.ghost:hover{ background:#f6f9ff; }
+#rtLoginModal .rt-modal__actions .rt-btn:active{ transform:translateY(1px); }
+
+/* ==== Product card layout fixes (scoped) ==== */
+.product-card{ position:relative; }
+
+/* image sizing */
+.product-card .thumb{
+  height: 240px;            /* adjust mo kung may design spec ka */
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+.product-card .thumb img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* top-left customization icon */
+.pc-icon.pc-edit{
+  position: absolute;
+  top: 10px; left: 10px;
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #111827;
+  z-index: 2;
+}
+
+/* actions row: Add to Cart (left) | Buy Now (right) */
+.pc-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:10px;
+}
+
+/* wag mag-expand; exact width lang ng label */
+.pc-actions .btn{ 
+  flex:0 0 auto;
+}
+
+/* iwas wrap ng "Add to Cart" */
+.pc-actions .add-to-cart-btn{
+  white-space:nowrap;
+}
+
+/* itulak ang Buy Now sa kanan */
+.pc-actions .btn-primary{
+  margin-left:auto;
+}
+
+/* (optional) maliit na icon spacing sa Add to Cart */
+.add-to-cart-btn i{ margin-right: 6px; line-height: 1; }
+
+/* Add to Cart – light pill + outside line */
+.pc-actions .add-to-cart-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:38px;
+  padding:0 16px;
+  border:0;
+  border-radius:999px;
+  background:#eef3ff;                     /* light blue pill */
+  color:#1e3a8a;                           /* dark blue text */
+  text-decoration:none;                    /* kung <a> man siya */
+  line-height:1;
+  cursor:pointer;
+
+  /* subtle outside line kahit hindi focus */
+  box-shadow:inset 0 0 0 1px rgba(47,91,136,.22);
+}
+
+/* hover + focus ring sa BUONG pill (hindi maliit na square) */
+.pc-actions .add-to-cart-btn:hover{
+  background:#f4f7ff;
+}
+.pc-actions .add-to-cart-btn:focus,
+.pc-actions .add-to-cart-btn:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 4px rgba(47,91,136,.20),         /* outer glow */
+    inset 0 0 0 1px rgba(47,91,136,.24);   /* inner line */
+}
+
+/* para hindi sa icon lang mapunta ang focus */
+.pc-actions .add-to-cart-btn i,
+.pc-actions .add-to-cart-btn span{
+  pointer-events:none;
+  outline:0;
+}
+
+/* keep Buy Now pushed to the right */
+.pc-actions .btn-primary{
+  margin-left:auto;
+  height:38px;
+  padding:0 16px;
+  border-radius:999px;
+}
+/* Add to Cart Button */
+.btn-add-cart {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f3f4f6;
+    color: #2f5b88;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.btn-add-cart:hover {
+    background: #e5e7eb;
+    transform: translateY(-2px);
+}
+
+.btn-add-cart .material-symbols-rounded {
+    font-size: 20px;
+}
+
+/* Make sure rt-cta has flex layout */
+.rt-cta {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}

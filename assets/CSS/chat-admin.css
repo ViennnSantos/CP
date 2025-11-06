@@ -1,0 +1,454 @@
+/* RADS-TOOLING Admin Chat Support - Namespaced with .rt-admin-* */
+
+.rt-admin-body {
+  margin: 0;
+  padding: 0;
+  font-family: Poppins;
+  background: #f5f7fa;
+}
+
+.rt-admin-header {
+  background: #1f4e74;
+  color: #fff;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.rt-admin-header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.rt-admin-header .rt-user-info {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.rt-admin-container {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.rt-admin-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.rt-admin-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.rt-admin-box {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.rt-admin-box h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #1f4e74;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.rt-admin-search {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.rt-admin-search:focus {
+  outline: none;
+  border-color: #1f4e74;
+  box-shadow: 0 0 0 3px rgba(31, 78, 116, 0.1);
+}
+
+/* ========== THREAD LIST ========== */
+.rt-thread-list {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.rt-thread-item {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+}
+
+.rt-thread-item:hover {
+  background: #f5f7fa;
+}
+
+.rt-thread-item.rt-active {
+  background: #e3edfb;
+  border-left: 4px solid #1f4e74;
+}
+
+.rt-thread-item.rt-has-unread {
+  background: #fff9f9;
+  border-left: 3px solid #e14d4d;
+}
+
+.rt-thread-item.rt-has-unread:hover {
+  background: #fff5f5;
+}
+
+.rt-thread-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.rt-thread-name {
+  font-weight: 500;
+  color: #1f4e74;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  font-size: 15px;
+}
+
+.rt-thread-time {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
+}
+
+/* ========== CONVERSATION ========== */
+.rt-admin-conv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 400px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 12px;
+  background: #f7f9fc;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border: 1px solid #e8edf5;
+}
+
+.rt-admin-conv:empty::before {
+  content: "Select a thread to view conversation";
+  display: block;
+  text-align: center;
+  padding: 50px 20px;
+  color: #999;
+  font-style: Poppins;
+}
+
+/* ========== MESSAGE BUBBLES (.rt-msg style) ========== */
+.rt-msg {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin: 4px 0;
+}
+
+.rt-msg-customer {
+  align-self: flex-start;
+  background: #e3edfb;
+  color: #1565c0;
+  border-bottom-left-radius: 4px;
+}
+
+.rt-msg-admin {
+  align-self: flex-end;
+  background: #2f5b88;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.rt-msg-bot {
+  align-self: flex-start;
+  background: #fff9e6;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+  border-bottom-left-radius: 4px;
+}
+
+/* ========== LEGACY BUBBLE WRAPPER SUPPORT ========== */
+/* Keep these for backwards compatibility if needed */
+.rt-admin-conv .rt-bubble-wrap {
+  display: flex;
+  margin: 8px 0;
+}
+
+.rt-admin-conv .rt-bubble-wrap.rt-customer {
+  justify-content: flex-start;
+}
+
+.rt-admin-conv .rt-bubble-wrap.rt-bot {
+  justify-content: flex-start;
+}
+
+.rt-admin-conv .rt-bubble-wrap.rt-admin {
+  justify-content: flex-end;
+}
+
+.rt-admin-conv .rt-bubble {
+  max-width: 70%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+.rt-admin-conv .rt-bubble-wrap.rt-customer .rt-bubble {
+  background: #e3edfb;
+  color: #1f4e74;
+}
+
+.rt-admin-conv .rt-bubble-wrap.rt-bot .rt-bubble {
+  background: #fffbe6;
+  color: #856404;
+}
+
+.rt-admin-conv .rt-bubble-wrap.rt-admin .rt-bubble {
+  background: #1f4e74;
+  color: #fff;
+}
+
+.rt-admin-conv::-webkit-scrollbar {
+  width: 8px;
+}
+
+.rt-admin-conv::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.rt-admin-conv::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+/* ========== INPUT ROW ========== */
+.rt-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.rt-input-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.rt-input-row input:focus {
+  outline: none;
+  border-color: #1f4e74;
+  box-shadow: 0 0 0 3px rgba(31, 78, 116, 0.1);
+}
+
+/* ========== BUTTONS ========== */
+.rt-btn {
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rt-btn:hover {
+  background: #f5f7fa;
+}
+
+.rt-btn-primary {
+  background: #1f4e74;
+  color: #fff;
+  border-color: #1f4e74;
+}
+
+.rt-btn-primary:hover {
+  background: #163a5a;
+}
+
+.rt-btn-danger {
+  background: #dc3545;
+  color: #fff;
+  border-color: #dc3545;
+  margin-left: 4px;
+}
+
+.rt-btn-danger:hover {
+  background: #c82333;
+}
+
+.rt-btn:active {
+  transform: translateY(1px);
+}
+
+.rt-btn-warning {
+  background: #f39c12;
+  color: #fff;
+  border-color: #f39c12;
+}
+
+.rt-btn-warning:hover {
+  background: #e67e22;
+}
+
+.rt-btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* ========== FAQ TABLE ========== */
+.rt-faq-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.rt-faq-table th {
+  background: #f7f9fc;
+  padding: 10px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 2px solid #e8edf5;
+  color: #1f4e74;
+}
+
+.rt-faq-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.rt-faq-question {
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+}
+
+.rt-faq-question:hover {
+  color: #1f4e74;
+}
+
+.rt-faq-answer-preview {
+  background: #f9fbfd;
+  border-left: 3px solid #1f4e74;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #333;
+  display: none;
+  animation: rt-slideDown 0.2s ease;
+}
+
+.rt-faq-answer-preview.rt-show {
+  display: block;
+}
+
+@keyframes rt-slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rt-faq-answer-label {
+  font-weight: 600;
+  color: #1f4e74;
+  margin-bottom: 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1024px) {
+  .rt-admin-container {
+    flex-direction: column;
+  }
+
+  .rt-admin-sidebar {
+    width: 100%;
+  }
+}
+
+/* Unread message indicator */
+.rt-unread-badge {
+  background: #e14d4d;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 12px;
+  display: inline-block;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(225, 77, 77, 0.3);
+}
+
+.rt-thread-item.rt-has-unread .rt-thread-name {
+  font-weight: 600;
+  color: #1f4e74;
+}
+
+/* Notification dot for Chat Support nav */
+.nav-item[data-section="chat"] {
+  position: relative;
+}
+
+.rt-notification-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  background: #e14d4d;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
