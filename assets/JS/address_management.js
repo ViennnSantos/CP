@@ -541,10 +541,15 @@ async function saveAddress(e) {
         msgEl.textContent = isEdit ? 'Address updated successfully!' : 'Address added successfully!';
         msgEl.className = 'msg success';
 
-        // Reload addresses
+        // Reload addresses and close modal
         setTimeout(() => {
             closeModal(document.getElementById('addressFormModal'));
             loadAddresses();
+
+            // ✅ FIX: Reset button state after successful save
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnSpinner.style.display = 'none';
         }, 1000);
 
     } catch (error) {
@@ -560,13 +565,49 @@ async function saveAddress(e) {
 }
 
 /**
- * Delete address
+ * Delete address with modal confirmation
  */
-async function deleteAddress(addressId) {
-    if (!confirm('Are you sure you want to delete this address?')) {
-        return;
-    }
+function deleteAddress(addressId) {
+    showDeleteConfirmModal(addressId);
+}
 
+/**
+ * Show delete confirmation modal
+ */
+function showDeleteConfirmModal(addressId) {
+    // Create modal
+    const modal = document.createElement('div');
+    modal.id = 'deleteConfirmModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-card" style="max-width: 420px;">
+            <div class="modal-card-header">
+                <h3>Confirm Delete</h3>
+                <button type="button" class="modal-close-btn" onclick="document.getElementById('deleteConfirmModal').remove()">&times;</button>
+            </div>
+            <p style="margin: 20px 0; color: #555;">Are you sure you want to delete this address? This action cannot be undone.</p>
+            <div class="row" style="margin-top: 20px;">
+                <button type="button" class="btn btn-outline" onclick="document.getElementById('deleteConfirmModal').remove()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    `;
+
+    // Show modal
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
+
+    // Handle confirm delete
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+        await performDelete(addressId);
+        modal.remove();
+    });
+}
+
+/**
+ * Perform actual delete operation
+ */
+async function performDelete(addressId) {
     try {
         const formData = new FormData();
         formData.append('csrf_token', __CSRF_TOKEN);
@@ -585,18 +626,55 @@ async function deleteAddress(addressId) {
             throw new Error(data.message || 'Failed to delete address');
         }
 
+        // Show success modal
+        showSuccessModal('Address deleted successfully!');
+
         // Reload addresses
         loadAddresses();
 
-        // Show success message
-        if (typeof showMessage === 'function') {
-            showMessage('Address deleted successfully', 'success');
-        }
-
     } catch (error) {
         console.error('Failed to delete address:', error);
-        alert('Failed to delete address: ' + error.message);
+        showErrorModal('Failed to delete address: ' + error.message);
     }
+}
+
+/**
+ * Show success modal
+ */
+function showSuccessModal(message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-card" style="max-width: 380px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">✅</div>
+            <h3 style="color: #27ae60; margin-bottom: 12px;">Success</h3>
+            <p style="margin-bottom: 24px; color: #555;">${message}</p>
+            <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">OK</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
+
+    // Auto-close after 2 seconds
+    setTimeout(() => modal.remove(), 2000);
+}
+
+/**
+ * Show error modal
+ */
+function showErrorModal(message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-card" style="max-width: 380px; text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+            <h3 style="color: #e74c3c; margin-bottom: 12px;">Error</h3>
+            <p style="margin-bottom: 24px; color: #555;">${message}</p>
+            <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">OK</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modal.classList.remove('hidden');
 }
 
 // Expose to global scope for inline onclick handlers
