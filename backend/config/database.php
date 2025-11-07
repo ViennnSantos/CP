@@ -1,44 +1,78 @@
 <?php
-/**
- * Database Connection Class
- */
-class Database {
-    private ?PDO $conn = null;
+if (!defined('DEBUG')) { define('DEBUG', false); }
 
-    public function getConnection(): PDO {
+class Database
+{
+    // 🔹 NEW: singleton holder
+    private static $instance = null;
+
+    private $host = "localhost";
+    private $database_name = "rads_tooling";
+    private $username = "root";
+    private $password = "";
+    private $conn = null;
+
+    // 🔹 NEW: global accessor (works alongside "new Database()")
+    public static function getInstance()
+    {
+        if (self::$instance === null) {
+            self::$instance = new self(); // uses current class
+        }
+        return self::$instance;
+    }
+
+    // (optional) prevent cloning/unserialize of the singleton
+    private function __clone() {}
+    public function __wakeup()
+    {
+        throw new \Exception("Cannot unserialize singleton");
+    }
+
+    public function getConnection()
+    {
         if ($this->conn !== null) {
             return $this->conn;
         }
 
-        // Load from .env
-        $env_file = dirname(__DIR__, 2) . '/.env';
-        if (file_exists($env_file)) {
-            $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            foreach ($lines as $line) {
-                if (strpos(trim($line), '#') === 0) continue;
-                list($key, $value) = explode('=', $line, 2);
-                $_ENV[trim($key)] = trim($value);
+        try {
+            $dsn = "mysql:host={$this->host};dbname={$this->database_name};charset=utf8mb4";
+            $options = [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                \PDO::ATTR_EMULATE_PREPARES => false,
+            ];
+
+            $this->conn = new \PDO($dsn, $this->username, $this->password, $options);
+            return $this->conn;
+        } catch (\PDOException $e) {
+            error_log("Database connection error: " . $e->getMessage());
+
+            if (defined('DEBUG') && DEBUG) {
+                throw new \Exception("Database connection failed: " . $e->getMessage());
+            } else {
+                throw new \Exception("Database connection failed. Please try again later.");
             }
         }
-
-        $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $dbname = $_ENV['DB_NAME'] ?? 'rads_tooling';
-        $username = $_ENV['DB_USER'] ?? 'root';
-        $password = $_ENV['DB_PASS'] ?? '';
-
-        $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
-
-        try {
-            $this->conn = new PDO($dsn, $username, $password, [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false
-            ]);
-        } catch (PDOException $e) {
-            error_log("Database connection failed: " . $e->getMessage());
-            throw new Exception("Database connection failed");
-        }
-
-        return $this->conn;
     }
+
+    public function testConnection()
+    {
+        try {
+            $conn = $this->getConnection();
+            $conn->query("SELECT 1");
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+}
+
+try {
+    $dbInstance = Database::getInstance();
+    $conn = $dbInstance->getConnection();
+    $pdo = $conn; // ensure $pdo available for legacy code
+} catch (Exception $e) {
+    error_log('database.php: failed to create $conn/$pdo - ' . $e->getMessage());
+    $conn = null;
+    $pdo = null;
 }
