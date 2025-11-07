@@ -83,73 +83,118 @@
   async function loadSavedAddresses() {
     const container = $('#savedAddressesContainer');
     const select = $('#savedAddressSelect');
-    if (!select) return; // Not on delivery page
+    if (!select) {
+      console.log('⚠️ Saved address select element not found - not on delivery page');
+      return;
+    }
 
     try {
+      console.log('🔄 Loading saved addresses...');
+
       const response = await fetch('/RADS-TOOLING/backend/api/customer_addresses.php?action=list', {
         credentials: 'include'
       });
-      const data = await response.json();
+
+      // Validate response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        throw new Error('Empty response from server');
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        console.error('❌ Invalid JSON response:', text);
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('📦 Saved addresses response:', data);
 
       if (!data.success || !data.addresses || data.addresses.length === 0) {
         // No saved addresses - hide the container
         if (container) container.style.display = 'none';
+        console.log('⚠️ No saved addresses found');
         return;
       }
 
       // Show the container
       if (container) container.style.display = 'block';
 
-      // Populate select options
-      select.innerHTML = '<option value="">-- Select a saved address --</option>';
+      // Find default address first
+      const defaultAddr = data.addresses.find(addr => addr.is_default == 1);
+      console.log('🔍 Default address:', defaultAddr ? `ID ${defaultAddr.id} - ${defaultAddr.full_name}` : 'None');
 
+      // Build options - only add placeholder if NO default address exists
+      let optionsHTML = '';
+
+      if (!defaultAddr) {
+        optionsHTML = '<option value="">-- Select a saved address --</option>';
+        console.log('ℹ️ No default address - showing placeholder');
+      } else {
+        console.log('✅ Default address exists - skipping placeholder');
+      }
+
+      // Add all address options
       data.addresses.forEach(addr => {
-        const option = document.createElement('option');
-        option.value = addr.id;
-        option.textContent = addr.address_nickname
-          ? `${addr.address_nickname} (${addr.street_block_lot.substring(0, 30)}...)`
+        const nickname = addr.address_nickname || '';
+        const preview = addr.street_block_lot.substring(0, 30);
+        const label = nickname
+          ? `${nickname} (${preview}...)`
           : `${addr.full_name} - ${addr.city_municipality}`;
-        option.dataset.address = JSON.stringify(addr);
 
-        if (addr.is_default == 1) {
-          option.textContent += ' (Default)';
-        }
-        select.appendChild(option);
+        const defaultTag = addr.is_default == 1 ? ' (Default)' : '';
+        const addressJSON = JSON.stringify(addr).replace(/'/g, '&apos;');
+
+        optionsHTML += `<option value="${addr.id}" data-address='${addressJSON}'>${label}${defaultTag}</option>`;
       });
 
-      // Handle address selection
-      select.addEventListener('change', async (e) => {
+      select.innerHTML = optionsHTML;
+      console.log(`✅ Added ${data.addresses.length} address options to dropdown`);
+
+      // Handle address selection (only add listener once)
+      select.removeEventListener('change', handleAddressChange); // Remove old listeners
+      select.addEventListener('change', handleAddressChange);
+
+      async function handleAddressChange(e) {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if (!selectedOption.value) {
-          // "Add New Address" selected - clear form and make editable
+          console.log('ℹ️ Placeholder selected - clearing form');
           showNewAddressForm();
           return;
         }
 
-        const addr = JSON.parse(selectedOption.dataset.address);
+        const addr = JSON.parse(selectedOption.dataset.address.replace(/&apos;/g, "'"));
+        console.log('🔄 Address selected:', addr.id, addr.full_name);
         await fillDeliveryForm(addr, true); // true = make fields read-only
-      });
+      }
 
       // ✅ AUTO-SELECT DEFAULT ADDRESS
-      const defaultAddr = data.addresses.find(addr => addr.is_default == 1);
       if (defaultAddr) {
-        console.log('🔍 Default address found:', defaultAddr.id, defaultAddr.full_name);
+        console.log('🔧 Setting default address:', defaultAddr.id);
 
         // Set select value to default address (ensure string type)
         select.value = String(defaultAddr.id);
-        console.log('✅ Select value set to:', select.value);
+
+        const selectedText = select.options[select.selectedIndex]?.text || 'N/A';
+        console.log('✅ Select value set to:', select.value, '| Selected text:', selectedText);
 
         // Wait a bit for PSGC to be fully ready, then auto-fill
         setTimeout(async () => {
+          console.log('🚀 Starting auto-fill for default address...');
           await fillDeliveryForm(defaultAddr, true); // true = make fields read-only
           console.log('✅ Default address auto-filled in delivery form (read-only)');
         }, 1000); // Increased to 1s to ensure PSGC is ready
       } else {
-        console.log('⚠️ No default address found in:', data.addresses);
+        console.log('⚠️ No default address found - user must select manually');
       }
 
     } catch (error) {
-      console.error('Failed to load saved addresses:', error);
+      console.error('❌ Failed to load saved addresses:', error);
       if (container) container.style.display = 'none';
     }
   }
