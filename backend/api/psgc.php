@@ -6,6 +6,9 @@
 
 header('Content-Type: application/json; charset=utf-8');
 
+// Start output buffering to catch any accidental output
+ob_start();
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
