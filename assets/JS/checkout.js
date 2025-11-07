@@ -120,10 +120,14 @@
       // Handle address selection
       select.addEventListener('change', (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
-        if (!selectedOption.value) return;
+        if (!selectedOption.value) {
+          // "Add New Address" selected - clear form and make editable
+          showNewAddressForm();
+          return;
+        }
 
         const addr = JSON.parse(selectedOption.dataset.address);
-        fillDeliveryForm(addr);
+        fillDeliveryForm(addr, true); // true = make fields read-only
       });
 
       // ✅ AUTO-SELECT DEFAULT ADDRESS
@@ -132,10 +136,10 @@
         // Set select value to default address
         select.value = defaultAddr.id;
 
-        // Trigger change event to auto-fill form
+        // Trigger change event to auto-fill form (with read-only fields)
         setTimeout(() => {
-          fillDeliveryForm(defaultAddr);
-          console.log('✅ Default address auto-filled in delivery form');
+          fillDeliveryForm(defaultAddr, true); // true = make fields read-only
+          console.log('✅ Default address auto-filled in delivery form (read-only)');
         }, 500);
       }
 
@@ -145,7 +149,7 @@
     }
   }
 
-  function fillDeliveryForm(addr) {
+  function fillDeliveryForm(addr, isReadOnly = false) {
     // Split full name into first and last name
     const nameParts = addr.full_name.trim().split(' ');
     const firstName = nameParts[0] || '';
@@ -154,20 +158,30 @@
     // Fill personal information
     const firstNameInput = $('input[name="first_name"]');
     const lastNameInput = $('input[name="last_name"]');
-    if (firstNameInput) firstNameInput.value = firstName;
-    if (lastNameInput) lastNameInput.value = lastName;
+    if (firstNameInput) {
+      firstNameInput.value = firstName;
+      firstNameInput.readOnly = isReadOnly;
+    }
+    if (lastNameInput) {
+      lastNameInput.value = lastName;
+      lastNameInput.readOnly = isReadOnly;
+    }
 
     // Fill phone number
     const phoneLocalInput = $('#phoneLocal');
     if (phoneLocalInput && addr.mobile_number) {
       const localNumber = addr.mobile_number.replace('+63', '');
       phoneLocalInput.value = localNumber;
+      phoneLocalInput.readOnly = isReadOnly;
       phoneLocalInput.dispatchEvent(new Event('input'));
     }
 
     // Fill email
     const emailInput = $('input[name="email"]');
-    if (emailInput && addr.email) emailInput.value = addr.email;
+    if (emailInput && addr.email) {
+      emailInput.value = addr.email;
+      emailInput.readOnly = isReadOnly;
+    }
 
     // Fill address fields
     const provinceSelect = $('#province');
@@ -178,26 +192,35 @@
 
     if (provinceSelect) {
       provinceSelect.value = addr.province;
+      provinceSelect.disabled = isReadOnly;
       provinceSelect.dispatchEvent(new Event('change'));
 
       // Wait for cities to load, then set city
       setTimeout(() => {
         if (citySelect) {
           citySelect.value = addr.city_municipality;
+          citySelect.disabled = isReadOnly;
           citySelect.dispatchEvent(new Event('change'));
 
           // Wait for barangays to load, then set barangay
           setTimeout(() => {
             if (barangaySelect) {
               barangaySelect.value = addr.barangay;
+              barangaySelect.disabled = isReadOnly;
             }
           }, 500);
         }
       }, 500);
     }
 
-    if (streetInput) streetInput.value = addr.street_block_lot;
-    if (postalInput && addr.postal_code) postalInput.value = addr.postal_code;
+    if (streetInput) {
+      streetInput.value = addr.street_block_lot;
+      streetInput.readOnly = isReadOnly;
+    }
+    if (postalInput && addr.postal_code) {
+      postalInput.value = addr.postal_code;
+      postalInput.readOnly = isReadOnly;
+    }
   }
 
   // Function to clear form and show new address form
@@ -207,7 +230,20 @@
 
     // Clear all form fields
     const form = $('#deliveryForm');
-    if (form) form.reset();
+    if (form) {
+      form.reset();
+
+      // Remove read-only/disabled attributes from all fields
+      const inputs = form.querySelectorAll('input:not([type="hidden"])');
+      inputs.forEach(input => {
+        input.readOnly = false;
+      });
+
+      const selects = form.querySelectorAll('select');
+      selects.forEach(select => {
+        select.disabled = false;
+      });
+    }
   };
 // ===== AUTO-FILL PICKUP FORM FROM PROFILE =====
   async function autoFillPickupForm() {
@@ -315,7 +351,7 @@
     }
   }
 
-  function fillDeliveryForm(addr) {
+  function fillDeliveryForm(addr, isReadOnly = false) {
     // Split full name into first and last name
     const nameParts = addr.full_name.trim().split(' ');
     const firstName = nameParts[0] || '';
@@ -324,20 +360,30 @@
     // Fill personal information
     const firstNameInput = $('input[name="first_name"]');
     const lastNameInput = $('input[name="last_name"]');
-    if (firstNameInput) firstNameInput.value = firstName;
-    if (lastNameInput) lastNameInput.value = lastName;
+    if (firstNameInput) {
+      firstNameInput.value = firstName;
+      firstNameInput.readOnly = isReadOnly;
+    }
+    if (lastNameInput) {
+      lastNameInput.value = lastName;
+      lastNameInput.readOnly = isReadOnly;
+    }
 
     // Fill phone number
     const phoneLocalInput = $('#phoneLocal');
     if (phoneLocalInput && addr.mobile_number) {
       const localNumber = addr.mobile_number.replace('+63', '');
       phoneLocalInput.value = localNumber;
+      phoneLocalInput.readOnly = isReadOnly;
       phoneLocalInput.dispatchEvent(new Event('input'));
     }
 
     // Fill email
     const emailInput = $('input[name="email"]');
-    if (emailInput && addr.email) emailInput.value = addr.email;
+    if (emailInput && addr.email) {
+      emailInput.value = addr.email;
+      emailInput.readOnly = isReadOnly;
+    }
 
     // Fill address fields
     const provinceSelect = $('#province');
@@ -348,26 +394,35 @@
 
     if (provinceSelect) {
       provinceSelect.value = addr.province;
+      provinceSelect.disabled = isReadOnly;
       provinceSelect.dispatchEvent(new Event('change'));
 
       // Wait for cities to load, then set city
       setTimeout(() => {
         if (citySelect) {
           citySelect.value = addr.city_municipality;
+          citySelect.disabled = isReadOnly;
           citySelect.dispatchEvent(new Event('change'));
 
           // Wait for barangays to load, then set barangay
           setTimeout(() => {
             if (barangaySelect) {
               barangaySelect.value = addr.barangay;
+              barangaySelect.disabled = isReadOnly;
             }
           }, 500);
         }
       }, 500);
     }
 
-    if (streetInput) streetInput.value = addr.street_block_lot;
-    if (postalInput && addr.postal_code) postalInput.value = addr.postal_code;
+    if (streetInput) {
+      streetInput.value = addr.street_block_lot;
+      streetInput.readOnly = isReadOnly;
+    }
+    if (postalInput && addr.postal_code) {
+      postalInput.value = addr.postal_code;
+      postalInput.readOnly = isReadOnly;
+    }
   }
 
   // Function to clear form and show new address form
@@ -377,7 +432,20 @@
 
     // Clear all form fields
     const form = $('#deliveryForm');
-    if (form) form.reset();
+    if (form) {
+      form.reset();
+
+      // Remove read-only/disabled attributes from all fields
+      const inputs = form.querySelectorAll('input:not([type="hidden"])');
+      inputs.forEach(input => {
+        input.readOnly = false;
+      });
+
+      const selects = form.querySelectorAll('select');
+      selects.forEach(select => {
+        select.disabled = false;
+      });
+    }
   };
 
   // ===== AUTO-FILL PICKUP FORM FROM PROFILE =====
