@@ -183,9 +183,15 @@ function setupAddressModal() {
                 return;
             }
 
-            const response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
-            const barangays = await response.json();
+            // Try cities endpoint first
 
+            let response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
+            let barangays = await response.json();
+            // If cities endpoint fails or returns empty, try municipalities endpoint
+            if (!Array.isArray(barangays) || barangays.length === 0) {
+                response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
+                barangays = await response.json();
+            }
             // Cache the barangays
             psgcBarangays[cityCode] = barangays;
 
@@ -467,8 +473,15 @@ async function loadBarangaysForEdit(addr) {
     barangaySelect.innerHTML = '<option value="">Loading...</option>';
 
     try {
-        const response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
-        const barangays = await response.json();
+        // Try cities endpoint first
+        let response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
+        let barangays = await response.json();
+
+        // If cities endpoint fails or returns empty, try municipalities endpoint
+        if (!Array.isArray(barangays) || barangays.length === 0) {
+            response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
+            barangays = await response.json();
+        }
         psgcBarangays[cityCode] = barangays;
         populateBarangaySelect(barangaySelect, barangays);
 

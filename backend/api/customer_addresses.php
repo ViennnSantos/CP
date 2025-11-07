@@ -815,41 +815,67 @@ function set_default_address($customer_id) {
 
  
 
-    $address_id = $_POST['id'] ?? null;
-
-    if (!$address_id) {
-
-        throw new Exception('Address ID required');
-
-    }
-
- 
-
-    // Verify ownership
-
-    $check_sql = "SELECT id FROM customer_addresses WHERE id = ? AND customer_id = ?";
-
-    $check_stmt = $conn->prepare($check_sql);
-
-    $check_stmt->bind_param('ii', $address_id, $customer_id);
-
-    $check_stmt->execute();
-
-    if ($check_stmt->get_result()->num_rows === 0) {
-
-        throw new Exception('Address not found or access denied');
-
-    }
-
- 
-
-    // Start transaction
-
-    $conn->begin_transaction();
-
- 
-
     try {
+
+        $address_id = $_POST['id'] ?? null;
+
+        if (!$address_id) {
+
+            throw new Exception('Address ID required');
+
+        }
+
+ 
+
+        // Verify ownership
+
+        $check_sql = "SELECT id FROM customer_addresses WHERE id = ? AND customer_id = ?";
+
+        $check_stmt = $conn->prepare($check_sql);
+
+        $check_stmt->execute([$address_id, $customer_id]);
+
+ 
+
+        if (!$check_stmt->fetch()) {
+
+            $check_stmt->closeCursor();
+
+            throw new Exception('Address not found or access denied');
+
+        }
+
+ 
+
+        // Close cursor before starting transaction
+
+        $check_stmt->closeCursor();
+
+        $check_stmt = null;
+
+ 
+
+        // Check if transaction is already active (PDO doesn't have inTransaction in all versions)
+
+        // So we'll just wrap the transaction carefully
+
+        $inTransaction = false;
+
+        try {
+
+            $conn->beginTransaction();
+
+            $inTransaction = true;
+
+        } catch (PDOException $e) {
+
+            // Transaction might already be active, log and continue
+
+            error_log("Warning: Could not begin transaction - " . $e->getMessage());
+
+        }
+
+ 
 
         // Unset all defaults for this customer
 
@@ -857,9 +883,7 @@ function set_default_address($customer_id) {
 
         $unset_stmt = $conn->prepare($unset_sql);
 
-        $unset_stmt->bind_param('i', $customer_id);
-
-        $unset_stmt->execute();
+        $unset_stmt->execute([$customer_id]);
 
  
 
@@ -869,30 +893,34 @@ function set_default_address($customer_id) {
 
         $set_stmt = $conn->prepare($set_sql);
 
-        $set_stmt->bind_param('ii', $address_id, $customer_id);
-
-        $set_stmt->execute();
+        $set_stmt->execute([$address_id, $customer_id]);
 
  
 
-        $conn->commit();
+        if ($inTransaction) {
+
+            $conn->commit();
+
+        }
 
  
 
         echo json_encode([
-
             'success' => true,
-
             'message' => 'Default address updated'
-
         ]);
 
     } catch (Exception $e) {
+        error_log("Set default address error: " . $e->getMessage());
 
-        $conn->rollback();
-
+        // Try to rollback if transaction is active
+        try {
+            if (isset($inTransaction) && $inTransaction) {
+                $conn->rollBack();
+            }
+        } catch (Exception $rollbackError) {
+            error_log("Rollback error: " . $rollbackError->getMessage());
+        }
         throw $e;
-
     }
-
 }

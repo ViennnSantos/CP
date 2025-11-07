@@ -118,16 +118,15 @@
       });
 
       // Handle address selection
-      select.addEventListener('change', (e) => {
+       select.addEventListener('change', async (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if (!selectedOption.value) {
           // "Add New Address" selected - clear form and make editable
           showNewAddressForm();
           return;
         }
-
         const addr = JSON.parse(selectedOption.dataset.address);
-        fillDeliveryForm(addr, true);
+        await fillDeliveryForm(addr, true); // true = make fields read-only
       });
 
     } catch (error) {
@@ -136,94 +135,234 @@
 
       if (defaultAddr) {
         // Set select value to default address
-        select.value = defaultAddr.id;
+        console.log('🔍 Default address found:', defaultAddr.id, defaultAddr.full_name);
+        // Set select value to default address (ensure string type)
+        select.value = String(defaultAddr.id);
+        console.log('✅ Select value set to:', select.value);
 
-        // Trigger change event to auto-fill form
-        setTimeout(() => {
-          fillDeliveryForm(defaultAddr, true); // true = make fields read-only
+        // Wait a bit for PSGC to be fully ready, then auto-fill
+        setTimeout(async () => {
+          await fillDeliveryForm(defaultAddr, true); // true = make fields read-only
           console.log('✅ Default address auto-filled in delivery form (read-only)');
-        }, 500);
+        }, 1000); // Increased to 1s to ensure PSGC is ready
+      } else {
+        console.log('⚠️ No default address found in:', data.addresses);
       }
       if (container) container.style.display = 'none';
     }
   }
 
-  function fillDeliveryForm(addr, isReadOnly = false) {
+  async function fillDeliveryForm(addr, isReadOnly = false) {
+
+    console.log('📝 Filling delivery form with:', addr.full_name, 'isReadOnly:', isReadOnly);
+
+ 
+
     // Split full name into first and last name
+
     const nameParts = addr.full_name.trim().split(' ');
+
     const firstName = nameParts[0] || '';
+
     const lastName = nameParts.slice(1).join(' ') || '';
+
  
 
     // Fill personal information
+
     const firstNameInput = $('input[name="first_name"]');
+
     const lastNameInput = $('input[name="last_name"]');
+
     if (firstNameInput) {
+
       firstNameInput.value = firstName;
+
       firstNameInput.readOnly = isReadOnly;
+
     }
 
     if (lastNameInput) {
+
       lastNameInput.value = lastName;
+
       lastNameInput.readOnly = isReadOnly;
+
     }
+
+ 
 
     // Fill phone number
+
     const phoneLocalInput = $('#phoneLocal');
+
     if (phoneLocalInput && addr.mobile_number) {
+
       const localNumber = addr.mobile_number.replace('+63', '');
+
       phoneLocalInput.value = localNumber;
+
       phoneLocalInput.readOnly = isReadOnly;
+
       phoneLocalInput.dispatchEvent(new Event('input'));
+
     }
+
+ 
 
     // Fill email
+
     const emailInput = $('input[name="email"]');
+
     if (emailInput && addr.email) {
+
       emailInput.value = addr.email;
+
       emailInput.readOnly = isReadOnly;
+
     }
+
+ 
 
     // Fill address fields
+
     const provinceSelect = $('#province');
+
     const citySelect = $('#city');
+
     const barangaySelect = $('#barangaySelect');
+
     const streetInput = $('input[name="street"]');
+
     const postalInput = $('input[name="postal"]');
 
-    if (provinceSelect) {
-      provinceSelect.value = addr.province;
-      provinceSelect.disabled = isReadOnly;
-      provinceSelect.dispatchEvent(new Event('change'));
-
-      // Wait for cities to load, then set city
-      setTimeout(() => {
-        if (citySelect) {
-          citySelect.value = addr.city_municipality;
-          citySelect.disabled = isReadOnly;
-          citySelect.dispatchEvent(new Event('change'));
-
-          // Wait for barangays to load, then set barangay
-          setTimeout(() => {
-            if (barangaySelect) {
-              barangaySelect.value = addr.barangay;
-              barangaySelect.disabled = isReadOnly;
-            }
-          }, 500);
-        }
-      }, 500);
-    }
+ 
 
     if (streetInput) {
-      streetInput.value = addr.street_block_lot;
-      streetInput.readOnly = isReadOnly;
-    }
-    if (postalInput && addr.postal_code) {
-      postalInput.value = addr.postal_code;
-      postalInput.readOnly = isReadOnly;
-    }
-  }
 
+      streetInput.value = addr.street_block_lot;
+
+      streetInput.readOnly = isReadOnly;
+
+    }
+
+    if (postalInput && addr.postal_code) {
+
+      postalInput.value = addr.postal_code;
+
+      postalInput.readOnly = isReadOnly;
+
+    }
+
+ 
+
+    // Helper function to wait for dropdown to be populated
+
+    const waitForDropdown = (selectElement, expectedValue, maxWait = 3000) => {
+
+      return new Promise((resolve) => {
+
+        const startTime = Date.now();
+
+        const checkInterval = setInterval(() => {
+
+          // Check if the option exists
+
+          const option = Array.from(selectElement.options).find(opt => opt.value === expectedValue);
+
+          if (option) {
+
+            clearInterval(checkInterval);
+
+            resolve(true);
+
+          } else if (Date.now() - startTime > maxWait) {
+
+            clearInterval(checkInterval);
+
+            console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
+
+            resolve(false);
+
+          }
+
+        }, 100); // Check every 100ms
+
+      });
+
+    };
+
+ 
+
+    // Fill province and trigger cascading load
+
+    if (provinceSelect && addr.province) {
+
+      console.log('🔄 Setting province:', addr.province);
+
+      provinceSelect.value = addr.province;
+
+      provinceSelect.disabled = isReadOnly;
+
+      provinceSelect.dispatchEvent(new Event('change'));
+
+ 
+
+      // Wait for cities to load
+
+      if (citySelect && addr.city_municipality) {
+
+        console.log('⏳ Waiting for cities to load...');
+
+        const cityLoaded = await waitForDropdown(citySelect, addr.city_municipality);
+
+ 
+
+        if (cityLoaded) {
+
+          console.log('🔄 Setting city:', addr.city_municipality);
+
+          citySelect.value = addr.city_municipality;
+
+          citySelect.disabled = isReadOnly;
+
+          citySelect.dispatchEvent(new Event('change'));
+
+ 
+
+          // Wait for barangays to load
+
+          if (barangaySelect && addr.barangay) {
+
+            console.log('⏳ Waiting for barangays to load...');
+
+            const barangayLoaded = await waitForDropdown(barangaySelect, addr.barangay);
+
+ 
+
+            if (barangayLoaded) {
+
+              console.log('🔄 Setting barangay:', addr.barangay);
+
+              barangaySelect.value = addr.barangay;
+
+              barangaySelect.disabled = isReadOnly;
+
+            }
+
+          }
+
+        }
+
+      }
+
+    }
+
+ 
+
+    console.log('✅ Form fill complete');
+
+  }
   // Function to clear form and show new address form
   window.showNewAddressForm = function() {
     const select = $('#savedAddressSelect');
@@ -296,66 +435,9 @@
       console.error('Failed to auto-fill pickup form:', error);
     }
   }
-// ===== SAVED ADDRESSES FUNCTIONALITY =====
-  async function loadSavedAddresses() {
-    const container = $('#savedAddressesContainer');
-    const select = $('#savedAddressSelect');
 
-    if (!select) return; // Not on delivery page
-
-    try {
-      const response = await fetch('/RADS-TOOLING/backend/api/customer_addresses.php?action=list', {
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (!data.success || !data.addresses || data.addresses.length === 0) {
-        // No saved addresses - hide the container
-        if (container) container.style.display = 'none';
-        return;
-      }
-
-      // Show the container
-      if (container) container.style.display = 'block';
-
-      // Populate select options
-      select.innerHTML = '<option value="">-- Select a saved address --</option>';
-
-      data.addresses.forEach(addr => {
-        const option = document.createElement('option');
-        option.value = addr.id;
-        option.textContent = addr.address_nickname
-          ? `${addr.address_nickname} (${addr.street_block_lot.substring(0, 30)}...)`
-          : `${addr.full_name} - ${addr.city_municipality}`;
-        option.dataset.address = JSON.stringify(addr);
-
-        if (addr.is_default == 1) {
-          option.textContent += ' (Default)';
-        }
-
-        select.appendChild(option);
-      });
-
-      // Handle address selection
-      select.addEventListener('change', (e) => {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        if (!selectedOption.value) {
-          // "Add New Address" selected - clear form and make editable
-          showNewAddressForm();
-          return;
-        }
-        const addr = JSON.parse(selectedOption.dataset.address);
-        fillDeliveryForm(addr, true);
-      });
-
-    } catch (error) {
-      console.error('Failed to load saved addresses:', error);
-      if (container) container.style.display = 'none';
-    }
-  }
-
-  function fillDeliveryForm(addr, isReadOnly = false) {
+ async function fillDeliveryForm(addr, isReadOnly = false) {
+    console.log('📝 Filling delivery form with:', addr.full_name, 'isReadOnly:', isReadOnly);
 
     // Split full name into first and last name
     const nameParts = addr.full_name.trim().split(' ');
@@ -365,12 +447,10 @@
     // Fill personal information
     const firstNameInput = $('input[name="first_name"]');
     const lastNameInput = $('input[name="last_name"]');
-
-    if (firstNameInput) {
+    if (firstNameInput) { 
       firstNameInput.value = firstName;
       firstNameInput.readOnly = isReadOnly;
     }
-
     if (lastNameInput) {
       lastNameInput.value = lastName;
       lastNameInput.readOnly = isReadOnly;
@@ -392,6 +472,7 @@
       emailInput.readOnly = isReadOnly;
     }
 
+
     // Fill address fields
     const provinceSelect = $('#province');
     const citySelect = $('#city');
@@ -399,38 +480,71 @@
     const streetInput = $('input[name="street"]');
     const postalInput = $('input[name="postal"]');
 
-    if (provinceSelect) {
-      provinceSelect.value = addr.province;
-      provinceSelect.disabled = isReadOnly;
-      provinceSelect.dispatchEvent(new Event('change'));
-
-      // Wait for cities to load, then set city
-      setTimeout(() => {
-        if (citySelect) {
-          citySelect.value = addr.city_municipality;
-          citySelect.disabled = isReadOnly;
-          citySelect.dispatchEvent(new Event('change'));
-
-          // Wait for barangays to load, then set barangay
-          setTimeout(() => {
-            if (barangaySelect) {
-              barangaySelect.value = addr.barangay;
-              barangaySelect.disabled = isReadOnly;
-            }
-          }, 500);
-        }
-      }, 500);
-    }
-
     if (streetInput) {
       streetInput.value = addr.street_block_lot;
       streetInput.readOnly = isReadOnly;
     }
+
     if (postalInput && addr.postal_code) {
       postalInput.value = addr.postal_code;
       postalInput.readOnly = isReadOnly;
-
     }
+
+    // Helper function to wait for dropdown to be populated
+    const waitForDropdown = (selectElement, expectedValue, maxWait = 3000) => {
+      return new Promise((resolve) => {
+        const startTime = Date.now();
+        const checkInterval = setInterval(() => {
+          // Check if the option exists
+          const option = Array.from(selectElement.options).find(opt => opt.value === expectedValue);
+          if (option) {
+            clearInterval(checkInterval);
+            resolve(true);
+          } else if (Date.now() - startTime > maxWait) {
+            clearInterval(checkInterval);
+            console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
+            resolve(false);
+          }
+        }, 100); // Check every 100ms
+      });
+    };
+
+
+    // Fill province and trigger cascading load
+    if (provinceSelect && addr.province) {
+      console.log('🔄 Setting province:', addr.province);
+      provinceSelect.value = addr.province;
+      provinceSelect.disabled = isReadOnly;
+      provinceSelect.dispatchEvent(new Event('change'));
+
+
+      // Wait for cities to load
+      if (citySelect && addr.city_municipality) {
+        console.log('⏳ Waiting for cities to load...');
+        const cityLoaded = await waitForDropdown(citySelect, addr.city_municipality);
+
+
+        if (cityLoaded) {
+          console.log('🔄 Setting city:', addr.city_municipality);
+          citySelect.value = addr.city_municipality;
+          citySelect.disabled = isReadOnly;
+          citySelect.dispatchEvent(new Event('change'));
+
+          // Wait for barangays to load
+          if (barangaySelect && addr.barangay) {
+            console.log('⏳ Waiting for barangays to load...');
+            const barangayLoaded = await waitForDropdown(barangaySelect, addr.barangay);
+
+            if (barangayLoaded) {
+              console.log('🔄 Setting barangay:', addr.barangay);
+              barangaySelect.value = addr.barangay;
+              barangaySelect.disabled = isReadOnly;
+            }
+          }
+        }
+      }
+    }
+    console.log('✅ Form fill complete');
   }
 
   // Function to clear form and show new address form
@@ -1314,18 +1428,15 @@
   });
 
   // ===== Initialize Everything =====
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Checkout.js loading...');
-    
     wirePhone();
-    loadPSGC();
-    loadSavedAddresses(); // Load saved addresses for delivery auto-fill
-    autoFillPickupForm(); // Auto-fill pickup form from customer profile
-    wireContinue();
-    wireClear();
-    wirePayment();
-    setupNumericInputs();
-
+    // Load PSGC data first (needed for autofill to work properly)
+    await loadPSGC();
+    console.log('✅ PSGC data loaded');
+    // Then load saved addresses and autofill (needs PSGC dropdowns ready)
+    await loadSavedAddresses(); // Load saved addresses for delivery auto-fill
+    console.log('✅ Saved addresses loaded and autofilled');
     console.log('✅ Checkout.js COMPLETE FIXED VERSION loaded!');
     console.log('✅ Features: NCR support, delivery/pickup auto-fill, active states, better errors, proper payload');
 
