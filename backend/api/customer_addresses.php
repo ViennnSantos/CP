@@ -595,6 +595,10 @@ function set_default_address($customer_id) {
         throw new Exception('Address not found or access denied');
     }
 
+    // Close cursor before starting transaction
+    $check_stmt->closeCursor();
+    $check_stmt = null;
+
     // Start transaction
     $conn->beginTransaction();
 

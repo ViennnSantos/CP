@@ -295,61 +295,6 @@
       console.error('Failed to auto-fill pickup form:', error);
     }
   }
-// ===== SAVED ADDRESSES FUNCTIONALITY =====
-  async function loadSavedAddresses() {
-    const container = $('#savedAddressesContainer');
-    const select = $('#savedAddressSelect');
-
-    if (!select) return; // Not on delivery page
-
-    try {
-      const response = await fetch('/RADS-TOOLING/backend/api/customer_addresses.php?action=list', {
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (!data.success || !data.addresses || data.addresses.length === 0) {
-        // No saved addresses - hide the container
-        if (container) container.style.display = 'none';
-        return;
-      }
-
-      // Show the container
-      if (container) container.style.display = 'block';
-
-      // Populate select options
-      select.innerHTML = '<option value="">-- Select a saved address --</option>';
-
-      data.addresses.forEach(addr => {
-        const option = document.createElement('option');
-        option.value = addr.id;
-        option.textContent = addr.address_nickname
-          ? `${addr.address_nickname} (${addr.street_block_lot.substring(0, 30)}...)`
-          : `${addr.full_name} - ${addr.city_municipality}`;
-        option.dataset.address = JSON.stringify(addr);
-
-        if (addr.is_default == 1) {
-          option.textContent += ' (Default)';
-        }
-
-        select.appendChild(option);
-      });
-
-      // Handle address selection
-      select.addEventListener('change', (e) => {
-        const selectedOption = e.target.options[e.target.selectedIndex];
-        if (!selectedOption.value) return;
-
-        const addr = JSON.parse(selectedOption.dataset.address);
-        fillDeliveryForm(addr);
-      });
-
-    } catch (error) {
-      console.error('Failed to load saved addresses:', error);
-      if (container) container.style.display = 'none';
-    }
-  }
 
   function fillDeliveryForm(addr, isReadOnly = false) {
     // Split full name into first and last name
