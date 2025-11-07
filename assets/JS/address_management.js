@@ -3,9 +3,16 @@
  * Handles CRUD operations for customer addresses with PSGC support
  */
 
-const API_BASE = '/RADS-TOOLING/backend/api';
-const CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value ||
-    (typeof CSRF !== 'undefined' ? CSRF : '');
+// Use existing API_BASE and CSRF_TOKEN from profile.php if available
+
+// Otherwise, declare them here for standalone use
+if (typeof API_BASE === 'undefined') {
+    var API_BASE = '/RADS-TOOLING/backend/api';
+}
+if (typeof CSRF_TOKEN === 'undefined') {
+    var CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value ||
+        (typeof CSRF !== 'undefined' ? CSRF : '');
+}
 
 // PSGC Data Cache
 let psgcProvinces = [];
