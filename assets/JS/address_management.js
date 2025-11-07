@@ -363,36 +363,25 @@ function showAddressForm() {
     const title = document.getElementById('addressModalTitle');
 
     // Reset form
-     if (form) form.reset();
-
-    const editIdEl = document.getElementById('addressEditId');
-    if (editIdEl) editIdEl.value = '';
-    if (title) title.textContent = 'Add New Address';
-
- 
+    form.reset();
+    document.getElementById('addressEditId').value = '';
+    title.textContent = 'Add New Address';
 
     // Clear hidden codes
-    const provCodeEl = document.getElementById('addressProvinceCode');
-    const cityCodeEl = document.getElementById('addressCityCode');
-    const brgyCodeEl = document.getElementById('addressBarangayCode');
-    if (provCodeEl) provCodeEl.value = '';
-    if (cityCodeEl) cityCodeEl.value = '';
-    if (brgyCodeEl) brgyCodeEl.value = '';
+    document.getElementById('addressProvinceCode').value = '';
+    document.getElementById('addressCityCode').value = '';
+    document.getElementById('addressBarangayCode').value = '';
 
     // Clear message
-    const msgEl = document.getElementById('addressFormMsg');
-    if (msgEl) {
-        msgEl.textContent = '';
-        msgEl.className = 'msg';
-    }
-   openModal(modal);
+    document.getElementById('addressFormMsg').textContent = '';
+    document.getElementById('addressFormMsg').className = 'msg';
+
+    openModal(modal);
 }
 
-// IMMEDIATELY expose to global scope for inline onclick handlers
-if (typeof window !== 'undefined') {
-    window.showAddressForm = showAddressForm;
-    console.log('✅ showAddressForm exposed to window immediately');
-}
+// Expose to global scope for inline onclick handlers
+window.showAddressForm = showAddressForm;
+
 /**
  * Edit existing address
  */

@@ -85,15 +85,41 @@
 
     currentImageIndex = index;
 
+<<<<<<< HEAD
     // Update counter
+=======
+    // Update counter (both page and modal)
+>>>>>>> 91df24e8f051443c5fcdef1815c1045381ad40e4
     const counter = document.getElementById('currentImageNum');
     if (counter) {
       counter.textContent = (index + 1);
     }
+<<<<<<< HEAD
 
     // Update thumbnails
     setActiveThumbnail(index);
 
+=======
+    const modalCounter = document.getElementById('modalImageNum');
+    if (modalCounter) {
+      modalCounter.textContent = (index + 1);
+    }
+
+    // Update thumbnails (both page and modal)
+    setActiveThumbnail(index);
+
+    // Update modal thumbnails
+    document.querySelectorAll('.modal-thumb').forEach((t, i) => {
+      if (i === index) {
+        t.classList.add('active');
+        t.setAttribute('aria-selected', 'true');
+      } else {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      }
+    });
+
+>>>>>>> 91df24e8f051443c5fcdef1815c1045381ad40e4
     // Scroll thumbnail into view
     try {
       thumb.scrollIntoView({
@@ -312,6 +338,39 @@
     }
   });
 
+  /**
+   * Modal navigation arrows
+   */
+  const prevBtn = document.querySelector('.modal-nav-prev');
+  const nextBtn = document.querySelector('.modal-nav-next');
+
+  if (prevBtn) {
+    prevBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      previousImage();
+    });
+  }
+
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      nextImage();
+    });
+  }
+
+  /**
+   * Modal thumbnail clicks
+   */
+  document.addEventListener('click', function(e) {
+    const modalThumb = e.target.closest('.modal-thumb');
+    if (!modalThumb) return;
+
+    const index = parseInt(modalThumb.dataset.index || '0', 10);
+    showImageByIndex(isNaN(index) ? 0 : index);
+  });
+
   // ==================== INITIALIZATION ====================
 
   /**
@@ -381,4 +440,8 @@
     getCurrentIndex: () => currentImageIndex
   };
 
+<<<<<<< HEAD
 })();
+=======
+})();
+>>>>>>> 91df24e8f051443c5fcdef1815c1045381ad40e4

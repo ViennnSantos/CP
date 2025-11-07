@@ -486,7 +486,6 @@ class AuthAPI
         }
     }
 
-    
     /* --------------------------------- Staff login --------------------------------- */
 
     private function loginStaff(string $username, string $password): void
