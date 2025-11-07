@@ -6,7 +6,7 @@ class Database
     // 🔹 NEW: singleton holder
     private static $instance = null;
 
-    private $host = "localhost";
+    private $host = "127.0.0.1"; // Use 127.0.0.1 instead of localhost to force TCP (avoids socket errors)
     private $database_name = "rads_tooling";
     private $username = "root";
     private $password = "";
@@ -45,7 +45,8 @@ class Database
             $this->conn = new \PDO($dsn, $this->username, $this->password, $options);
             return $this->conn;
         } catch (\PDOException $e) {
-            error_log("Database connection error: " . $e->getMessage());
+            // Log to error file only (not stdout) to avoid breaking JSON responses
+            @error_log("Database connection error: " . $e->getMessage());
 
             if (defined('DEBUG') && DEBUG) {
                 throw new \Exception("Database connection failed: " . $e->getMessage());
@@ -72,7 +73,9 @@ try {
     $conn = $dbInstance->getConnection();
     $pdo = $conn; // ensure $pdo available for legacy code
 } catch (Exception $e) {
-    error_log('database.php: failed to create $conn/$pdo - ' . $e->getMessage());
+    // Silently fail - API endpoints will check if $conn is null
+    // Don't use error_log here to avoid breaking JSON responses
+    @error_log('database.php: failed to create $conn/$pdo - ' . $e->getMessage());
     $conn = null;
     $pdo = null;
 }
