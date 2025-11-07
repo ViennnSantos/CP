@@ -17,27 +17,89 @@ header('Content-Type: application/json; charset=utf-8');
 
 
 // Suppress errors to prevent HTML output before JSON
+// Suppress errors to prevent HTML output before JSON
+
 ini_set('display_errors', '0');
+
 error_reporting(E_ALL);
 
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/csrf.php';
-require_once __DIR__ . '/../includes/utils.php';
  
-// Check if database connection exists
-if (!isset($conn) || $conn === null) {
-    http_response_code(500);
-    echo json_encode([
-        'success' => false,
-        'message' => 'Database connection failed'
-    ]);
-    exit;
+
+// Start session if not started
+
+if (session_status() === PHP_SESSION_NONE) {
+
+    session_start();
+
 }
 
+ 
+
+// Include required files (using correct paths)
+
+require_once dirname(__DIR__) . '/config/database.php';
+
+require_once dirname(__DIR__, 2) . '/includes/phone_util.php';
+
+ 
+
+// Initialize database connection
+
+try {
+
+    $database = new Database();
+
+    $conn = $database->getConnection();
+
+} catch (Exception $e) {
+
+    http_response_code(500);
+
+    echo json_encode([
+
+        'success' => false,
+
+        'message' => 'Database connection failed'
+
+    ]);
+
+    exit;
+
+}
+
+ 
+
 // Require customer authentication
-check_customer_auth();
-$customer_id = $_SESSION['customer_id'];
+
+if (empty($_SESSION['user']) || ($_SESSION['user']['aud'] ?? '') !== 'customer') {
+
+    http_response_code(401);
+
+    echo json_encode([
+
+        'success' => false,
+
+        'message' => 'Authentication required'
+
+    ]);
+
+    exit;
+
+}
+
+ 
+
+$customer_id = (int)$_SESSION['user']['id'];
+
+ 
+
+// Generate CSRF token if not exists
+
+if (empty($_SESSION['csrf_token'])) {
+
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+}
 
  
 
@@ -45,9 +107,27 @@ $customer_id = $_SESSION['customer_id'];
 
 $method = $_SERVER['REQUEST_METHOD'];
 
+ 
+
 if (in_array($method, ['POST', 'PUT', 'DELETE'])) {
 
-    verify_csrf_token();
+    $csrf_token = $_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
+
+    if ($csrf_token !== $_SESSION['csrf_token']) {
+
+        http_response_code(403);
+
+        echo json_encode([
+
+            'success' => false,
+
+            'message' => 'Invalid CSRF token'
+
+        ]);
+
+        exit;
+
+    }
 
 }
 
@@ -145,6 +225,10 @@ function list_addresses($customer_id) {
 
  
 
+     global $conn;
+
+ 
+
     $sql = "SELECT * FROM customer_addresses
 
             WHERE customer_id = ?
@@ -155,21 +239,9 @@ function list_addresses($customer_id) {
 
     $stmt = $conn->prepare($sql);
 
-    $stmt->bind_param('i', $customer_id);
+    $stmt->execute([$customer_id]);
 
-    $stmt->execute();
-
-    $result = $stmt->get_result();
-
- 
-
-    $addresses = [];
-
-    while ($row = $result->fetch_assoc()) {
-
-        $addresses[] = $row;
-
-    }
+    $addresses = $stmt->fetchAll();
 
  
 
@@ -193,7 +265,7 @@ function list_addresses($customer_id) {
 
 function get_address($customer_id) {
 
-    global $conn;
+     global $conn;
 
  
 
@@ -215,23 +287,17 @@ function get_address($customer_id) {
 
     $stmt = $conn->prepare($sql);
 
-    $stmt->bind_param('ii', $address_id, $customer_id);
+    $stmt->execute([$address_id, $customer_id]);
 
-    $stmt->execute();
-
-    $result = $stmt->get_result();
+    $address = $stmt->fetch();
 
  
 
-    if ($result->num_rows === 0) {
+    if (!$address) {
 
         throw new Exception('Address not found');
 
     }
-
- 
-
-    $address = $result->fetch_assoc();
 
  
 
@@ -342,16 +408,13 @@ function create_address($customer_id) {
  
 
     // Check if customer has any addresses
-
-    $check_sql = "SELECT COUNT(*) as count FROM customer_addresses WHERE customer_id = ?";
+$check_sql = "SELECT COUNT(*) as count FROM customer_addresses WHERE customer_id = ?";
 
     $check_stmt = $conn->prepare($check_sql);
 
-    $check_stmt->bind_param('i', $customer_id);
+    $check_stmt->execute([$customer_id]);
 
-    $check_stmt->execute();
-
-    $check_result = $check_stmt->get_result()->fetch_assoc();
+    $check_result = $check_stmt->fetch();
 
  
 
@@ -373,9 +436,7 @@ function create_address($customer_id) {
 
         $unset_stmt = $conn->prepare($unset_sql);
 
-        $unset_stmt->bind_param('i', $customer_id);
-
-        $unset_stmt->execute();
+        $unset_stmt->execute([$customer_id]);
 
     }
 
@@ -397,9 +458,7 @@ function create_address($customer_id) {
 
     $stmt = $conn->prepare($sql);
 
-    $stmt->bind_param(
-
-        'issssssssssssi',
+    $success = $stmt->execute([
 
         $customer_id,
 
@@ -427,22 +486,21 @@ function create_address($customer_id) {
 
         $postal_code,
 
-        $is_default
+        $is_default ? 1 : 0
 
-    );
+    ]);
 
  
 
-    if (!$stmt->execute()) {
+    if (!$success) {
 
-        throw new Exception('Failed to create address: ' . $stmt->error);
+        throw new Exception('Failed to create address');
 
     }
 
  
 
-    $address_id = $conn->insert_id;
-
+    $address_id = $conn->lastInsertId();
  
 
     echo json_encode([
@@ -487,11 +545,11 @@ function update_address($customer_id) {
 
     $check_stmt = $conn->prepare($check_sql);
 
-    $check_stmt->bind_param('ii', $address_id, $customer_id);
+    $check_stmt->execute([$address_id, $customer_id]);
 
-    $check_stmt->execute();
+ 
 
-    if ($check_stmt->get_result()->num_rows === 0) {
+    if (!$check_stmt->fetch()) {
 
         throw new Exception('Address not found or access denied');
 
@@ -567,7 +625,7 @@ function update_address($customer_id) {
 
     // Update address
 
-    $sql = "UPDATE customer_addresses SET
+   $sql = "UPDATE customer_addresses SET
 
             address_nickname = ?,
 
@@ -599,9 +657,7 @@ function update_address($customer_id) {
 
     $stmt = $conn->prepare($sql);
 
-    $stmt->bind_param(
-
-        'ssssssssssssii',
+    $success = $stmt->execute([
 
         $address_nickname,
 
@@ -631,13 +687,13 @@ function update_address($customer_id) {
 
         $customer_id
 
-    );
+    ]);
 
  
 
-    if (!$stmt->execute()) {
+    if (!$success) {
 
-        throw new Exception('Failed to update address: ' . $stmt->error);
+        throw new Exception('Failed to update address');
 
     }
 
@@ -683,23 +739,19 @@ function delete_address($customer_id) {
 
     $check_stmt = $conn->prepare($check_sql);
 
-    $check_stmt->bind_param('ii', $address_id, $customer_id);
+    $check_stmt->execute([$address_id, $customer_id]);
 
-    $check_stmt->execute();
-
-    $result = $check_stmt->get_result();
+    $address = $check_stmt->fetch();
 
  
 
-    if ($result->num_rows === 0) {
+    if (!$address) {
 
         throw new Exception('Address not found or access denied');
 
     }
 
  
-
-    $address = $result->fetch_assoc();
 
     $was_default = $address['is_default'];
 
@@ -711,13 +763,11 @@ function delete_address($customer_id) {
 
     $delete_stmt = $conn->prepare($delete_sql);
 
-    $delete_stmt->bind_param('ii', $address_id, $customer_id);
-
  
 
-    if (!$delete_stmt->execute()) {
+    if (!$delete_stmt->execute([$address_id, $customer_id])) {
 
-        throw new Exception('Failed to delete address: ' . $delete_stmt->error);
+        throw new Exception('Failed to delete address');
 
     }
 
@@ -735,9 +785,7 @@ function delete_address($customer_id) {
 
         $set_stmt = $conn->prepare($set_new_default_sql);
 
-        $set_stmt->bind_param('i', $customer_id);
-
-        $set_stmt->execute();
+        $set_stmt->execute([$customer_id]);
 
     }
 
