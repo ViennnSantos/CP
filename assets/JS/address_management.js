@@ -3,16 +3,14 @@
  * Handles CRUD operations for customer addresses with PSGC support
  */
 
-// Use existing API_BASE and CSRF_TOKEN from profile.php if available
-
-// Otherwise, declare them here for standalone use
-if (typeof API_BASE === 'undefined') {
-    var API_BASE = '/RADS-TOOLING/backend/api';
-}
-if (typeof CSRF_TOKEN === 'undefined') {
-    var CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value ||
-        (typeof CSRF !== 'undefined' ? CSRF : '');
-}
+/**
+ * Safe globals - avoid redeclaring API_BASE/CSRF_TOKEN if they already exist.
+ * Use internal names (__API_BASE, __CSRF_TOKEN) to prevent SyntaxError.
+ */
+const __API_BASE = (typeof API_BASE !== 'undefined') ? API_BASE : '/RADS-TOOLING/backend/api';
+const __CSRF_TOKEN = (typeof CSRF_TOKEN !== 'undefined')
+    ? CSRF_TOKEN
+    : (document.querySelector('input[name="csrf_token"]')?.value || (typeof CSRF !== 'undefined' ? CSRF : ''));
 
 // PSGC Data Cache
 let psgcProvinces = [];
@@ -279,7 +277,7 @@ async function loadAddresses() {
     noAddressesEl.style.display = 'none';
 
     try {
-        const response = await fetch(`${API_BASE}/customer_addresses.php?action=list`, {
+        const response = await fetch(`${__API_BASE}/customer_addresses.php?action=list`, {
             credentials: 'include'
         });
 
@@ -391,7 +389,7 @@ async function editAddress(addressId) {
     const title = document.getElementById('addressModalTitle');
 
     try {
-        const response = await fetch(`${API_BASE}/customer_addresses.php?action=get&id=${addressId}`, {
+        const response = await fetch(`${__API_BASE}/customer_addresses.php?action=get&id=${addressId}`, {
             credentials: 'include'
         });
 
@@ -509,7 +507,7 @@ async function saveAddress(e) {
     const isEdit = !!addressId;
 
     const formData = new FormData();
-    formData.append('csrf_token', CSRF_TOKEN);
+    formData.append('csrf_token', __CSRF_TOKEN);
     formData.append('action', isEdit ? 'update' : 'create');
 
     if (isEdit) {
@@ -531,7 +529,7 @@ async function saveAddress(e) {
     formData.append('is_default', document.getElementById('addressIsDefault').checked ? '1' : '0');
 
     try {
-        const response = await fetch(`${API_BASE}/customer_addresses.php`, {
+        const response = await fetch(`${__API_BASE}/customer_addresses.php`, {
             method: 'POST',
             body: formData,
             credentials: 'include'
@@ -574,11 +572,11 @@ async function deleteAddress(addressId) {
 
     try {
         const formData = new FormData();
-        formData.append('csrf_token', CSRF_TOKEN);
+        formData.append('csrf_token', __CSRF_TOKEN);
         formData.append('action', 'delete');
         formData.append('id', addressId);
 
-        const response = await fetch(`${API_BASE}/customer_addresses.php`, {
+        const response = await fetch(`${__API_BASE}/customer_addresses.php`, {
             method: 'POST',
             body: formData,
             credentials: 'include'
@@ -613,11 +611,11 @@ window.deleteAddress = deleteAddress;
 async function setDefaultAddress(addressId) {
     try {
         const formData = new FormData();
-        formData.append('csrf_token', CSRF_TOKEN);
+        formData.append('csrf_token', __CSRF_TOKEN);
         formData.append('action', 'set_default');
         formData.append('id', addressId);
 
-        const response = await fetch(`${API_BASE}/customer_addresses.php`, {
+        const response = await fetch(`${__API_BASE}/customer_addresses.php`, {
             method: 'POST',
             body: formData,
             credentials: 'include'
