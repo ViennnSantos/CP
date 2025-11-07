@@ -1,49 +1,42 @@
 <?php
-
 /**
-
  * Customer Address Management API
-
  * Handles CRUD operations for customer addresses with PSGC support
-
  *
-
  * Actions:
-
  * - list: Get all addresses for logged-in customer
-
  * - get: Get single address by ID
-
  * - create: Create new address
-
  * - update: Update existing address
-
  * - delete: Delete address
-
  * - set_default: Set an address as default
-
  */
 
- 
+// Set JSON header FIRST before any includes (to prevent HTML errors from leaking)
+header('Content-Type: application/json; charset=utf-8');
+
+
+// Suppress errors to prevent HTML output before JSON
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
 
 require_once __DIR__ . '/../includes/db.php';
-
 require_once __DIR__ . '/../includes/auth.php';
-
 require_once __DIR__ . '/../includes/csrf.php';
-
 require_once __DIR__ . '/../includes/utils.php';
-
  
-
-header('Content-Type: application/json');
-
- 
+// Check if database connection exists
+if (!isset($conn) || $conn === null) {
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Database connection failed'
+    ]);
+    exit;
+}
 
 // Require customer authentication
-
 check_customer_auth();
-
 $customer_id = $_SESSION['customer_id'];
 
  

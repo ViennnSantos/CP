@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 07, 2025 at 12:27 AM
+-- Generation Time: Nov 07, 2025 at 01:25 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -175,22 +175,22 @@ INSERT INTO `customers` (`id`, `username`, `full_name`, `email`, `profile_image`
 CREATE TABLE `customer_addresses` (
   `id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
-  `address_nickname` varchar(50) DEFAULT NULL COMMENT 'Optional nickname (e.g., Home, Office)',
-  `full_name` varchar(100) NOT NULL,
+  `address_nickname` varchar(100) DEFAULT NULL COMMENT 'Optional nickname like Home, Office',
+  `full_name` varchar(255) NOT NULL,
   `mobile_number` varchar(20) NOT NULL,
   `email` varchar(255) DEFAULT NULL,
   `province` varchar(100) NOT NULL,
-  `province_code` varchar(20) DEFAULT NULL COMMENT 'PSGC province code',
+  `province_code` varchar(20) DEFAULT NULL COMMENT 'PSGC code',
   `city_municipality` varchar(100) NOT NULL,
-  `city_code` varchar(20) DEFAULT NULL COMMENT 'PSGC city/municipality code',
+  `city_code` varchar(20) DEFAULT NULL COMMENT 'PSGC code',
   `barangay` varchar(100) NOT NULL,
-  `barangay_code` varchar(20) DEFAULT NULL COMMENT 'PSGC barangay code',
-  `street_block_lot` text NOT NULL COMMENT 'Complete street address',
+  `barangay_code` varchar(20) DEFAULT NULL COMMENT 'PSGC code',
+  `street_block_lot` text NOT NULL COMMENT 'House number, street, building, etc.',
   `postal_code` varchar(10) DEFAULT NULL,
-  `is_default` tinyint(1) NOT NULL DEFAULT 0,
+  `is_default` tinyint(1) DEFAULT 0 COMMENT '1 = default address, 0 = not default',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
 
@@ -1155,7 +1155,15 @@ INSERT INTO `user_logs` (`id`, `user_type`, `user_id`, `action`, `details`, `cre
 (150, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 21:04:53'),
 (151, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 21:09:33'),
 (152, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 22:36:44'),
-(153, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 23:17:18');
+(153, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 23:17:18'),
+(154, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-06 23:41:03'),
+(155, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 23:41:11'),
+(156, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-07 00:23:02'),
+(157, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-07 01:11:44'),
+(158, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-07 01:49:16'),
+(159, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-07 03:49:30'),
+(160, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-07 06:57:38'),
+(161, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-07 11:12:25');
 
 --
 -- Indexes for dumped tables
@@ -1227,8 +1235,8 @@ ALTER TABLE `customers`
 --
 ALTER TABLE `customer_addresses`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `customer_id` (`customer_id`),
-  ADD KEY `is_default` (`is_default`),
+  ADD KEY `idx_customer_id` (`customer_id`),
+  ADD KEY `idx_is_default` (`is_default`),
   ADD KEY `idx_customer_default` (`customer_id`,`is_default`);
 
 --
@@ -1746,7 +1754,7 @@ ALTER TABLE `texture_allowed_parts`
 -- AUTO_INCREMENT for table `user_logs`
 --
 ALTER TABLE `user_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=154;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=162;
 
 --
 -- Constraints for dumped tables
@@ -1772,12 +1780,6 @@ ALTER TABLE `cart_items`
 --
 ALTER TABLE `color_allowed_parts`
   ADD CONSTRAINT `fk_color_allowed_parts_color` FOREIGN KEY (`color_id`) REFERENCES `colors` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `customer_addresses`
---
-ALTER TABLE `customer_addresses`
-  ADD CONSTRAINT `customer_addresses_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `customizations`
