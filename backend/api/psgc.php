@@ -5,17 +5,17 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 
-$path = $_GET['path'] ?? '';
+$path = $_GET['endpoint'] ?? '';
 $path = ltrim($path, '/'); // sanitize
 $qs   = $_SERVER['QUERY_STRING'] ?? '';
 
 $base = 'https://psgc.cloud/api/';
 $url  = $base . $path;
 
-// keep other query params (except "path")
+// keep other query params (except "endpoint")
 if ($qs) {
   parse_str($qs, $q);
-  unset($q['path']);
+  unset($q['endpoint']);
   if (!empty($q)) {
     $url .= (strpos($url, '?') === false ? '?' : '&') . http_build_query($q);
   }
