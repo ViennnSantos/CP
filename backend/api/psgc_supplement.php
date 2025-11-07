@@ -92,7 +92,9 @@ function get_supplement($endpoint) {
 
     // Cavite province codes: 042100000 (v1), 043400000 (v2), or similar variations
 
-    if (preg_match('#^provinces/(042[0-9]{6}|043[0-9]{6})/cities$#', $endpoint)) {
+    // Supports both /cities and /cities-municipalities endpoints
+
+    if (preg_match('#^provinces/(042[0-9]{6}|043[0-9]{6})/(cities|cities-municipalities)$#', $endpoint)) {
 
         return $CAVITE_CITIES;
 

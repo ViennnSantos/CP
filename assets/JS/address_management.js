@@ -143,7 +143,7 @@ function setupAddressModal() {
                 return;
             }
 
-            const response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities`);
+            const response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
             const cities = await response.json();
 
             // Cache the cities
@@ -618,9 +618,25 @@ async function performDelete(addressId) {
             method: 'POST',
             body: formData,
             credentials: 'include'
-        });
 
-        const data = await response.json();
+        });
+         if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            throw new Error('Empty response from server');
+        }
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (jsonError) {
+            console.error('Invalid JSON response:', text);
+            throw new Error('Invalid response from server');
+        }
 
         if (!data.success) {
             throw new Error(data.message || 'Failed to delete address');
@@ -696,23 +712,37 @@ async function setDefaultAddress(addressId) {
             credentials: 'include'
         });
 
-        const data = await response.json();
+        // Check if response is ok and has content
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Check if response has content before parsing JSON
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+            throw new Error('Empty response from server');
+        }
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (jsonError) {
+            console.error('Invalid JSON response:', text);
+            throw new Error('Invalid response from server');
+        }
 
         if (!data.success) {
             throw new Error(data.message || 'Failed to set default address');
         }
 
+        // Show success modal
+        showSuccessModal('Default address updated successfully!');
+
         // Reload addresses
         loadAddresses();
-
-        // Show success message
-        if (typeof showMessage === 'function') {
-            showMessage('Default address updated', 'success');
-        }
-
     } catch (error) {
         console.error('Failed to set default address:', error);
-        alert('Failed to set default address: ' + error.message);
+        showErrorModal('Failed to set default address: ' + error.message);
     }
 }
 
