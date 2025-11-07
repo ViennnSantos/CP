@@ -1460,14 +1460,12 @@ $CSRF = $_SESSION['csrf_token'];
         document.getElementById('phoneLocal')?.addEventListener('input', e => {
             e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
         });
-        // Sync phone inputs in address form
+    // Sync phone inputs in address form
         document.getElementById('addressPhoneLocal')?.addEventListener('input', e => {
             e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
             document.getElementById('addressPhone').value = '+63' + e.target.value;
         });
     </script>
-    <!-- Address Management Script -->
-    <script src="/RADS-TOOLING/assets/JS/address_management.js"></script>
 
     <script>
         /***** BACK BUTTON FUNCTIONALITY *****/
@@ -1509,6 +1507,8 @@ $CSRF = $_SESSION['csrf_token'];
         });
 
     </script>
+    <script src="/RADS-TOOLING/assets/JS/address_management.js"></script>
+
 </body>
 
 </html>
