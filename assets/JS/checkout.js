@@ -441,31 +441,18 @@
     // Clear all form fields
     const form = $('#deliveryForm');
     if (form) {
-
       form.reset();
 
- 
-
       // Remove read-only/disabled attributes from all fields
-
       const inputs = form.querySelectorAll('input:not([type="hidden"])');
-
       inputs.forEach(input => {
-
         input.readOnly = false;
-
       });
-
- 
 
       const selects = form.querySelectorAll('select');
-
       selects.forEach(select => {
-
         select.disabled = false;
-
       });
-
     }
   };
 

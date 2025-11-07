@@ -336,7 +336,8 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
         <div class="form-group">
           <label style="display: flex; justify-content: space-between; align-items: center;">
             <span>My Saved Addresses</span>
-            <button type="button" class="btn-link" onclick="showNewAddressForm()" style="font-size: 14px; color: #2f5b88; background: none; border: none; cursor: pointer; text-decoration: underline;">
+            <button type="button" class="btn-link" onclick="window.location.href='/RADS-TOOLING/customer/profile.php#address'" 
+            style="font-size: 14px; color: #2f5b88; background: none; border: none; cursor: pointer; text-decoration: underline;">
               + Add New Address
             </button>
           </label>
