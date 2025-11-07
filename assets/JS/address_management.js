@@ -92,14 +92,11 @@ function setupAddressModal() {
     // Cancel button
     cancelBtn?.addEventListener('click', () => closeModal(modal));
 
-    // Close on backdrop click
-    modal?.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal(modal);
-        }
-    });
-
-    // Close on Escape key
+    // X close button
+    const closeBtn = document.getElementById('addressModalCloseBtn');
+    closeBtn?.addEventListener('click', () => closeModal(modal));
+    // Close on Escape key (optional)
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeModal(modal);

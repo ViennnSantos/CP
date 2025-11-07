@@ -1149,7 +1149,10 @@ $CSRF = $_SESSION['csrf_token'];
 <!-- MODAL: Add/Edit Address with PSGC -->
     <div id="addressFormModal" class="modal hidden">
         <div class="modal-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-            <h3 id="addressModalTitle">Add New Address</h3>
+            <div class="modal-card-header">
+                <h3 id="addressModalTitle">Add New Address</h3>
+                <button type="button" class="modal-close-btn" id="addressModalCloseBtn" aria-label="Close">&times;</button>
+            </div>
             <form id="addressManageForm">
                 <input type="hidden" id="addressEditId">
  

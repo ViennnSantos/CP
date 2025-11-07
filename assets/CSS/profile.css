@@ -622,6 +622,52 @@ textarea {
 .modal-card h3 {
     margin: 0 0 6px
 }
+.modal-card-header {
+
+    position: relative;
+
+    margin-bottom: 15px;
+
+    padding-bottom: 10px;
+
+    border-bottom: 1px solid #e5e7eb;
+
+}
+
+.modal-card-header h3 {
+    margin: 0;
+    padding-right: 35px;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    line-height: 1;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, background-color 0.2s;
+    border-radius: 6px;
+}
+
+.modal-close-btn:hover {
+    color: #23486A;
+    background-color: #f3f4f6;
+}
+
+.modal-close-btn:focus {
+    outline: 2px solid #23486A;
+    outline-offset: 2px;
+}
 
 .modal-card .muted {
     color: #6b7280;
