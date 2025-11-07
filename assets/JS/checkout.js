@@ -128,6 +128,18 @@
 
     } catch (error) {
       console.error('Failed to load saved addresses:', error);
+      const defaultAddr = data.addresses.find(addr => addr.is_default == 1);
+
+      if (defaultAddr) {
+        // Set select value to default address
+        select.value = defaultAddr.id;
+
+        // Trigger change event to auto-fill form
+        setTimeout(() => {
+          fillDeliveryForm(defaultAddr);
+          console.log('✅ Default address auto-filled in delivery form');
+        }, 500);
+      }
       if (container) container.style.display = 'none';
     }
   }
@@ -544,11 +556,11 @@
     // ✅ FETCH PROVINCES (with NCR)
     async function fetchProvinces() {
       // Try local API first
-      let j = await getJSON('/RADS-TOOLING/backend/api/psgc.php?action=provinces');
+       let j = await getJSON('/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces');
       if (Array.isArray(j) && j.length) {
-        const filtered = j.map(x => x.name || x).filter(name => 
-          ALLOWED_PROVINCES.some(allowed => 
-            name.toLowerCase().includes(allowed.toLowerCase()) || 
+        const filtered = j.map(x => x.name || x).filter(name =>
+          ALLOWED_PROVINCES.some(allowed =>
+            name.toLowerCase().includes(allowed.toLowerCase()) ||
             allowed.toLowerCase().includes(name.toLowerCase())
           )
         );
@@ -558,9 +570,9 @@
       // Try cloud API
       j = await getJSON('https://psgc.cloud/api/provinces');
       if (Array.isArray(j) && j.length) {
-        const filtered = j.map(x => x.name).filter(name => 
-          ALLOWED_PROVINCES.some(allowed => 
-            name.toLowerCase().includes(allowed.toLowerCase()) || 
+        const filtered = j.map(x => x.name).filter(name =>
+          ALLOWED_PROVINCES.some(allowed =>
+            name.toLowerCase().includes(allowed.toLowerCase()) ||
             allowed.toLowerCase().includes(name.toLowerCase())
           )
         );
@@ -593,9 +605,8 @@
       }
 
       // Try local API
-      let j = await getJSON('/RADS-TOOLING/backend/api/psgc.php?action=cities&province=' + encodeURIComponent(provinceName));
-      if (Array.isArray(j) && j.length) return j.map(x => x.name || x);
-
+      // Try local API (FIXED: cities endpoint no longer supported, use cloud API)
+      // Skip local API for cities as it requires province code, not name
       // Try cloud API
       const provList = await getJSON('https://psgc.cloud/api/provinces');
       if (Array.isArray(provList) && provList.length) {
@@ -611,8 +622,7 @@
 
     // ✅ FETCH BARANGAYS
     async function fetchBarangays(cityName, provinceName) {
-      let j = await getJSON('/RADS-TOOLING/backend/api/psgc.php?action=barangays&city=' + encodeURIComponent(cityName));
-      if (Array.isArray(j) && j.length) return j.map(x => x.name || x);
+      // Skip local API for barangays as it requires city code, not name
 
       const norm = s => (s || '').toLowerCase().trim();
 
