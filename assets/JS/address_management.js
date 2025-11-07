@@ -3,15 +3,20 @@
  * Handles CRUD operations for customer addresses with PSGC support
  */
 
-// Use existing API_BASE and CSRF_TOKEN from profile.php if available
+// ✅ Use API_BASE and CSRF_TOKEN from profile.php (declared globally)
+// No need to redeclare - they are already available in global scope
+// If running standalone (testing), manually set window.API_BASE before loading this script
 
-// Otherwise, declare them here for standalone use
+// Safety check - ensure globals exist
 if (typeof API_BASE === 'undefined') {
-    var API_BASE = '/RADS-TOOLING/backend/api';
+    console.error('❌ API_BASE not found. Make sure profile.php declares it before loading this script.');
+    // Fallback (for development/testing only)
+    window.API_BASE = '/RADS-TOOLING/backend/api';
 }
 if (typeof CSRF_TOKEN === 'undefined') {
-    var CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value ||
-        (typeof CSRF !== 'undefined' ? CSRF : '');
+    console.error('❌ CSRF_TOKEN not found. Make sure profile.php declares it before loading this script.');
+    // Fallback
+    window.CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value || '';
 }
 
 // PSGC Data Cache
