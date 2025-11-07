@@ -132,6 +132,7 @@ function e($val)
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/Homepage.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-widget.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product.css">
+    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product-ux-enhanced.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/checkout_modal.css">
 
@@ -542,8 +543,46 @@ function e($val)
     </div>
 
 
-    <!-- Image Modal -->
-    <div id="imageModal" class="image-modal" aria-hidden="true" role="dialog"><img id="modalImage" class="modal-content-img" alt="Enlarged image"></div>
+    <!-- Image Modal with Navigation -->
+    <div id="imageModal" class="image-modal" aria-hidden="true" role="dialog">
+        <button class="image-modal-close" aria-label="Close image gallery (Esc)" data-modal-close>
+            <span class="material-symbols-rounded">close</span>
+        </button>
+
+        <div class="image-modal-content">
+            <!-- Previous/Next Navigation Arrows -->
+            <?php if (count($productImages) > 1): ?>
+            <button class="modal-nav-btn modal-nav-prev" aria-label="Previous image">
+                <span class="material-symbols-rounded">chevron_left</span>
+            </button>
+            <button class="modal-nav-btn modal-nav-next" aria-label="Next image">
+                <span class="material-symbols-rounded">chevron_right</span>
+            </button>
+            <?php endif; ?>
+
+            <!-- Main Modal Image -->
+            <img id="modalImage" class="modal-content-img" alt="Enlarged image">
+
+            <!-- Image Counter -->
+            <?php if (count($productImages) > 1): ?>
+            <div class="modal-image-counter">
+                <span id="modalImageNum">1</span> / <?= count($productImages) ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- Thumbnail Strip (Optional) -->
+            <?php if (count($productImages) > 1): ?>
+            <div class="modal-thumbnails">
+                <?php foreach ($productImages as $i => $img): ?>
+                    <img src="<?= e($img['url']) ?>"
+                         class="modal-thumb <?= $i === 0 ? 'active' : '' ?>"
+                         data-index="<?= $i ?>"
+                         alt="Thumbnail <?= $i + 1 ?>">
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
 
     <!-- BUY CHOICE MODAL (same structure as products.php) -->
     <div id="buyChoiceModal" class="rt-modal" hidden>
@@ -597,6 +636,8 @@ function e($val)
     <!-- scripts -->
     <script src="/RADS-TOOLING/assets/js/script.js"></script>
     <script src="/RADS-TOOLING/assets/js/cart.js"></script>
+    <script src="/RADS-TOOLING/assets/JS/product-modal.js"></script>
+    <script src="/RADS-TOOLING/assets/JS/product-drag.js"></script>
 
     <script>
         // ===== Quantity control and buy/add handlers =====
