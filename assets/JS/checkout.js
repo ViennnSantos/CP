@@ -118,7 +118,7 @@
       });
 
       // Handle address selection
-      select.addEventListener('change', (e) => {
+      select.addEventListener('change', async (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if (!selectedOption.value) {
           // "Add New Address" selected - clear form and make editable
@@ -127,20 +127,25 @@
         }
 
         const addr = JSON.parse(selectedOption.dataset.address);
-        fillDeliveryForm(addr, true); // true = make fields read-only
+        await fillDeliveryForm(addr, true); // true = make fields read-only
       });
 
       // ✅ AUTO-SELECT DEFAULT ADDRESS
       const defaultAddr = data.addresses.find(addr => addr.is_default == 1);
       if (defaultAddr) {
-        // Set select value to default address
-        select.value = defaultAddr.id;
+        console.log('🔍 Default address found:', defaultAddr.id, defaultAddr.full_name);
 
-        // Trigger change event to auto-fill form (with read-only fields)
-        setTimeout(() => {
-          fillDeliveryForm(defaultAddr, true); // true = make fields read-only
+        // Set select value to default address (ensure string type)
+        select.value = String(defaultAddr.id);
+        console.log('✅ Select value set to:', select.value);
+
+        // Wait a bit for PSGC to be fully ready, then auto-fill
+        setTimeout(async () => {
+          await fillDeliveryForm(defaultAddr, true); // true = make fields read-only
           console.log('✅ Default address auto-filled in delivery form (read-only)');
-        }, 500);
+        }, 1000); // Increased to 1s to ensure PSGC is ready
+      } else {
+        console.log('⚠️ No default address found in:', data.addresses);
       }
 
     } catch (error) {
@@ -149,7 +154,9 @@
     }
   }
 
-  function fillDeliveryForm(addr, isReadOnly = false) {
+  async function fillDeliveryForm(addr, isReadOnly = false) {
+    console.log('📝 Filling delivery form with:', addr.full_name, 'isReadOnly:', isReadOnly);
+
     // Split full name into first and last name
     const nameParts = addr.full_name.trim().split(' ');
     const firstName = nameParts[0] || '';
@@ -190,29 +197,6 @@
     const streetInput = $('input[name="street"]');
     const postalInput = $('input[name="postal"]');
 
-    if (provinceSelect) {
-      provinceSelect.value = addr.province;
-      provinceSelect.disabled = isReadOnly;
-      provinceSelect.dispatchEvent(new Event('change'));
-
-      // Wait for cities to load, then set city
-      setTimeout(() => {
-        if (citySelect) {
-          citySelect.value = addr.city_municipality;
-          citySelect.disabled = isReadOnly;
-          citySelect.dispatchEvent(new Event('change'));
-
-          // Wait for barangays to load, then set barangay
-          setTimeout(() => {
-            if (barangaySelect) {
-              barangaySelect.value = addr.barangay;
-              barangaySelect.disabled = isReadOnly;
-            }
-          }, 500);
-        }
-      }, 500);
-    }
-
     if (streetInput) {
       streetInput.value = addr.street_block_lot;
       streetInput.readOnly = isReadOnly;
@@ -221,6 +205,60 @@
       postalInput.value = addr.postal_code;
       postalInput.readOnly = isReadOnly;
     }
+
+    // Helper function to wait for dropdown to be populated
+    const waitForDropdown = (selectElement, expectedValue, maxWait = 3000) => {
+      return new Promise((resolve) => {
+        const startTime = Date.now();
+        const checkInterval = setInterval(() => {
+          // Check if the option exists
+          const option = Array.from(selectElement.options).find(opt => opt.value === expectedValue);
+          if (option) {
+            clearInterval(checkInterval);
+            resolve(true);
+          } else if (Date.now() - startTime > maxWait) {
+            clearInterval(checkInterval);
+            console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
+            resolve(false);
+          }
+        }, 100); // Check every 100ms
+      });
+    };
+
+    // Fill province and trigger cascading load
+    if (provinceSelect && addr.province) {
+      console.log('🔄 Setting province:', addr.province);
+      provinceSelect.value = addr.province;
+      provinceSelect.disabled = isReadOnly;
+      provinceSelect.dispatchEvent(new Event('change'));
+
+      // Wait for cities to load
+      if (citySelect && addr.city_municipality) {
+        console.log('⏳ Waiting for cities to load...');
+        const cityLoaded = await waitForDropdown(citySelect, addr.city_municipality);
+
+        if (cityLoaded) {
+          console.log('🔄 Setting city:', addr.city_municipality);
+          citySelect.value = addr.city_municipality;
+          citySelect.disabled = isReadOnly;
+          citySelect.dispatchEvent(new Event('change'));
+
+          // Wait for barangays to load
+          if (barangaySelect && addr.barangay) {
+            console.log('⏳ Waiting for barangays to load...');
+            const barangayLoaded = await waitForDropdown(barangaySelect, addr.barangay);
+
+            if (barangayLoaded) {
+              console.log('🔄 Setting barangay:', addr.barangay);
+              barangaySelect.value = addr.barangay;
+              barangaySelect.disabled = isReadOnly;
+            }
+          }
+        }
+      }
+    }
+
+    console.log('✅ Form fill complete');
   }
 
   // Function to clear form and show new address form
@@ -296,7 +334,9 @@
     }
   }
 
-  function fillDeliveryForm(addr, isReadOnly = false) {
+  async function fillDeliveryForm(addr, isReadOnly = false) {
+    console.log('📝 Filling delivery form with:', addr.full_name, 'isReadOnly:', isReadOnly);
+
     // Split full name into first and last name
     const nameParts = addr.full_name.trim().split(' ');
     const firstName = nameParts[0] || '';
@@ -337,29 +377,6 @@
     const streetInput = $('input[name="street"]');
     const postalInput = $('input[name="postal"]');
 
-    if (provinceSelect) {
-      provinceSelect.value = addr.province;
-      provinceSelect.disabled = isReadOnly;
-      provinceSelect.dispatchEvent(new Event('change'));
-
-      // Wait for cities to load, then set city
-      setTimeout(() => {
-        if (citySelect) {
-          citySelect.value = addr.city_municipality;
-          citySelect.disabled = isReadOnly;
-          citySelect.dispatchEvent(new Event('change'));
-
-          // Wait for barangays to load, then set barangay
-          setTimeout(() => {
-            if (barangaySelect) {
-              barangaySelect.value = addr.barangay;
-              barangaySelect.disabled = isReadOnly;
-            }
-          }, 500);
-        }
-      }, 500);
-    }
-
     if (streetInput) {
       streetInput.value = addr.street_block_lot;
       streetInput.readOnly = isReadOnly;
@@ -368,6 +385,60 @@
       postalInput.value = addr.postal_code;
       postalInput.readOnly = isReadOnly;
     }
+
+    // Helper function to wait for dropdown to be populated
+    const waitForDropdown = (selectElement, expectedValue, maxWait = 3000) => {
+      return new Promise((resolve) => {
+        const startTime = Date.now();
+        const checkInterval = setInterval(() => {
+          // Check if the option exists
+          const option = Array.from(selectElement.options).find(opt => opt.value === expectedValue);
+          if (option) {
+            clearInterval(checkInterval);
+            resolve(true);
+          } else if (Date.now() - startTime > maxWait) {
+            clearInterval(checkInterval);
+            console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
+            resolve(false);
+          }
+        }, 100); // Check every 100ms
+      });
+    };
+
+    // Fill province and trigger cascading load
+    if (provinceSelect && addr.province) {
+      console.log('🔄 Setting province:', addr.province);
+      provinceSelect.value = addr.province;
+      provinceSelect.disabled = isReadOnly;
+      provinceSelect.dispatchEvent(new Event('change'));
+
+      // Wait for cities to load
+      if (citySelect && addr.city_municipality) {
+        console.log('⏳ Waiting for cities to load...');
+        const cityLoaded = await waitForDropdown(citySelect, addr.city_municipality);
+
+        if (cityLoaded) {
+          console.log('🔄 Setting city:', addr.city_municipality);
+          citySelect.value = addr.city_municipality;
+          citySelect.disabled = isReadOnly;
+          citySelect.dispatchEvent(new Event('change'));
+
+          // Wait for barangays to load
+          if (barangaySelect && addr.barangay) {
+            console.log('⏳ Waiting for barangays to load...');
+            const barangayLoaded = await waitForDropdown(barangaySelect, addr.barangay);
+
+            if (barangayLoaded) {
+              console.log('🔄 Setting barangay:', addr.barangay);
+              barangaySelect.value = addr.barangay;
+              barangaySelect.disabled = isReadOnly;
+            }
+          }
+        }
+      }
+    }
+
+    console.log('✅ Form fill complete');
   }
 
   // Function to clear form and show new address form
