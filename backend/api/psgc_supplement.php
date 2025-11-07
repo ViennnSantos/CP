@@ -37,14 +37,15 @@ $CAVITE_CITIES = [
 /**
  * Get supplemental data for a given endpoint
  *
- * @param string $endpoint The PSGC endpoint (e.g., "provinces/043400000/cities")
+ * @param string $endpoint The PSGC endpoint (e.g., "provinces/042100000/cities")
  * @return array|null Supplemental data or null if no supplement exists
  */
 function get_supplement($endpoint) {
     global $CAVITE_CITIES;
 
-    // Match Cavite cities endpoint
-    if (preg_match('#^provinces/0434\d+/cities$#', $endpoint)) {
+    // Match Cavite cities endpoint (flexible pattern for different PSGC versions)
+    // Cavite province codes: 042100000 (v1), 043400000 (v2), or similar variations
+    if (preg_match('#^provinces/(042[0-9]{6}|043[0-9]{6})/cities$#', $endpoint)) {
         return $CAVITE_CITIES;
     }
 
