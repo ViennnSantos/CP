@@ -27,6 +27,19 @@
   --rt-transition-slow: 250ms ease;
 }
 
+/* ==================== OVERRIDES FOR OLD CSS ==================== */
+
+/* Override old product.css that limits description height */
+.rt-desc {
+  height: auto !important;
+  overflow: visible !important;
+}
+
+/* Only truncate descriptions on CARDS, not on detail pages */
+.rt-card .rt-desc {
+  overflow: hidden !important;
+}
+
 /* ==================== PRODUCT GRID (LIST VIEW) ==================== */
 
 .product-grid,
@@ -78,12 +91,12 @@
 .product-image,
 .rt-imgwrap {
   position: relative;
-  height: 220px;
+  height: 200px; /* Reduced from 220px to give more space for description */
   background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
+  padding: 16px;
   overflow: hidden;
 }
 
@@ -107,10 +120,10 @@
 /* Content section */
 .product-content,
 .rt-content {
-  padding: 14px 18px;
+  padding: 16px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
 }
 
@@ -128,19 +141,22 @@
   white-space: nowrap;
 }
 
-/* Short description */
-.product-short-desc,
-.rt-desc {
+/* Short description (CARD VIEW ONLY - show 3-4 lines max) */
+.rt-card .rt-desc,
+.product-card .product-short-desc {
   color: var(--rt-text-muted);
   font-size: 13px;
-  line-height: 1.5;
+  line-height: 1.6;
   margin: 0;
-  /* Limit to 2-3 lines */
+  /* Limit to 4 lines on cards - more readable */
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: auto !important; /* Override old product.css height:30px */
+  max-height: 6.4em; /* 4 lines × 1.6 line-height = 6.4em */
+  min-height: 3.2em; /* Ensure at least 2 lines of space */
 }
 
 /* Price */
@@ -373,8 +389,10 @@
   margin-top: 8px;
 }
 
-/* Full description box */
-.product-description-box {
+/* Full description box (DETAIL PAGE - NO TRUNCATION) */
+.product-description-box,
+.product-detail .product-description,
+.product-detail-container .product-description {
   background: #fff;
   padding: 18px;
   border-radius: 12px;
@@ -382,9 +400,16 @@
   color: #495266;
   line-height: 1.7;
   margin-top: 4px;
+  font-size: 14px;
   /* NO truncation - show full description */
   white-space: pre-wrap;
   word-wrap: break-word;
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: unset !important;
 }
 
 /* ==================== IMAGE MODAL ==================== */
