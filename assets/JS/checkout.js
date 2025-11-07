@@ -78,8 +78,8 @@
       modal.remove();
     });
   }
- // ===== SAVED ADDRESSES FUNCTIONALITY =====
 
+  // ===== SAVED ADDRESSES FUNCTIONALITY =====
   async function loadSavedAddresses() {
     const container = $('#savedAddressesContainer');
     const select = $('#savedAddressSelect');
@@ -157,7 +157,7 @@
       console.log(`✅ Added ${data.addresses.length} address options to dropdown`);
 
       // Handle address selection (only add listener once)
-      select.removeEventListener('change', handleAddressChange); // Remove old listeners
+      select.removeEventListener('change', handleAddressChange);
       select.addEventListener('change', handleAddressChange);
 
       async function handleAddressChange(e) {
@@ -188,7 +188,7 @@
           console.log('🚀 Starting auto-fill for default address...');
           await fillDeliveryForm(defaultAddr, true); // true = make fields read-only
           console.log('✅ Default address auto-filled in delivery form (read-only)');
-        }, 1000); // Increased to 1s to ensure PSGC is ready
+        }, 1000);
       } else {
         console.log('⚠️ No default address found - user must select manually');
       }
@@ -266,7 +266,7 @@
             console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
             resolve(false);
           }
-        }, 100); // Check every 100ms
+        }, 100);
       });
     };
 
@@ -328,10 +328,11 @@
       });
     }
   };
-// ===== AUTO-FILL PICKUP FORM FROM PROFILE =====
+
+  // ===== AUTO-FILL PICKUP FORM FROM PROFILE =====
   async function autoFillPickupForm() {
     const pickupForm = $('#pickupForm');
-    if (!pickupForm) return; // Not on pickup page
+    if (!pickupForm) return;
 
     try {
       const response = await fetch('/RADS-TOOLING/backend/api/customer_profile.php', {
@@ -344,6 +345,7 @@
         console.log('No customer data available for auto-fill');
         return;
       }
+
       const customer = data.customer;
 
       // Split full name into first and last name
@@ -368,11 +370,13 @@
           phoneLocalInput.dispatchEvent(new Event('input'));
         }
       }
+
       // Fill email
       if (customer.email) {
         const emailInput = pickupForm.querySelector('input[name="email"]');
         if (emailInput && !emailInput.value) emailInput.value = customer.email;
       }
+
       console.log('✅ Pickup form auto-filled from customer profile');
     } catch (error) {
       console.error('Failed to auto-fill pickup form:', error);
@@ -431,11 +435,9 @@
 
     // ✅ FIXED: NCR + CALABARZON provinces
     const ALLOWED_PROVINCES = [
-      // NCR variations
       'National Capital Region',
       'Metro Manila',
       'NCR',
-      // Calabarzon provinces
       'Cavite',
       'Laguna',
       'Batangas',
@@ -502,7 +504,6 @@
 
     // ✅ FETCH PROVINCES (with NCR)
     async function fetchProvinces() {
-      // Try local API first (FIXED: use endpoint parameter)
       let j = await getJSON('/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces');
       if (Array.isArray(j) && j.length) {
         const filtered = j.map(x => x.name || x).filter(name =>
@@ -514,7 +515,6 @@
         if (filtered.length) return filtered;
       }
 
-      // Try cloud API
       j = await getJSON('https://psgc.cloud/api/provinces');
       if (Array.isArray(j) && j.length) {
         const filtered = j.map(x => x.name).filter(name =>
@@ -526,20 +526,11 @@
         if (filtered.length) return filtered;
       }
 
-      // ✅ FALLBACK: Return hardcoded list with NCR
-      return [
-        'Metro Manila',
-        'Cavite',
-        'Laguna',
-        'Batangas',
-        'Rizal',
-        'Quezon'
-      ];
+      return ['Metro Manila', 'Cavite', 'Laguna', 'Batangas', 'Rizal', 'Quezon'];
     }
 
     // ✅ FETCH CITIES (with NCR special handling)
     async function fetchCities(provinceName) {
-      // ✅ SPECIAL HANDLING: NCR cities
       const isNCR = provinceName && (
         provinceName.toLowerCase().includes('ncr') ||
         provinceName.toLowerCase().includes('metro manila') ||
@@ -551,10 +542,6 @@
         return NCR_CITIES;
       }
 
-      // Try local API (FIXED: cities endpoint no longer supported, use cloud API)
-      // Skip local API for cities as it requires province code, not name
-
-      // Try cloud API
       const provList = await getJSON('https://psgc.cloud/api/provinces');
       if (Array.isArray(provList) && provList.length) {
         const found = provList.find(p => (p.name || '').toLowerCase() === (provinceName || '').toLowerCase());
@@ -569,15 +556,13 @@
 
     // ✅ FETCH BARANGAYS
     async function fetchBarangays(cityName, provinceName) {
-      // Skip local API for barangays as it requires city code, not name
-
       const norm = s => (s || '').toLowerCase().trim();
 
       let cityData = await getJSON('https://psgc.cloud/api/cities');
       if (Array.isArray(cityData)) {
         let hit = cityData.find(x => norm(x.name) === norm(cityName));
         if (hit && hit.code) {
-          j = await getJSON(`https://psgc.cloud/api/cities/${hit.code}/barangays`);
+          let j = await getJSON(`https://psgc.cloud/api/cities/${hit.code}/barangays`);
           if (Array.isArray(j) && j.length) return j.map(x => x.name).filter(Boolean);
         }
       }
@@ -586,7 +571,7 @@
       if (Array.isArray(munData)) {
         let hit = munData.find(x => norm(x.name) === norm(cityName));
         if (hit && hit.code) {
-          j = await getJSON(`https://psgc.cloud/api/municipalities/${hit.code}/barangays`);
+          let j = await getJSON(`https://psgc.cloud/api/municipalities/${hit.code}/barangays`);
           if (Array.isArray(j) && j.length) return j.map(x => x.name).filter(Boolean);
         }
       }
@@ -597,7 +582,7 @@
     // ✅ BOOTSTRAP PROVINCES
     console.log('🔄 Loading PSGC data...');
     const provinces = await fetchProvinces();
-    
+
     if (!provinces.length) {
       console.warn('⚠️ No provinces loaded, showing text inputs');
       showText('province', true);
@@ -724,7 +709,6 @@
     const btnBuy = $('#inlineBuyBtn');
     if (!btnBuy) return;
 
-    // ✅ FIXED: Payment method selection with visual feedback
     $$('[data-pay]').forEach(btn => {
       btn.addEventListener('click', () => {
         $$('[data-pay]').forEach(b => b.classList.remove('is-active'));
@@ -735,7 +719,6 @@
       });
     });
 
-    // ✅ FIXED: Deposit selection with visual feedback
     $$('[data-dep]').forEach(btn => {
       btn.addEventListener('click', () => {
         $$('[data-dep]').forEach(b => b.classList.remove('is-active'));
@@ -757,7 +740,6 @@
       console.log('💰 Deposit selection opened');
     });
 
-    // ✅ FIXED: Order creation with proper payload
     $('#btnPayNow')?.addEventListener('click', async () => {
       const method = $('#paymentMethod')?.value;
       const dep = parseInt($('#depositRate')?.value || '0', 10);
@@ -766,17 +748,15 @@
         showModalAlert('Selection Required', 'Please select both payment method and deposit amount.', 'warning');
         return;
       }
-      
+
       PAYMENT_METHOD = method;
 
       const orderData = window.RT_ORDER || {};
 
-      // ✅ STEP 1: Create order
       if (!ORDER_ID) {
         try {
           const url = `${location.origin}/RADS-TOOLING/backend/api/order_create.php`;
-          
-          // ✅ FIXED: Proper payload structure matching backend expectations
+
           const payload = {
             pid: orderData.pid || 0,
             qty: orderData.qty || 1,
@@ -817,8 +797,8 @@
           }
 
           let result;
-          try { 
-            result = JSON.parse(raw1); 
+          try {
+            result = JSON.parse(raw1);
           } catch {
             showModalAlert('Invalid Response', 'Server returned invalid data. Please contact support.', 'error');
             return;
@@ -847,7 +827,6 @@
         }
       }
 
-      // ✅ STEP 2: Save payment decision
       try {
         const url = `${location.origin}/RADS-TOOLING/backend/api/payment_decision.php`;
         const r2 = await fetch(url, {
@@ -860,32 +839,31 @@
           credentials: 'same-origin',
           body: JSON.stringify({ order_id: ORDER_ID, method: method, deposit_rate: dep })
         });
-        
+
         const raw2 = await r2.text();
         console.log('📥 Payment decision response:', r2.status, raw2);
-        
+
         if (!r2.ok) {
           showModalAlert('Payment Setup Error', `Could not setup payment terms (Status ${r2.status}).`, 'error');
           return;
         }
-        
+
         const result2 = JSON.parse(raw2);
 
         if (!result2 || !result2.success) {
           showModalAlert('Payment Failed', result2?.message || 'Could not set payment terms.', 'error');
           return;
         }
-        
+
         AMOUNT_DUE = result2.data.amount_due || 0;
         console.log('✅ Payment decision saved. Amount due:', AMOUNT_DUE);
-        
+
       } catch (err) {
         console.error('❌ Payment decision error:', err);
         showModalAlert('Network Error', 'Could not set payment terms.', 'error');
         return;
       }
 
-      // ✅ STEP 3: Fetch QR code
       try {
         const url = `${location.origin}/RADS-TOOLING/backend/api/content_mgmt.php`;
         const r3 = await fetch(url, {
@@ -898,10 +876,10 @@
           credentials: 'same-origin',
           body: 'action=get_payment_qr'
         });
-        
+
         const raw3 = await r3.text();
         console.log('📥 QR fetch response:', r3.status, raw3);
-        
+
         let result3;
         try { result3 = JSON.parse(raw3); } catch { result3 = null; }
 
@@ -909,16 +887,16 @@
         if (qrBox) {
           if (result3 && result3.success && result3.data) {
             const qrData = method === 'gcash' ? result3.data.gcash : result3.data.bpi;
-            
+
             if (qrData && qrData.image_path) {
               const imageUrl = `/RADS-TOOLING/${qrData.image_path}`;
               console.log(`✅ Displaying ${method.toUpperCase()} QR:`, imageUrl);
-              
+
               qrBox.innerHTML = `
-                <img 
-                  src="${imageUrl}?v=${Date.now()}" 
-                  alt="${method.toUpperCase()} QR" 
-                  style="width:100%;height:100%;object-fit:contain;cursor:pointer;padding:8px;" 
+                <img
+                  src="${imageUrl}?v=${Date.now()}"
+                  alt="${method.toUpperCase()} QR"
+                  style="width:100%;height:100%;object-fit:contain;cursor:pointer;padding:8px;"
                   onclick="window.openQrZoom('${imageUrl}')"
                   onerror="this.parentElement.innerHTML='<span style=\\'color:#e74c3c;\\'>❌ Failed to load QR</span>'"
                 >`;
@@ -948,7 +926,6 @@
       console.log('📝 Verification form opened');
     });
 
-    // ✅ FIXED: Verify payment with validation
     $('#btnVerify')?.addEventListener('click', async () => {
       const name = $('#vpName');
       const num = $('#vpNum');
@@ -971,36 +948,31 @@
 
       const accountNum = num.value.trim();
       const refNum = ref.value.trim();
-      
-     // Validate account number (digits only)
+
       if (!/^\d+$/.test(accountNum)) {
         showModalAlert('Invalid Account Number', 'Account number must contain only digits.', 'error');
         num.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate GCash account number (max 11 digits)
-       if (PAYMENT_METHOD === 'gcash' && accountNum.length > 11) {
+      if (PAYMENT_METHOD === 'gcash' && accountNum.length > 11) {
         showModalAlert('Invalid GCash Account', 'GCash account number must be maximum 11 digits.', 'error');
         num.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate reference number (digits only, flexible length)
       if (!/^\d+$/.test(refNum)) {
         showModalAlert('Invalid Reference Number', 'Reference number must contain only digits.', 'error');
         ref.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate reference number length (reasonable limit)
       if (refNum.length > 30) {
         showModalAlert('Invalid Reference Number', 'Reference number too long (max 30 digits).', 'error');
         ref.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate amount paid (must EXACTLY match the expected amount)
       const amountPaid = parseFloat(amt.value);
       const expectedAmount = AMOUNT_DUE;
 
@@ -1014,10 +986,8 @@
         return;
       }
 
-      // Show T&C modal instead of directly submitting
       showStep('#termsModal');
 
-      // Store form data for later submission
       window.VERIFICATION_DATA = {
         account_name: name.value,
         account_number: num.value,
@@ -1029,7 +999,6 @@
       console.log('✅ Verification data validated, showing T&C modal');
     });
 
-    // Handle T&C checkbox
     const termsCheckbox = $('#acceptTermsCheckbox');
     const btnAcceptTerms = $('#btnAcceptTerms');
 
@@ -1046,7 +1015,6 @@
       });
     }
 
-    // Handle final payment submission after T&C acceptance
     btnAcceptTerms?.addEventListener('click', async () => {
       const verData = window.VERIFICATION_DATA;
       if (!verData) {
@@ -1063,12 +1031,11 @@
       form.append('reference_number', verData.reference_number);
       form.append('amount_paid', verData.amount_paid);
       form.append('screenshot', verData.screenshot);
-      form.append('terms_accepted', '1'); // Flag that T&C was accepted
+      form.append('terms_accepted', '1');
 
       try {
         console.log('📤 Submitting payment verification with T&C acceptance...');
 
-        // Disable button to prevent double submission
         btnAcceptTerms.disabled = true;
         btnAcceptTerms.textContent = 'Submitting...';
 
@@ -1077,13 +1044,12 @@
           body: form,
           credentials: 'same-origin'
         });
-        
+
         const result = await r.json();
         console.log('📥 Verification response:', result);
 
         if (!result || !result.success) {
           showModalAlert('Verification Failed', result?.message || 'Payment verification failed.', 'error');
-          // Re-enable button on error
           btnAcceptTerms.disabled = false;
           btnAcceptTerms.textContent = 'Accept & Submit Payment';
           return;
@@ -1094,7 +1060,6 @@
 
         setTimeout(() => {
           showStep('#finalNotice');
-          // Reset T&C checkbox for next time
           if (termsCheckbox) termsCheckbox.checked = false;
           btnAcceptTerms.disabled = true;
           btnAcceptTerms.textContent = 'Accept & Submit Payment';
@@ -1103,7 +1068,6 @@
       } catch (err) {
         console.error('❌ Payment submit error:', err);
         showModalAlert('Network Error', 'Could not submit payment verification.', 'error');
-        // Re-enable button on error
         btnAcceptTerms.disabled = false;
         btnAcceptTerms.textContent = 'Accept & Submit Payment';
       }
@@ -1145,30 +1109,30 @@
   window.openQrZoom = function(qrUrl) {
     const modal = $('#qrZoomModal');
     const img = $('#zoomQrImage');
-    
+
     if (!modal || !img) {
       console.warn('⚠️ QR Zoom elements not found');
       return;
     }
-    
+
     img.src = qrUrl;
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
-    
+
     const handleBackdropClick = (e) => {
       if (e.target === modal) {
         window.closeQrZoom();
       }
     };
     modal.addEventListener('click', handleBackdropClick);
-    
+
     console.log('🔍 QR Zoom opened:', qrUrl);
   };
 
   window.closeQrZoom = function() {
     const modal = $('#qrZoomModal');
     if (!modal) return;
-    
+
     modal.classList.remove('show');
     document.body.style.overflow = '';
     console.log('✅ QR Zoom closed');
@@ -1194,10 +1158,10 @@
     console.log('✅ PSGC data loaded');
 
     // Then load saved addresses and autofill (needs PSGC dropdowns ready)
-    await loadSavedAddresses(); // Load saved addresses for delivery auto-fill
+    await loadSavedAddresses();
     console.log('✅ Saved addresses loaded and autofilled');
 
-    autoFillPickupForm(); // Auto-fill pickup form from customer profile
+    autoFillPickupForm();
     wireContinue();
     wireClear();
     wirePayment();
@@ -1205,6 +1169,5 @@
 
     console.log('✅ Checkout.js COMPLETE FIXED VERSION loaded!');
     console.log('✅ Features: NCR support, delivery/pickup auto-fill, active states, better errors, proper payload');
-
   });
 })();
