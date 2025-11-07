@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 04, 2025 at 05:25 AM
+-- Generation Time: Nov 07, 2025 at 12:27 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -163,7 +163,34 @@ CREATE TABLE `customers` (
 
 INSERT INTO `customers` (`id`, `username`, `full_name`, `email`, `profile_image`, `email_verified`, `verification_code`, `verification_expires`, `password_reset_code`, `password_reset_expires`, `phone`, `address`, `password`, `created_at`, `updated_at`) VALUES
 (40, 'capstonk', 'Capstonk Capstoink', 'capstoink@gmail.com', NULL, 1, NULL, NULL, NULL, NULL, '+639856268378', NULL, '$2y$10$I4Ynvygx23QyjzlIpYzMf.KgkcqzW8jARBFigLqAxesJnqjRyQ1Ui', '2025-11-03 04:07:14', '2025-11-03 04:07:38'),
-(41, 'moenpogi21', 'Moen Secapuri', 'moenpogi045@gmail.com', NULL, 1, NULL, NULL, NULL, NULL, '+639937060282', NULL, '$2y$10$VEdXOXrq/DE1GwFg4v/zMeVVVaFjkhZKiJEb/kS0lnTwezu5fFtGi', '2025-11-04 03:59:03', '2025-11-04 03:59:22');
+(41, 'moenpogi21', 'Moen Secapuri', 'moenpogi045@gmail.com', NULL, 1, NULL, NULL, NULL, NULL, '+639937060282', NULL, '$2y$10$VEdXOXrq/DE1GwFg4v/zMeVVVaFjkhZKiJEb/kS0lnTwezu5fFtGi', '2025-11-04 03:59:03', '2025-11-04 03:59:22'),
+(42, 'vimm', 'vien ezekiel santos', 'viensantos98@gmail.com', NULL, 1, NULL, NULL, '501791', '2025-11-05 18:04:32', '+639762284470', NULL, '$2y$10$FTtNheEEXJIZFX6V0CQu8OEmBBQeVqTT8ES56xLn6UFqOpGpo.ngK', '2025-11-04 23:03:54', '2025-11-05 16:54:32');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `customer_addresses`
+--
+
+CREATE TABLE `customer_addresses` (
+  `id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `address_nickname` varchar(50) DEFAULT NULL COMMENT 'Optional nickname (e.g., Home, Office)',
+  `full_name` varchar(100) NOT NULL,
+  `mobile_number` varchar(20) NOT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `province` varchar(100) NOT NULL,
+  `province_code` varchar(20) DEFAULT NULL COMMENT 'PSGC province code',
+  `city_municipality` varchar(100) NOT NULL,
+  `city_code` varchar(20) DEFAULT NULL COMMENT 'PSGC city/municipality code',
+  `barangay` varchar(100) NOT NULL,
+  `barangay_code` varchar(20) DEFAULT NULL COMMENT 'PSGC barangay code',
+  `street_block_lot` text NOT NULL COMMENT 'Complete street address',
+  `postal_code` varchar(10) DEFAULT NULL,
+  `is_default` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -218,12 +245,27 @@ CREATE TABLE `feedback` (
   `customer_id` int(11) NOT NULL,
   `rating` tinyint(4) NOT NULL,
   `comment` text DEFAULT NULL,
+  `image_path` varchar(255) DEFAULT NULL,
+  `image_uploaded_at` datetime DEFAULT NULL,
+  `admin_reply` text DEFAULT NULL,
+  `helpful_count` int(11) DEFAULT 0,
+  `replied_by` int(11) DEFAULT NULL,
+  `replied_at` datetime DEFAULT NULL,
   `status` enum('pending','released') NOT NULL DEFAULT 'released',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `is_released` tinyint(1) NOT NULL DEFAULT 1,
   `released_at` datetime DEFAULT NULL,
-  `deleted` tinyint(1) NOT NULL DEFAULT 0
+  `deleted` tinyint(1) NOT NULL DEFAULT 0,
+  `deleted_by` int(11) DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `feedback`
+--
+
+INSERT INTO `feedback` (`id`, `order_id`, `customer_id`, `rating`, `comment`, `image_path`, `image_uploaded_at`, `admin_reply`, `helpful_count`, `replied_by`, `replied_at`, `status`, `created_at`, `is_released`, `released_at`, `deleted`, `deleted_by`, `deleted_at`) VALUES
+(11, 48, 42, 3, 'Okay sya', NULL, NULL, NULL, 0, NULL, NULL, 'pending', '2025-11-05 14:20:21', 1, NULL, 0, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -299,15 +341,26 @@ CREATE TABLE `orders` (
   `mode` enum('delivery','pickup') NOT NULL DEFAULT 'pickup',
   `subtotal` decimal(12,2) NOT NULL DEFAULT 0.00,
   `vat` decimal(12,2) NOT NULL DEFAULT 0.00,
-  `created_at` timestamp NULL DEFAULT current_timestamp()
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `delivery_address_id` int(11) DEFAULT NULL COMMENT 'Reference to customer_addresses table',
+  `delivery_contact_name` varchar(100) DEFAULT NULL,
+  `delivery_mobile` varchar(20) DEFAULT NULL,
+  `delivery_email` varchar(255) DEFAULT NULL,
+  `delivery_address_full` text DEFAULT NULL COMMENT 'Full address snapshot at order time',
+  `pickup_contact_name` varchar(100) DEFAULT NULL,
+  `pickup_mobile` varchar(20) DEFAULT NULL,
+  `pickup_email` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `orders`
 --
 
-INSERT INTO `orders` (`id`, `order_code`, `customer_id`, `total_amount`, `payment_status`, `is_installment`, `status`, `order_date`, `cancelled_by`, `cancellation_reason`, `cancelled_at`, `received_at`, `received_by_customer`, `is_received`, `customer_received_at`, `mode`, `subtotal`, `vat`, `created_at`) VALUES
-(47, 'RT2511043677', 41, 16180.00, 'Partially Paid', 1, 'Cancelled', '2025-11-04 04:05:18', NULL, NULL, NULL, NULL, 0, 0, NULL, 'delivery', 14000.00, 1680.00, '2025-11-04 04:05:18');
+INSERT INTO `orders` (`id`, `order_code`, `customer_id`, `total_amount`, `payment_status`, `is_installment`, `status`, `order_date`, `cancelled_by`, `cancellation_reason`, `cancelled_at`, `received_at`, `received_by_customer`, `is_received`, `customer_received_at`, `mode`, `subtotal`, `vat`, `created_at`, `delivery_address_id`, `delivery_contact_name`, `delivery_mobile`, `delivery_email`, `delivery_address_full`, `pickup_contact_name`, `pickup_mobile`, `pickup_email`) VALUES
+(47, 'RT2511043677', 41, 16180.00, 'Partially Paid', 1, 'Cancelled', '2025-11-04 04:05:18', NULL, NULL, NULL, NULL, 0, 0, NULL, 'delivery', 14000.00, 1680.00, '2025-11-04 04:05:18', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(48, 'RT2511056333', 42, 16180.00, 'Partially Paid', 1, 'Completed', '2025-11-05 14:18:09', NULL, NULL, NULL, NULL, 0, 0, NULL, 'delivery', 14000.00, 1680.00, '2025-11-05 14:18:09', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(49, 'RT2511050695', 42, 15680.00, 'Pending', 1, 'Pending', '2025-11-05 15:54:15', NULL, NULL, NULL, NULL, 0, 0, NULL, 'pickup', 14000.00, 1680.00, '2025-11-05 15:54:15', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(50, 'RT2511076452', 42, 1378.72, 'Pending', 1, 'Pending', '2025-11-06 21:37:49', NULL, NULL, NULL, NULL, 0, 0, NULL, 'pickup', 1231.00, 147.72, '2025-11-06 21:37:49', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -335,7 +388,10 @@ CREATE TABLE `order_addresses` (
 --
 
 INSERT INTO `order_addresses` (`id`, `order_id`, `type`, `first_name`, `last_name`, `phone`, `email`, `province`, `city`, `barangay`, `street`, `postal`) VALUES
-(47, 47, '', 'Moen', 'Secapuri', '+639937060282', 'moenpogi045@gmail.com', 'Cavite', 'Alfonso', 'Mangas II', 'Blk 4 Lot 47 Phase A Laterraza Subdivision', '4103');
+(47, 47, '', 'Moen', 'Secapuri', '+639937060282', 'moenpogi045@gmail.com', 'Cavite', 'Alfonso', 'Mangas II', 'Blk 4 Lot 47 Phase A Laterraza Subdivision', '4103'),
+(48, 48, '', 'vien ezekiel', 'santos', '+639762284470', '', 'Laguna', 'City of Calamba', 'Barangay 5 ', 'Blk 15 Lot 97', '4117'),
+(49, 49, '', 'vien ezekiel', 'santos', '+639762284470', 'viensantos98@gmail.com', '', '', '', '', ''),
+(50, 50, '', 'vien ezekiel', 'santos', '+639762284470', 'viensantos98@gmail.com', '', '', '', '', '');
 
 -- --------------------------------------------------------
 
@@ -381,7 +437,10 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `item_type`, `product_id`, `cabinet_id`, `customization_id`, `quantity`, `unit_price`, `subtotal`, `name`, `qty`, `line_total`, `image`) VALUES
-(47, 47, 'product', 47, NULL, NULL, 1, 14000.00, 0.00, 'Storage Cabinet', 1, 14000.00, NULL);
+(47, 47, 'product', 47, NULL, NULL, 1, 14000.00, 0.00, 'Storage Cabinet', 1, 14000.00, NULL),
+(48, 48, 'product', 47, NULL, NULL, 1, 14000.00, 0.00, 'Storage Cabinet', 1, 14000.00, NULL),
+(49, 49, 'product', 47, NULL, NULL, 1, 14000.00, 0.00, 'Storage Cabinet', 1, 14000.00, NULL),
+(50, 50, 'product', 48, NULL, NULL, 1, 1231.00, 0.00, 'testing wardrobe cabinets', 1, 1231.00, NULL);
 
 -- --------------------------------------------------------
 
@@ -441,7 +500,10 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `order_id`, `amount_paid`, `payment_method`, `qr_code`, `payment_date`, `verified_by`, `verified_at`, `method`, `deposit_rate`, `amount_due`, `status`, `updated_at`) VALUES
-(45, 47, 8090.00, 'GCash QR', NULL, '2025-11-04 04:05:18', 1, '2025-11-04 04:06:41', 'gcash', 50, 8090.00, 'VERIFIED', '2025-11-04 04:06:41');
+(45, 47, 8090.00, 'GCash QR', NULL, '2025-11-04 04:05:18', 1, '2025-11-04 04:06:41', 'gcash', 50, 8090.00, 'VERIFIED', '2025-11-04 04:06:41'),
+(46, 48, 8090.00, 'GCash QR', NULL, '2025-11-05 14:18:09', 1, '2025-11-05 14:19:04', 'gcash', 50, 8090.00, 'VERIFIED', '2025-11-05 14:19:04'),
+(47, 49, 0.00, 'GCash QR', NULL, '2025-11-05 15:54:15', NULL, NULL, 'gcash', 50, 7840.00, '', '2025-11-05 15:54:15'),
+(48, 50, 0.00, 'GCash QR', NULL, '2025-11-06 21:37:49', NULL, NULL, 'gcash', 50, 689.36, '', '2025-11-06 21:37:49');
 
 -- --------------------------------------------------------
 
@@ -473,7 +535,13 @@ CREATE TABLE `payment_installments` (
 
 INSERT INTO `payment_installments` (`id`, `order_id`, `installment_number`, `amount_due`, `amount_paid`, `due_date`, `status`, `payment_method`, `reference_number`, `screenshot_path`, `verified_by`, `verified_at`, `notes`, `created_at`, `updated_at`) VALUES
 (42, 47, 1, 8090.00, 8090.00, NULL, 'PAID', NULL, NULL, NULL, NULL, '2025-11-04 12:06:41', NULL, '2025-11-04 04:05:19', '2025-11-04 04:06:41'),
-(43, 47, 2, 8090.00, 0.00, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-04 04:05:19', '2025-11-04 04:05:19');
+(43, 47, 2, 8090.00, 0.00, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-04 04:05:19', '2025-11-04 04:05:19'),
+(44, 48, 1, 8090.00, 8090.00, NULL, 'PAID', NULL, NULL, NULL, NULL, '2025-11-05 22:19:04', NULL, '2025-11-05 14:18:09', '2025-11-05 14:19:04'),
+(45, 48, 2, 8090.00, 0.00, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-05 14:18:09', '2025-11-05 14:18:09'),
+(46, 49, 1, 7840.00, 0.00, NULL, 'PENDING', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-05 15:54:15', '2025-11-05 15:54:15'),
+(47, 49, 2, 7840.00, 0.00, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-05 15:54:15', '2025-11-05 15:54:15'),
+(48, 50, 1, 689.36, 0.00, NULL, 'PENDING', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-06 21:37:49', '2025-11-06 21:37:49'),
+(49, 50, 2, 689.36, 0.00, NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, '2025-11-06 21:37:49', '2025-11-06 21:37:49');
 
 -- --------------------------------------------------------
 
@@ -519,15 +587,20 @@ CREATE TABLE `payment_verifications` (
   `rejection_reason` text DEFAULT NULL COMMENT 'Reason for rejecting payment',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `reject_reason` text DEFAULT NULL,
-  `rejected_reason` text DEFAULT NULL
+  `rejected_reason` text DEFAULT NULL,
+  `terms_accepted` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'User accepted T&C before submission',
+  `terms_accepted_at` timestamp NULL DEFAULT NULL COMMENT 'When T&C was accepted'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `payment_verifications`
 --
 
-INSERT INTO `payment_verifications` (`id`, `order_id`, `method`, `account_name`, `account_number`, `reference_number`, `amount_reported`, `screenshot_path`, `status`, `approved_by`, `approved_at`, `rejected_by`, `rejected_at`, `rejection_reason`, `created_at`, `reject_reason`, `rejected_reason`) VALUES
-(21, 47, 'gcash', 'teest', '2', '12121', 8090.00, 'uploads/payments/proof_47_1762229151.jpg', 'APPROVED', 1, '2025-11-04 12:06:41', NULL, NULL, NULL, '2025-11-04 04:05:51', NULL, NULL);
+INSERT INTO `payment_verifications` (`id`, `order_id`, `method`, `account_name`, `account_number`, `reference_number`, `amount_reported`, `screenshot_path`, `status`, `approved_by`, `approved_at`, `rejected_by`, `rejected_at`, `rejection_reason`, `created_at`, `reject_reason`, `rejected_reason`, `terms_accepted`, `terms_accepted_at`) VALUES
+(21, 47, 'gcash', 'teest', '2', '12121', 8090.00, 'uploads/payments/proof_47_1762229151.jpg', 'APPROVED', 1, '2025-11-04 12:06:41', NULL, NULL, NULL, '2025-11-04 04:05:51', NULL, NULL, 0, NULL),
+(22, 48, 'gcash', 'Vien', '1231231231', '12312312', 8090.00, 'uploads/payments/proof_48_1762352312.png', 'APPROVED', 1, '2025-11-05 22:19:04', NULL, NULL, NULL, '2025-11-05 14:18:32', NULL, NULL, 0, NULL),
+(23, 49, 'gcash', 'Vien', '1231231231', '1234567890', 7840.00, 'uploads/payments/proof_49_1762358071.png', 'PENDING', NULL, NULL, NULL, NULL, NULL, '2025-11-05 15:54:31', NULL, NULL, 0, NULL),
+(24, 50, 'gcash', 'test', '1231231231', '1234567890', 689.36, 'uploads/payments/proof_50_1762465537.png', 'PENDING', NULL, NULL, NULL, NULL, NULL, '2025-11-06 21:45:37', NULL, NULL, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -595,7 +668,9 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `type`, `description`, `price`, `stock`, `image`, `model_3d`, `measurement_unit`, `is_customizable`, `created_at`, `created_by`, `status`, `released_at`, `is_archived`, `archived_at`) VALUES
-(47, 'Storage Cabinet', 'Storage Cabinet', 'Elegant storage cabinet', 14000.00, 0, 'uploads/products/store_1762228933_4d1ef4696623.png', 'test_cab_1762228945_7d9d194d5fba.glb', 'cm', 1, '2025-11-03 04:14:18', 1, 'released', '2025-11-03 12:17:18', 0, NULL);
+(47, 'Storage Cabinet', 'Storage Cabinet', 'Elegant storage cabinet', 14000.00, 0, 'uploads/products/ClassicFour-DoorWardrobe_1_1762383840_d1105ce61065.jpg', 'test_cab_1762228945_7d9d194d5fba.glb', 'cm', 1, '2025-11-03 04:14:18', 1, 'released', '2025-11-03 12:17:18', 0, NULL),
+(48, 'testing wardrobe cabinets', 'Kitchen Cabinet', 'dasda', 1231.00, 0, 'uploads/products/IndustrialSmallStorage_1_1762383871_d5f125c80207.jpg', NULL, 'cm', 0, '2025-11-05 19:47:49', 1, 'released', '2025-11-06 05:44:48', 0, NULL),
+(49, 'asdasd', 'Wardrobe', 'asdad', 1800.00, 0, 'uploads/products/IndustrialCabinetStorage_1_1762383895_81719538d9d6.jpg', NULL, 'cm', 0, '2025-11-05 23:05:01', 1, 'draft', NULL, 0, NULL);
 
 -- --------------------------------------------------------
 
@@ -650,6 +725,20 @@ CREATE TABLE `product_images` (
   `is_primary` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_images`
+--
+
+INSERT INTO `product_images` (`image_id`, `product_id`, `image_path`, `display_order`, `is_primary`, `created_at`) VALUES
+(178, 47, 'uploads/products/ClassicFour-DoorWardrobe_1_1762383840_d1105ce61065.jpg', 0, 1, '2025-11-05 23:04:02'),
+(179, 47, 'uploads/products/ClassicFour-DoorWardrobe_3_1762383840_9fbe4c8981e0.jpg', 1, 0, '2025-11-05 23:04:02'),
+(180, 47, 'uploads/products/ClassicFour-DoorWardrobe-2_1762383840_f09c9b78565c.jpg', 2, 0, '2025-11-05 23:04:02'),
+(181, 48, 'uploads/products/IndustrialSmallStorage_1_1762383871_d5f125c80207.jpg', 0, 1, '2025-11-05 23:04:33'),
+(182, 48, 'uploads/products/IndustrialSmallStorage_2_1762383871_ed02925fbfac.jpg', 1, 0, '2025-11-05 23:04:33'),
+(183, 48, 'uploads/products/IndustrialSmallStorage_3_1762383871_0c92223dde88.jpg', 2, 0, '2025-11-05 23:04:33'),
+(184, 49, 'uploads/products/IndustrialCabinetStorage_1_1762383895_81719538d9d6.jpg', 0, 1, '2025-11-05 23:05:01'),
+(185, 49, 'uploads/products/IndustrialCabinetStorage_2_1762383895_4b0ce103a3d4.jpg', 1, 0, '2025-11-05 23:05:01');
 
 --
 -- Triggers `product_images`
@@ -897,6 +986,23 @@ CREATE TABLE `shared_images` (
   `last_used` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `shared_images`
+--
+
+INSERT INTO `shared_images` (`id`, `image_path`, `reference_count`, `first_uploaded`, `last_used`) VALUES
+(94, 'uploads/products/IndustrialSmallStorage_1_1762379054_bf7f4792ef78.jpg', 0, '2025-11-05 21:44:17', '2025-11-05 23:03:52'),
+(95, 'uploads/products/IndustrialSmallStorage_2_1762379054_f8eaf69e0189.jpg', 0, '2025-11-05 21:44:17', '2025-11-05 23:03:54'),
+(96, 'uploads/products/IndustrialSmallStorage_3_1762379054_6542fd4523ba.jpg', 0, '2025-11-05 21:44:17', '2025-11-05 23:03:55'),
+(97, 'uploads/products/ClassicFour-DoorWardrobe_1_1762383840_d1105ce61065.jpg', 1, '2025-11-05 23:04:02', '2025-11-05 23:04:02'),
+(98, 'uploads/products/ClassicFour-DoorWardrobe_3_1762383840_9fbe4c8981e0.jpg', 1, '2025-11-05 23:04:02', '2025-11-05 23:04:02'),
+(99, 'uploads/products/ClassicFour-DoorWardrobe-2_1762383840_f09c9b78565c.jpg', 1, '2025-11-05 23:04:02', '2025-11-05 23:04:02'),
+(100, 'uploads/products/IndustrialSmallStorage_1_1762383871_d5f125c80207.jpg', 1, '2025-11-05 23:04:33', '2025-11-05 23:04:33'),
+(101, 'uploads/products/IndustrialSmallStorage_2_1762383871_ed02925fbfac.jpg', 1, '2025-11-05 23:04:33', '2025-11-05 23:04:33'),
+(102, 'uploads/products/IndustrialSmallStorage_3_1762383871_0c92223dde88.jpg', 1, '2025-11-05 23:04:33', '2025-11-05 23:04:33'),
+(103, 'uploads/products/IndustrialCabinetStorage_1_1762383895_81719538d9d6.jpg', 1, '2025-11-05 23:05:01', '2025-11-05 23:05:01'),
+(104, 'uploads/products/IndustrialCabinetStorage_2_1762383895_4b0ce103a3d4.jpg', 1, '2025-11-05 23:05:01', '2025-11-05 23:05:01');
+
 -- --------------------------------------------------------
 
 --
@@ -998,7 +1104,58 @@ INSERT INTO `user_logs` (`id`, `user_type`, `user_id`, `action`, `details`, `cre
 (99, 'customer', 41, 'logout', 'User logged out: Moen Secapuri', '2025-11-04 04:06:15'),
 (100, '', 1, 'login', 'Staff login (dashboard)', '2025-11-04 04:06:21'),
 (101, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-04 04:07:31'),
-(102, 'customer', 41, 'login', 'Customer login (shop)', '2025-11-04 04:07:36');
+(102, 'customer', 41, 'login', 'Customer login (shop)', '2025-11-04 04:07:36'),
+(103, '', 1, 'login', 'Staff login (dashboard)', '2025-11-04 10:40:16'),
+(104, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-04 14:30:07'),
+(105, '', 1, 'login', 'Staff login (dashboard)', '2025-11-04 23:01:20'),
+(106, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-04 23:03:19'),
+(107, 'customer', 42, 'register', '{\"email\":\"viensantos98@gmail.com\",\"username\":\"vimm\"}', '2025-11-04 23:03:58'),
+(108, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-04 23:04:29'),
+(109, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 14:11:47'),
+(110, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 14:18:51'),
+(111, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 14:18:56'),
+(112, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-05 14:19:45'),
+(113, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 14:19:55'),
+(114, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 14:20:54'),
+(115, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 14:21:00'),
+(116, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 15:54:00'),
+(117, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 15:54:43'),
+(118, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 15:54:49'),
+(119, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 16:38:06'),
+(120, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-05 16:54:14'),
+(121, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 19:21:26'),
+(122, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 19:21:38'),
+(123, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 19:21:48'),
+(124, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-05 19:23:00'),
+(125, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 19:23:22'),
+(126, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-05 19:47:54'),
+(127, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 19:48:04'),
+(128, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 19:48:12'),
+(129, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 19:48:19'),
+(130, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-05 19:48:27'),
+(131, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 19:48:50'),
+(132, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 20:14:12'),
+(133, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 20:14:45'),
+(134, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 20:14:51'),
+(135, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 20:19:23'),
+(136, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 20:21:59'),
+(137, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 20:54:37'),
+(138, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 21:43:57'),
+(139, '', 1, 'logout', 'User logged out: System Owner44', '2025-11-05 21:44:53'),
+(140, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-05 21:45:11'),
+(141, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-05 22:24:50'),
+(142, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 22:25:00'),
+(143, '', 1, 'login', 'Staff login (dashboard)', '2025-11-05 23:03:28'),
+(144, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 10:00:46'),
+(145, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-06 10:01:35'),
+(146, '', 0, 'logout', 'User logged out: Unknown', '2025-11-06 11:17:48'),
+(147, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 14:10:22'),
+(148, 'customer', 42, 'logout', 'User logged out: vien ezekiel santos', '2025-11-06 14:12:03'),
+(149, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 21:04:38'),
+(150, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 21:04:53'),
+(151, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 21:09:33'),
+(152, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 22:36:44'),
+(153, 'customer', 42, 'login', 'Customer login (shop)', '2025-11-06 23:17:18');
 
 --
 -- Indexes for dumped tables
@@ -1066,6 +1223,15 @@ ALTER TABLE `customers`
   ADD KEY `idx_password_reset_code` (`password_reset_code`);
 
 --
+-- Indexes for table `customer_addresses`
+--
+ALTER TABLE `customer_addresses`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `customer_id` (`customer_id`),
+  ADD KEY `is_default` (`is_default`),
+  ADD KEY `idx_customer_default` (`customer_id`,`is_default`);
+
+--
 -- Indexes for table `customizations`
 --
 ALTER TABLE `customizations`
@@ -1088,7 +1254,11 @@ ALTER TABLE `feedback`
   ADD UNIQUE KEY `unique_order_customer` (`order_id`,`customer_id`),
   ADD KEY `idx_feedback_customer` (`customer_id`),
   ADD KEY `idx_feedback_order` (`order_id`),
-  ADD KEY `idx_feedback_status` (`status`);
+  ADD KEY `idx_feedback_status` (`status`),
+  ADD KEY `idx_image_path` (`image_path`),
+  ADD KEY `idx_feedback_image` (`image_path`(50)),
+  ADD KEY `idx_feedback_deleted` (`deleted`),
+  ADD KEY `idx_feedback_released` (`is_released`,`deleted`,`created_at`);
 
 --
 -- Indexes for table `handle_types`
@@ -1119,7 +1289,8 @@ ALTER TABLE `orders`
   ADD UNIQUE KEY `order_code` (`order_code`),
   ADD KEY `idx_customer_id` (`customer_id`),
   ADD KEY `idx_orders_customer_status` (`customer_id`,`status`),
-  ADD KEY `idx_orders_date` (`order_date`);
+  ADD KEY `idx_orders_date` (`order_date`),
+  ADD KEY `delivery_address_id` (`delivery_address_id`);
 
 --
 -- Indexes for table `order_addresses`
@@ -1377,7 +1548,13 @@ ALTER TABLE `color_allowed_parts`
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=42;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
+
+--
+-- AUTO_INCREMENT for table `customer_addresses`
+--
+ALTER TABLE `customer_addresses`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `customizations`
@@ -1395,7 +1572,7 @@ ALTER TABLE `customization_steps`
 -- AUTO_INCREMENT for table `feedback`
 --
 ALTER TABLE `feedback`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `handle_types`
@@ -1419,13 +1596,13 @@ ALTER TABLE `messages`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `order_addresses`
 --
 ALTER TABLE `order_addresses`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `order_completions`
@@ -1437,7 +1614,7 @@ ALTER TABLE `order_completions`
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `order_status_history`
@@ -1455,13 +1632,13 @@ ALTER TABLE `password_resets`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
 
 --
 -- AUTO_INCREMENT for table `payment_installments`
 --
 ALTER TABLE `payment_installments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `payment_qr`
@@ -1473,13 +1650,13 @@ ALTER TABLE `payment_qr`
 -- AUTO_INCREMENT for table `payment_verifications`
 --
 ALTER TABLE `payment_verifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=48;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT for table `product_colors`
@@ -1497,7 +1674,7 @@ ALTER TABLE `product_handles`
 -- AUTO_INCREMENT for table `product_images`
 --
 ALTER TABLE `product_images`
-  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=175;
+  MODIFY `image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=186;
 
 --
 -- AUTO_INCREMENT for table `product_material_map`
@@ -1551,7 +1728,7 @@ ALTER TABLE `rt_faqs`
 -- AUTO_INCREMENT for table `shared_images`
 --
 ALTER TABLE `shared_images`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT for table `textures`
@@ -1569,7 +1746,7 @@ ALTER TABLE `texture_allowed_parts`
 -- AUTO_INCREMENT for table `user_logs`
 --
 ALTER TABLE `user_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=103;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=154;
 
 --
 -- Constraints for dumped tables
@@ -1595,6 +1772,12 @@ ALTER TABLE `cart_items`
 --
 ALTER TABLE `color_allowed_parts`
   ADD CONSTRAINT `fk_color_allowed_parts_color` FOREIGN KEY (`color_id`) REFERENCES `colors` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `customer_addresses`
+--
+ALTER TABLE `customer_addresses`
+  ADD CONSTRAINT `customer_addresses_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `customizations`

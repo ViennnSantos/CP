@@ -3,9 +3,16 @@
  * Handles CRUD operations for customer addresses with PSGC support
  */
 
-const API_BASE = '/RADS-TOOLING/backend/api';
-const CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value ||
-    (typeof CSRF !== 'undefined' ? CSRF : '');
+// Use existing API_BASE and CSRF_TOKEN from profile.php if available
+
+// Otherwise, declare them here for standalone use
+if (typeof API_BASE === 'undefined') {
+    var API_BASE = '/RADS-TOOLING/backend/api';
+}
+if (typeof CSRF_TOKEN === 'undefined') {
+    var CSRF_TOKEN = document.querySelector('input[name="csrf_token"]')?.value ||
+        (typeof CSRF !== 'undefined' ? CSRF : '');
+}
 
 // PSGC Data Cache
 let psgcProvinces = [];
@@ -356,25 +363,36 @@ function showAddressForm() {
     const title = document.getElementById('addressModalTitle');
 
     // Reset form
-    form.reset();
-    document.getElementById('addressEditId').value = '';
-    title.textContent = 'Add New Address';
+     if (form) form.reset();
+
+    const editIdEl = document.getElementById('addressEditId');
+    if (editIdEl) editIdEl.value = '';
+    if (title) title.textContent = 'Add New Address';
+
+ 
 
     // Clear hidden codes
-    document.getElementById('addressProvinceCode').value = '';
-    document.getElementById('addressCityCode').value = '';
-    document.getElementById('addressBarangayCode').value = '';
+    const provCodeEl = document.getElementById('addressProvinceCode');
+    const cityCodeEl = document.getElementById('addressCityCode');
+    const brgyCodeEl = document.getElementById('addressBarangayCode');
+    if (provCodeEl) provCodeEl.value = '';
+    if (cityCodeEl) cityCodeEl.value = '';
+    if (brgyCodeEl) brgyCodeEl.value = '';
 
     // Clear message
-    document.getElementById('addressFormMsg').textContent = '';
-    document.getElementById('addressFormMsg').className = 'msg';
-
-    openModal(modal);
+    const msgEl = document.getElementById('addressFormMsg');
+    if (msgEl) {
+        msgEl.textContent = '';
+        msgEl.className = 'msg';
+    }
+   openModal(modal);
 }
 
-// Expose to global scope for inline onclick handlers
-window.showAddressForm = showAddressForm;
-
+// IMMEDIATELY expose to global scope for inline onclick handlers
+if (typeof window !== 'undefined') {
+    window.showAddressForm = showAddressForm;
+    console.log('✅ showAddressForm exposed to window immediately');
+}
 /**
  * Edit existing address
  */
