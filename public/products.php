@@ -169,6 +169,7 @@ function public_img_url($raw, $checkExists = true)
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/Homepage.css" />
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-widget.css" />
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product.css" />
+    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product-ux-enhanced.css" />
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
     <style>
         /* small helper for consistent product img sizing and selector */
@@ -580,5 +581,6 @@ async function patchProductCardsWithPrimaryImages() {
 }
     </script>
 <script src="/RADS-TOOLING/assets/JS/chat_widget.js"></script>
+<script src="/RADS-TOOLING/assets/JS/product-drag.js"></script>
 </body>
 </html>

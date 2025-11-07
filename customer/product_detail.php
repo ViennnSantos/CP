@@ -132,6 +132,7 @@ function e($val)
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/Homepage.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-widget.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product.css">
+    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product-ux-enhanced.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/checkout_modal.css">
 
@@ -543,7 +544,12 @@ function e($val)
 
 
     <!-- Image Modal -->
-    <div id="imageModal" class="image-modal" aria-hidden="true" role="dialog"><img id="modalImage" class="modal-content-img" alt="Enlarged image"></div>
+    <div id="imageModal" class="image-modal" aria-hidden="true" role="dialog">
+        <button class="image-modal-close" aria-label="Close image gallery (Esc)" data-modal-close>
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        <img id="modalImage" class="modal-content-img" alt="Enlarged image">
+    </div>
 
     <!-- BUY CHOICE MODAL (same structure as products.php) -->
     <div id="buyChoiceModal" class="rt-modal" hidden>
@@ -597,6 +603,8 @@ function e($val)
     <!-- scripts -->
     <script src="/RADS-TOOLING/assets/js/script.js"></script>
     <script src="/RADS-TOOLING/assets/js/cart.js"></script>
+    <script src="/RADS-TOOLING/assets/JS/product-modal.js"></script>
+    <script src="/RADS-TOOLING/assets/JS/product-drag.js"></script>
 
     <script>
         // ===== Quantity control and buy/add handlers =====
