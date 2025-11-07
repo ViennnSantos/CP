@@ -1,0 +1,4 @@
+Require all granted
+AddType model/gltf-binary .glb
+AddType model/gltf+json   .gltf
+AddType application/octet-stream .bin

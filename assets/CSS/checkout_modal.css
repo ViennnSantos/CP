@@ -1,0 +1,264 @@
+/* /RADS-TOOLING/assets/CSS/checkout_modal.css */
+/* Modal styling matching products.php exactly */
+
+:root {
+  --brand: #2f5b88;
+  --brand-dark: #1e3a8a;
+  --ink: #111827;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --card: #fff;
+  --radius: 14px;
+}
+
+/* ========== BASE MODAL ========== */
+.rt-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .45);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.rt-modal[hidden] {
+  display: none;
+}
+
+/* Modal Dialog */
+.rt-modal__dialog {
+  width: min(480px, 95vw);
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+  animation: modalSlideUp .3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========== HEADER (BLUE BAR) ========== */
+.rt-header {
+  background: var(--brand);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.rt-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.rt-close {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background .15s ease;
+}
+
+.rt-close:hover {
+  background: rgba(255, 255, 255, .1);
+}
+
+/* ========== BODY (WHITE) ========== */
+.rt-body {
+  background: #fff;
+  color: var(--ink);
+  padding: 24px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rt-body .muted {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ========== CHOICES ROW ========== */
+.rt-choices {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Choice Buttons */
+.rt-choice {
+  flex: 1;
+  min-width: 140px;
+  background: #fff;
+  color: var(--brand);
+  border: 2px solid var(--brand);
+  border-radius: 10px;
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transition: all .15s ease;
+}
+
+.rt-choice .material-symbols-rounded {
+  font-size: 32px;
+  line-height: 1;
+}
+
+/* Hover (not active) */
+.rt-choice:not(.is-active):hover {
+  background: rgba(47, 91, 136, .05);
+}
+
+/* Active state */
+.rt-choice.is-active {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(47, 91, 136, .15);
+}
+
+/* Focus ring */
+.rt-choice:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(47, 91, 136, .2);
+}
+
+/* ========== FOOTER (OK BUTTON) ========== */
+.rt-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.rt-btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all .15s ease;
+  min-width: 100px;
+}
+
+.rt-btn-primary:hover:not(:disabled) {
+  background: var(--brand-dark);
+  transform: translateY(-1px);
+}
+
+.rt-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 500px) {
+  .rt-modal__dialog {
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .rt-choices {
+    flex-direction: column;
+  }
+  
+  .rt-choice {
+    width: 100%;
+  }
+  
+  .rt-header h3 {
+    font-size: 16px;
+  }
+}
+
+/* ========== ALTERNATE CARD STYLE (IF USING .rt-card) ========== */
+.rt-card {
+  background: #fff;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+/* ========== BUY CHOICE MODAL SPECIFIC ========== */
+#buyChoiceModal .rt-header {
+  background: var(--brand);
+}
+
+#buyChoiceModal .rt-body {
+  padding: 24px 20px;
+}
+
+#buyChoiceModal .rt-choices {
+  margin: 12px 0;
+}
+
+#buyChoiceModal #choiceDelivery .material-symbols-rounded,
+#buyChoiceModal #choicePickup .material-symbols-rounded {
+  font-size: 36px;
+}
+
+#buyChoiceModal #choiceOk {
+  align-self: flex-end;
+  padding: 10px 28px;
+  font-size: 15px;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.rt-modal {
+  animation: fadeIn .2s ease;
+}
+
+/* ========== ADDITIONAL UTILITY CLASSES ========== */
+.rt-modal-overlay {
+  background: rgba(0, 0, 0, .5);
+}
+
+.rt-modal-blur {
+  backdrop-filter: blur(3px);
+}
+
+/* Prevent body scroll when modal open */
+body.modal-open {
+  overflow: hidden;
+}

@@ -1,0 +1,16 @@
+[2025-10-30 00:42:16] DB error on payment_submit: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'user_id' in 'field list'
+[2025-10-30 02:09:09] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-10-30 10:04:57] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-10-30 10:07:20] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-11-03 00:27:02] payment_submit: no address fields posted for order 44 by user 17
+[2025-11-03 00:27:02] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-11-03 01:31:39] payment_submit: no address fields posted for order 45 by user 17
+[2025-11-03 01:31:39] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-11-03 01:43:40] payment_submit: no address fields posted for order 46 by user 17
+[2025-11-03 01:43:40] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-11-05 15:18:32] payment_submit: no address fields posted for order 48 by user 42
+[2025-11-05 15:18:32] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-11-05 16:54:31] payment_submit: no address fields posted for order 49 by user 42
+[2025-11-05 16:54:31] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist
+[2025-11-06 22:45:37] payment_submit: no address fields posted for order 50 by user 42
+[2025-11-06 22:45:37] Notification insert skipped or failed: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'rads_tooling.admin_notifications' doesn't exist

@@ -1,0 +1,355 @@
+/* RADS-TOOLING Customer Chat Widget Styles */
+
+/* ========== Chat Widget Styles ========== */
+
+/* Chat button */
+.rt-chat-btn {
+  position: fixed;
+  bottom: 55px;
+  right: 24px;
+  background: linear-gradient(135deg, #1f4e74, #2f5b88);
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(31, 78, 116, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.rt-chat-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(31, 78, 116, 0.4);
+}
+
+.rt-chat-btn .material-symbols-rounded {
+  font-size: 24px;
+}
+
+/* Chat popup */
+.rt-chat-popup {
+  position: fixed;
+  bottom: 120px;
+  right: 24px;
+  width: 380px;
+  max-height: 600px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  display: none;
+  flex-direction: column;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.rt-chat-popup.rt-show {
+  display: flex;
+}
+
+/* Header */
+.rt-chat-header {
+  background: #1f4e74;
+  color: #fff;
+  padding: 16px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rt-clear-btn {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.rt-clear-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rt-clear-btn .material-symbols-rounded {
+  font-size: 20px;
+}
+
+/* FAQ Container */
+.rt-faq-container {
+  border-bottom: 1px solid #e0e0e0;
+  background: #f9fafb;
+}
+
+.rt-faq-toggle {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  color: #1f4e74;
+  transition: background 0.2s;
+}
+
+.rt-faq-toggle:hover {
+  background: #f0f2f5;
+}
+
+.rt-faq-icon {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.rt-faq-dropdown {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.rt-faq-dropdown.rt-show {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.rt-faq-chip {
+  margin: 8px 12px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #d0d7de;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1f4e74;
+  transition: all 0.2s;
+}
+
+.rt-faq-chip:hover {
+  background: #e3edfb;
+  border-color: #2f5b88;
+  transform: translateX(2px);
+}
+
+/* Messages area */
+.rt-chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: 400px;
+  background: #f9fafb;
+}
+
+.rt-msg {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.rt-msg-customer {
+  background: #1f4e74;
+  color: #fff;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.rt-msg-bot,
+.rt-msg-admin {
+  background: #e3edfb;
+  color: #1f4e74;
+  margin-right: auto;
+  border-bottom-left-radius: 4px;
+}
+
+.rt-msg-system {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  font-style: Poppins;
+  margin: 12px 0;
+}
+
+/* Input area */
+.rt-chat-input {
+  padding: 12px 16px;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rt-chat-input input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d0d7de;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.rt-chat-input input:focus {
+  border-color: #1f4e74;
+}
+
+.rt-chat-send {
+  background: #1f4e74;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.rt-chat-send:hover {
+  background: #2f5b88;
+  transform: scale(1.05);
+}
+
+.rt-chat-send .material-symbols-rounded {
+  font-size: 20px;
+}
+
+/* Scrollbar styling */
+.rt-chat-messages::-webkit-scrollbar,
+.rt-faq-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rt-chat-messages::-webkit-scrollbar-track,
+.rt-faq-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.rt-chat-messages::-webkit-scrollbar-thumb,
+.rt-faq-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.rt-chat-messages::-webkit-scrollbar-thumb:hover,
+.rt-faq-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+  .rt-chat-popup {
+    right: 12px;
+    bottom: 80px;
+    width: calc(100vw - 24px);
+    max-width: 380px;
+  }
+
+  .rt-chat-btn {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+
+/* Clear chat modal - MUST be above everything */
+.rt-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999 !important; /* CRITICAL: Above footer */
+  backdrop-filter: blur(2px);
+}
+
+.rt-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+  position: relative;
+  z-index: 1000000 !important;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rt-modal-content h3 {
+  margin: 0 0 12px;
+  color: #1f4e74;
+  font-size: 1.5rem;
+}
+
+.rt-modal-content p {
+  margin: 0 0 24px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.rt-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.rt-modal-btn {
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 100px;
+}
+
+.rt-modal-cancel {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.rt-modal-cancel:hover {
+  background: #d0d0d0;
+  transform: translateY(-1px);
+}
+
+.rt-modal-confirm {
+  background: #e14d4d;
+  color: #fff;
+}
+
+.rt-modal-confirm:hover {
+  background: #c93030;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(225, 77, 77, 0.3);
+}

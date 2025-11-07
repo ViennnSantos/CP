@@ -1,0 +1,31 @@
+# Root .htaccess
+
+# If your project runs under a subfolder (e.g. /RADS-TOOLING/), set this:
+RewriteBase /RADS-TOOLING/
+
+Options -Indexes
+DirectoryIndex index.php
+RewriteEngine On
+
+# Optional: force HTTPS once SSL is enabled
+#RewriteCond %{HTTPS} !=on
+#RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# Security headers (light but helpful)
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Block direct access to sensitive config/lib
+RewriteRule ^backend/config/ - [F,L]
+RewriteRule ^backend/lib/ - [F,L]
+
+# Allow API endpoints under backend/api
+RewriteRule ^backend/api/ - [L]
+
+# Convenience routes
+RewriteRule ^admin/?$ /admin/index.php [L]
+RewriteRule ^customer/?$ /customer/index.php [L]
