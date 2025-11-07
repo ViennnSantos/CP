@@ -1251,12 +1251,19 @@
   });
 
   // ===== Initialize Everything =====
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Checkout.js loading...');
-    
+
     wirePhone();
-    loadPSGC();
-    loadSavedAddresses(); // Load saved addresses for delivery auto-fill
+
+    // Load PSGC data first (needed for autofill to work properly)
+    await loadPSGC();
+    console.log('✅ PSGC data loaded');
+
+    // Then load saved addresses and autofill (needs PSGC dropdowns ready)
+    await loadSavedAddresses(); // Load saved addresses for delivery auto-fill
+    console.log('✅ Saved addresses loaded and autofilled');
+
     autoFillPickupForm(); // Auto-fill pickup form from customer profile
     wireContinue();
     wireClear();
