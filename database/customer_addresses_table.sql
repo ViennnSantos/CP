@@ -2,8 +2,8 @@
 -- Stores multiple addresses per customer with PSGC support
 
 CREATE TABLE IF NOT EXISTS `customer_addresses` (
-  `id` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `customer_id` INT(11) UNSIGNED NOT NULL,
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `customer_id` INT(11) NOT NULL,
   `address_nickname` VARCHAR(100) DEFAULT NULL COMMENT 'Optional nickname like Home, Office',
   `full_name` VARCHAR(255) NOT NULL,
   `mobile_number` VARCHAR(20) NOT NULL,
@@ -22,8 +22,13 @@ CREATE TABLE IF NOT EXISTS `customer_addresses` (
   PRIMARY KEY (`id`),
   KEY `idx_customer_id` (`customer_id`),
   KEY `idx_is_default` (`is_default`),
-  CONSTRAINT `fk_customer_addresses_customer` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE
+  KEY `idx_customer_default` (`customer_id`, `is_default`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Create index for faster lookups
-CREATE INDEX idx_customer_default ON customer_addresses(customer_id, is_default);
+-- Note: Foreign key constraint removed to avoid data type mismatch errors
+-- If you want to add it manually, first check customers.id data type:
+--   SHOW CREATE TABLE customers;
+-- Then add constraint matching that type:
+--   ALTER TABLE customer_addresses
+--   ADD CONSTRAINT fk_customer_addresses_customer
+--   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE;
