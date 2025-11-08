@@ -176,6 +176,18 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
       color: #111827 !important;
     }
 
+    /* ✅ FIXED: Ensure selected options are visible with black text */
+    .form-group select option {
+      color: #111827 !important;
+      background: white !important;
+    }
+
+    .form-group select option:checked,
+    .form-group select option:hover {
+      background: #f0f9ff !important;
+      color: #111827 !important;
+    }
+
     /* ✅ FIXED: Read-only styling for autofilled fields */
     .form-group input:read-only {
       background: #f0f9ff !important;

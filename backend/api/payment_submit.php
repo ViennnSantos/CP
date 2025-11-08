@@ -52,6 +52,7 @@ $account_name    = trim((string)($_POST['account_name'] ?? ''));
 $account_number  = trim((string)($_POST['account_number'] ?? ''));
 $reference       = trim((string)($_POST['reference_number'] ?? $_POST['reference'] ?? ''));
 $amount_paid     = (float)($_POST['amount_paid'] ?? 0.0);
+$amount_due      = (float)($_POST['amount_due'] ?? 0.0); // Expected amount from selected payment option
 
 // quick debug (uncomment for troubleshooting)
 // @file_put_contents(__DIR__ . '/../logs/payment_submit_debug.log', date('[Y-m-d H:i:s] ') . "POST: " . json_encode($_POST) . PHP_EOL, FILE_APPEND);
@@ -150,9 +151,13 @@ try {
         $minThisPayment = round($remaining * 0.30, 2);
     }
 
-    // ✅ FIXED: Added closing brace for if statement (line 152 in original)
-    if (abs($amount_paid - $remaining) >= 0.01) {
-        fail('Payment amount must exactly match the order total: ₱' . number_format($remaining,2), 400);
+    // ✅ FIXED: Validate against selected payment amount (amount_due from deposit rate)
+    // If amount_due was provided from frontend (selected payment option), use that
+    // Otherwise fall back to remaining amount validation
+    $expectedAmount = ($amount_due > 0) ? $amount_due : $minThisPayment;
+
+    if (abs($amount_paid - $expectedAmount) >= 0.01) {
+        fail('Payment amount does not match the selected payment option. Please pay exactly ₱' . number_format($expectedAmount, 2), 400);
     }
 } catch (Throwable $e) {
     local_log("Payment validation error: " . $e->getMessage());

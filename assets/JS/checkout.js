@@ -1058,8 +1058,8 @@
 
       if (amountPaid !== expectedAmount) {
         showModalAlert(
-          'Amount Mismatch',
-          `Amount paid must equal order total.\n\nExpected: ₱${expectedAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}\nYou entered: ₱${amountPaid.toLocaleString('en-PH', {minimumFractionDigits: 2})}`,
+          'Payment Amount Mismatch',
+          `Payment amount does not match the selected payment option. Please pay exactly ₱${expectedAmount.toLocaleString('en-PH', {minimumFractionDigits: 2})}.\n\nYou entered: ₱${amountPaid.toLocaleString('en-PH', {minimumFractionDigits: 2})}`,
           'error'
         );
         amt.style.borderColor = '#ef4444';
