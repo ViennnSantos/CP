@@ -119,23 +119,54 @@ try {
     }
 
     // ==========================================
-    // STEP 2: CREATE ORDER
+    // STEP 2: CREATE ORDER WITH T&C TRACKING
     // ==========================================
-    $stmt = $pdo->prepare("INSERT INTO orders
-        (order_code, customer_id, mode, status, payment_status, subtotal, vat, total_amount, terms_agreed, order_date)
-        VALUES (
-            CONCAT('RT', DATE_FORMAT(NOW(),'%y%m%d'), LPAD(FLOOR(RAND()*9999), 4, '0')),
-            :cid, :mode, 'Pending', 'Pending', :sub, :vat, :tot, :terms, NOW()
-        )");
 
-    $stmt->execute([
-    ':cid'  => $uid,
-    ':mode' => $mode,
-    ':sub'  => $subtotal,
-    ':vat'  => $vat,
-    ':tot'  => $total,
-    ':terms' => $terms_agreed
-]);
+    // ✅ Check if terms_agreed_at column exists
+    $colCheck = $pdo->prepare("
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'orders'
+          AND column_name IN ('terms_agreed_at', 'terms_agreed_ip')
+    ");
+    $colCheck->execute();
+    $existingCols = $colCheck->fetchAll(PDO::FETCH_COLUMN);
+
+    $hasTermsAt = in_array('terms_agreed_at', $existingCols);
+    $hasTermsIp = in_array('terms_agreed_ip', $existingCols);
+
+    // Build INSERT query dynamically
+    $orderCols = ['order_code', 'customer_id', 'mode', 'status', 'payment_status', 'subtotal', 'vat', 'total_amount', 'terms_agreed', 'order_date'];
+    $orderVals = [
+        "CONCAT('RT', DATE_FORMAT(NOW(),'%y%m%d'), LPAD(FLOOR(RAND()*9999), 4, '0'))",
+        ':cid', ':mode', "'Pending'", "'Pending'", ':sub', ':vat', ':tot', ':terms', 'NOW()'
+    ];
+    $params = [
+        ':cid'  => $uid,
+        ':mode' => $mode,
+        ':sub'  => $subtotal,
+        ':vat'  => $vat,
+        ':tot'  => $total,
+        ':terms' => $terms_agreed
+    ];
+
+    // ✅ Add T&C timestamp if column exists
+    if ($hasTermsAt && $terms_agreed) {
+        $orderCols[] = 'terms_agreed_at';
+        $orderVals[] = 'NOW()';
+    }
+
+    // ✅ Add T&C IP if column exists
+    if ($hasTermsIp && $terms_agreed) {
+        $orderCols[] = 'terms_agreed_ip';
+        $orderVals[] = ':terms_ip';
+        $params[':terms_ip'] = $_SERVER['REMOTE_ADDR'] ?? null;
+    }
+
+    $sql = "INSERT INTO orders (" . implode(', ', $orderCols) . ") VALUES (" . implode(', ', $orderVals) . ")";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
 
 $err = $stmt->errorInfo();
 if ($err[0] !== '00000') {
