@@ -7,6 +7,12 @@ Options -Indexes
 DirectoryIndex index.php
 RewriteEngine On
 
+# PHP Upload Settings (for 3D models and large files)
+php_value upload_max_filesize 32M
+php_value post_max_size 35M
+php_value max_execution_time 300
+php_value max_input_time 300
+
 # Optional: force HTTPS once SSL is enabled
 #RewriteCond %{HTTPS} !=on
 #RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

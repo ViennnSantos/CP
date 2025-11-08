@@ -1571,7 +1571,15 @@ if (!$isLoggedIn) {
                     showNotification('success', 'Texture added successfully');
                     closeModal('addTextureModal');
                     document.getElementById('addTextureForm').reset();
-                    if (typeof loadTextures === 'function') loadTextures();
+                    // Reload textures AND refresh the UI list
+                    if (typeof loadTextures === 'function') {
+                        await loadTextures();
+                        // Refresh the texture list in the current product modal if open
+                        if (window.currentProduct && typeof populateTexturesList === 'function') {
+                            const productTextures = window.currentProduct.textures || window.currentProduct.raw_textures || [];
+                            populateTexturesList(productTextures);
+                        }
+                    }
                 } else showNotification('error', data.message || 'Failed to add texture');
             } catch (err) {
                 console.error(err);
@@ -1644,7 +1652,15 @@ if (!$isLoggedIn) {
                     showNotification('success', 'Handle added successfully');
                     closeModal('addHandleModal');
                     document.getElementById('addHandleForm').reset();
-                    if (typeof loadHandles === 'function') loadHandles();
+                    // Reload handles AND refresh the UI list
+                    if (typeof loadHandles === 'function') {
+                        await loadHandles();
+                        // Refresh the handle list in the current product modal if open
+                        if (window.currentProduct && typeof populateHandlesList === 'function') {
+                            const productHandles = window.currentProduct.handles || window.currentProduct.raw_handles || [];
+                            populateHandlesList(productHandles);
+                        }
+                    }
                 } else showNotification('error', data.message || 'Failed to add handle');
             } catch (err) {
                 console.error(err);
