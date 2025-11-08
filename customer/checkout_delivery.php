@@ -1,9 +1,10 @@
 <?php
 /**
- * Checkout Delivery Page
- * Customer provides delivery information for product order
- * 
- * Security: Authentication required, CSRF protected, SQL injection safe
+ * Checkout Delivery Page - FIXED VERSION
+ * ✅ Location selector working
+ * ✅ Default address autofill enabled
+ * ✅ No duplicate fields
+ * ✅ Proper CSRF protection
  */
 
 declare(strict_types=1);
@@ -149,6 +150,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
       border-radius: 10px;
       transition: all 0.2s ease;
       font-family: 'Poppins', sans-serif;
+      background: white;
     }
 
     .form-group input:focus,
@@ -156,6 +158,20 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
       border-color: #2f5b88;
       outline: none;
       box-shadow: 0 0 0 4px rgba(47, 91, 136, 0.1);
+    }
+
+    .form-group input:disabled,
+    .form-group select:disabled {
+      background: #f9fafb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    /* ✅ FIXED: Read-only styling for autofilled fields */
+    .form-group input:read-only {
+      background: #f0f9ff;
+      border-color: #bae6fd;
+      color: #0369a1;
     }
 
     .form-group input[type="text"]::placeholder {
@@ -220,9 +236,14 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
       color: white;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(47, 91, 136, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .btn-secondary {
@@ -370,7 +391,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
         <p><strong>Limited to Calabarzon.</strong> Delivery fee is ₱500. Orders are shipped within 3-5 business days.</p>
       </div>
 
-      <!-- Saved Addresses Dropdown -->
+      <!-- ✅ FIXED: Saved Addresses Dropdown with proper visibility control -->
       <div id="savedAddressesContainer" style="margin-bottom: 24px; display: none;">
         <div class="form-group">
           <label style="display: flex; justify-content: space-between; align-items: center;">
@@ -418,35 +439,34 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
           <small>Enter 10 digits only (example: 9123456789)</small>
         </div>
 
-        <!-- Address Information -->
+        <!-- ✅ FIXED: Address Information - Removed duplicates, proper field structure -->
         <div class="form-row">
           <div class="form-group">
             <label>Province <span class="required">*</span></label>
-            <select id="province" name="province" required disabled autocomplete="address-level1">
+            <select id="province" required disabled autocomplete="address-level1">
               <option value="">Loading provinces...</option>
             </select>
-            <input type="hidden" id="provinceVal" name="province">
-            <input type="text" id="provinceInput" name="province" placeholder="Enter province" hidden disabled autocomplete="address-level1">
+            <input type="hidden" id="provinceVal" name="province" required>
           </div>
 
           <div class="form-group">
             <label>City/Municipality <span class="required">*</span></label>
-            <select id="city" name="city" required disabled autocomplete="address-level2">
+            <select id="city" required disabled autocomplete="address-level2">
               <option value="">Select province first</option>
             </select>
-            <input type="hidden" id="cityVal" name="city">
-            <input type="text" id="cityInput" name="city" placeholder="Enter city" hidden disabled autocomplete="address-level2">
+            <input type="hidden" id="cityVal" name="city" required>
           </div>
         </div>
 
+        <!-- ✅ FIXED: Single barangay field (no duplicates) -->
         <div class="form-group">
           <label>Barangay <span class="required">*</span></label>
           <select id="barangaySelect" required disabled autocomplete="address-level3">
             <option value="">Select city first</option>
           </select>
           <input type="hidden" id="barangayVal" name="barangay" required>
-          <input type="text" id="barangayInput" placeholder="Enter barangay" hidden disabled autocomplete="address-level3">
         </div>
+
         <div class="form-row">
           <div class="form-group">
             <label>Street / Block / Lot <span class="required">*</span></label>

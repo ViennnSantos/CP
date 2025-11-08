@@ -1,6 +1,6 @@
 <?php
 // /customer/checkout_pickup.php
-// 🔥 COMPLETE FIXED VERSION with Material Symbols icons
+// ✅ FIXED VERSION - Continue button now works properly
 
 declare(strict_types=1);
 session_start();
@@ -255,9 +255,14 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
       color: white;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(47, 91, 136, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
     .btn-secondary {
