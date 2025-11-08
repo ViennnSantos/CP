@@ -222,18 +222,20 @@ body {
 }
 
 .content-header h2 {
-    font-size: 1.25rem;
+    font-size: 1.375rem;
     color: var(--text-dark);
     margin-bottom: 4px;
+    font-weight: 600;
 }
 
 .content-header p {
     color: var(--text-medium);
-    font-size: 0.9rem;
+    font-size: 0.875rem;
 }
 
 .content-body {
     padding: 32px;
+    max-width: 1020px;
 }
 
 /* ===== TAB CONTENT ===== */

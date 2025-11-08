@@ -519,25 +519,26 @@ $CSRF = $_SESSION['csrf_token'];
         /* Address Card Styles */
         .address-card {
             background: white;
-            border: 1px solid #e3e3e3;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: box-shadow 0.2s, border-color 0.2s;
+            border: 1px solid #e6e6e6;
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 22px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            transition: all 0.2s ease;
         }
 
         .address-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: #2f5b88;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
         }
 
         .address-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid #f0f0f0;
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e6e6e6;
         }
 
         .address-header-left {
@@ -548,13 +549,14 @@ $CSRF = $_SESSION['csrf_token'];
         }
 
         .address-header-left strong {
-            color: #2f5b88;
-            font-size: 1rem;
+            color: #333;
+            font-size: 15px;
+            font-weight: 600;
         }
 
         .address-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
 
         .btn-icon {
@@ -564,15 +566,22 @@ $CSRF = $_SESSION['csrf_token'];
             width: 32px;
             height: 32px;
             padding: 0;
-            background: transparent;
-            border: 1px solid #e3e3e3;
-            border-radius: 6px;
+            background: white;
+            border: 1px solid #e6e6e6;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+        }
+
+        .btn-icon svg {
+            width: 16px;
+            height: 16px;
+            stroke: #666;
+            transition: stroke 0.2s;
         }
 
         .btn-icon:hover {
-            background: #f0f7ff;
+            background: #f8f9fa;
             border-color: #2f5b88;
         }
 
@@ -581,7 +590,7 @@ $CSRF = $_SESSION['csrf_token'];
         }
 
         .btn-icon.btn-delete:hover {
-            background: #fee;
+            background: #fff5f5;
             border-color: #dc3545;
         }
 
@@ -589,35 +598,43 @@ $CSRF = $_SESSION['csrf_token'];
             stroke: #dc3545;
         }
 
-        .address-card-body p {
-            margin: 0.5rem 0;
+        .address-card-body {
             line-height: 1.6;
+        }
+
+        .address-card-body p {
+            margin: 6px 0;
+            font-size: 14px;
+            color: #333;
         }
 
         .address-card-body .address-text {
             color: #666;
-            font-size: 0.95rem;
-            margin-top: 0.75rem;
+            font-size: 13px;
+            margin-top: 10px;
+            line-height: 1.5;
         }
 
         .badge {
             display: inline-block;
-            padding: 0.25rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .badge-primary {
-            background: #2f5b88;
+            background: #3b82f6;
             color: white;
         }
 
         /* Address List Container */
         #address-list {
             display: grid;
-            gap: 1rem;
+            gap: 16px;
+            max-width: 980px;
         }
 
         /* Modal Styles */
@@ -732,12 +749,26 @@ $CSRF = $_SESSION['csrf_token'];
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            max-width: 980px;
+        }
+
+        .content-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .content-header p {
+            font-size: 14px;
+            color: #666;
         }
 
         .content-header button {
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            white-space: nowrap;
         }
 
         @media (max-width: 768px) {
