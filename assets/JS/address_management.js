@@ -44,14 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function initializePSGC() {
     try {
-        // Load provinces
+        console.log('🔄 Loading provinces from PSGC API...');
         const response = await fetch('/backend/api/psgc.php?endpoint=provinces');
 
+        console.log('📡 Province API response:', response.status, response.statusText);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Province API failed:', response.status, errorText);
             throw new Error(`Failed to load provinces: ${response.status}`);
         }
 
         const provinces = await response.json();
+        console.log('✅ Provinces loaded:', provinces.length, 'total');
 
         // Filter to NCR and Calabarzon only
         const allowedProvinces = [
@@ -68,9 +73,12 @@ async function initializePSGC() {
             allowedProvinces.some(ap => p.name.includes(ap) || ap.includes(p.name))
         );
 
+        console.log('✅ Filtered provinces:', psgcProvinces.length, 'provinces (NCR + Calabarzon)');
+
         // Populate province dropdown
         const provinceSelect = document.getElementById('addressProvince');
         if (provinceSelect) {
+            console.log('🔄 Populating province dropdown...');
             provinceSelect.innerHTML = '<option value="">Select Province</option>';
             psgcProvinces.forEach(prov => {
                 const option = document.createElement('option');
@@ -79,10 +87,14 @@ async function initializePSGC() {
                 option.textContent = prov.name;
                 provinceSelect.appendChild(option);
             });
+            console.log('✅ Province dropdown populated with', psgcProvinces.length, 'options');
+        } else {
+            console.error('❌ Province select element not found (#addressProvince)');
         }
 
     } catch (error) {
-        console.error('Failed to load PSGC data:', error);
+        console.error('❌ Failed to load PSGC data:', error);
+        console.error('Error details:', error.message, error.stack);
     }
 }
 
@@ -90,6 +102,7 @@ async function initializePSGC() {
  * Setup address modal handlers
  */
 function setupAddressModal() {
+    console.log('🔄 Setting up address modal handlers...');
     const modal = document.getElementById('addressFormModal');
     const form = document.getElementById('addressManageForm');
     const cancelBtn = document.getElementById('addressFormCancel');
@@ -148,20 +161,28 @@ function setupAddressModal() {
         try {
             // Check cache first
             if (psgcCities[provinceCode]) {
+                console.log('✅ Using cached cities for province:', provinceCode);
                 populateCitySelect(citySelect, psgcCities[provinceCode]);
                 return;
             }
 
-            const response = await fetch(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
+            console.log('🔄 Loading cities for province:', provinceCode, provinceName);
+            const url = `/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`;
+            console.log('📡 Fetching:', url);
+            const response = await fetch(url);
+
+            console.log('📡 Cities API response:', response.status, response.statusText);
 
             // Validate response
             if (!response.ok) {
-                console.error('PSGC API error:', response.status, response.statusText);
+                const errorText = await response.text();
+                console.error('❌ Cities API failed:', response.status, errorText.substring(0, 200));
                 citySelect.innerHTML = '<option value="">Failed to load cities (API error)</option>';
                 return;
             }
 
             const cities = await response.json();
+            console.log('✅ Cities received:', cities.length, 'cities');
 
             // Validate response data
             if (!Array.isArray(cities) || cities.length === 0) {
@@ -175,7 +196,13 @@ function setupAddressModal() {
 
             populateCitySelect(citySelect, cities);
         } catch (error) {
-            console.error('Failed to load cities:', error);
+            console.error('❌ Exception loading cities:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                provinceCode: provinceCode,
+                provinceName: provinceName
+            });
             citySelect.innerHTML = '<option value="">Failed to load cities</option>';
         }
     });
@@ -247,6 +274,11 @@ function setupAddressModal() {
         const barangayCode = selectedOption.dataset.code;
         document.getElementById('addressBarangayCode').value = barangayCode || '';
     });
+
+    console.log('✅ Address modal handlers setup complete');
+    console.log('   - Province select:', provinceSelect ? 'FOUND' : 'NOT FOUND');
+    console.log('   - City select:', citySelect ? 'FOUND' : 'NOT FOUND');
+    console.log('   - Barangay select:', barangaySelect ? 'FOUND' : 'NOT FOUND');
 }
 
 /**
