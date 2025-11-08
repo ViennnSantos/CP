@@ -163,7 +163,8 @@ $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
             'o.order_code',
             'o.total_amount',
             'o.order_date',
-            "o.mode AS delivery_mode"
+            "o.mode AS delivery_mode",
+            "o.terms_agreed AS order_terms_agreed"
         ];
 
         // add detected order columns as order_<col>
