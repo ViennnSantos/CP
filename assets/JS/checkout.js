@@ -692,14 +692,20 @@
       const form = $('#deliveryForm') || $('#pickupForm');
       if (!form) return;
 
-      const invalids = Array.from(form.querySelectorAll('input:required, select:required')).filter(el => !el.value);
+      // ✅ FIX: Only validate enabled, visible required fields
+      const invalids = Array.from(form.querySelectorAll('input:required, select:required'))
+        .filter(el => !el.disabled && !el.hidden && el.offsetParent !== null) // Skip disabled/hidden
+        .filter(el => !el.value || el.value.trim() === '');
+
       invalids.forEach(el => el.style.borderColor = '#ef4444');
 
       if (invalids.length) {
+        console.log('❌ Validation failed. Missing fields:', invalids.map(el => el.name || el.id));
         openModal('#invalidModal');
         return;
       }
 
+      console.log('✅ Validation passed. Submitting form...');
       form.submit();
     });
   }

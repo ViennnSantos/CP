@@ -422,19 +422,19 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
         <div class="form-row">
           <div class="form-group">
             <label>Province <span class="required">*</span></label>
-            <select id="province" name="province" required disabled autocomplete="address-level1">
+            <select id="province" required disabled autocomplete="address-level1">
               <option value="">Loading provinces...</option>
             </select>
-            <input type="hidden" id="provinceVal" name="province">
+            <input type="hidden" id="provinceVal" name="province" required>
             <input type="text" id="provinceInput" name="province" placeholder="Enter province" hidden disabled autocomplete="address-level1">
           </div>
 
           <div class="form-group">
             <label>City/Municipality <span class="required">*</span></label>
-            <select id="city" name="city" required disabled autocomplete="address-level2">
+            <select id="city" required disabled autocomplete="address-level2">
               <option value="">Select province first</option>
             </select>
-            <input type="hidden" id="cityVal" name="city">
+            <input type="hidden" id="cityVal" name="city" required>
             <input type="text" id="cityInput" name="city" placeholder="Enter city" hidden disabled autocomplete="address-level2">
           </div>
         </div>
@@ -445,7 +445,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
             <option value="">Select city first</option>
           </select>
           <input type="hidden" id="barangayVal" name="barangay" required>
-          <input type="text" id="barangayInput" placeholder="Enter barangay" hidden disabled autocomplete="address-level3">
+          <input type="text" id="barangayInput" name="barangay" placeholder="Enter barangay" hidden disabled autocomplete="address-level3">
         </div>
         <div class="form-row">
           <div class="form-group">
