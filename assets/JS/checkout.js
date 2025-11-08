@@ -1067,6 +1067,21 @@
       // ✅ CORRECT FLOW: Show T&C modal before submitting to admin verification
       showStep('#termsModal');
 
+       // ✅ FIX 2: Reset T&C modal state to ensure clean start
+      const termsCheckbox = $('#termsCheckbox');
+      const termsConfirm = $('#termsConfirm');
+      if (termsCheckbox) {
+        termsCheckbox.checked = false;
+      }
+		
+      if (termsConfirm) {
+        termsConfirm.disabled = true;
+        termsConfirm.textContent = 'I Agree and Continue';
+        termsConfirm.style.opacity = '0.5';
+        termsConfirm.style.cursor = 'not-allowed';
+        termsConfirm.style.background = '#9ca3af';
+      }
+
       // Store verification data to be used after T&C acceptance
       window.VERIFICATION_DATA = {
         account_name: name.value,
@@ -1102,12 +1117,21 @@
 
     if (termsConfirm) {
       termsConfirm.addEventListener('click', async () => {
+         // ✅ FIX 2: Prevent double-click / race condition
+        if (termsConfirm.disabled) {
+          console.log('⚠️ Submit already in progress, ignoring duplicate click');
+          return;
+        }
         const verData = window.VERIFICATION_DATA;
         if (!verData) {
           showModalAlert('Error', 'Verification data not found. Please try again.', 'error');
           return;
         }
-
+        // ✅ FIX 2: Immediately disable button to prevent duplicate submissions
+        termsConfirm.disabled = true;
+        termsConfirm.textContent = 'Submitting...';
+        termsConfirm.style.opacity = '0.5';
+        termsConfirm.style.cursor = 'not-allowed';
         // Hide T&C modal
         const termsModal = $('#termsModal');
         if (termsModal) termsModal.hidden = true;
@@ -1125,22 +1149,33 @@
 
         try {
           console.log('📤 Submitting payment verification with T&C acceptance...');
-          termsConfirm.disabled = true;
-          termsConfirm.textContent = 'Submitting...';
-
-          const r = await fetch('/backend/api/payment_submit.php', {
+           const r = await fetch('/backend/api/payment_submit.php', {
             method: 'POST',
             body: form,
             credentials: 'same-origin'
           });
-			
+
           const result = await r.json();
           console.log('📥 Verification response:', result);
 
           if (!result || !result.success) {
             showModalAlert('Verification Failed', result?.message || 'Payment verification failed.', 'error');
-            termsConfirm.disabled = false;
-            termsConfirm.textContent = 'I Agree and Continue';
+            // ✅ FIX 2: Re-enable button with proper styling on error, but keep checkbox checked
+            if (termsCheckbox && termsCheckbox.checked) {
+              termsConfirm.disabled = false;
+              termsConfirm.textContent = 'I Agree and Continue';
+              termsConfirm.style.opacity = '1';
+              termsConfirm.style.cursor = 'pointer';
+              termsConfirm.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
+            } else {
+              termsConfirm.disabled = true;
+              termsConfirm.textContent = 'I Agree and Continue';
+              termsConfirm.style.opacity = '0.5';
+              termsConfirm.style.cursor = 'not-allowed';
+              termsConfirm.style.background = '#9ca3af';
+            }
+            // Re-show T&C modal since we hid it earlier
+            if (termsModal) termsModal.hidden = false;
             return;
           }
 
@@ -1159,8 +1194,22 @@
         } catch (err) {
           console.error('❌ Payment submit error:', err);
           showModalAlert('Network Error', 'Could not submit payment verification.', 'error');
-          termsConfirm.disabled = false;
-          termsConfirm.textContent = 'I Agree and Continue';
+          // ✅ FIX 2: Re-enable button with proper styling on network error
+          if (termsCheckbox && termsCheckbox.checked) {
+            termsConfirm.disabled = false;
+            termsConfirm.textContent = 'I Agree and Continue';
+            termsConfirm.style.opacity = '1';
+            termsConfirm.style.cursor = 'pointer';
+            termsConfirm.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
+          } else {
+            termsConfirm.disabled = true;
+            termsConfirm.textContent = 'I Agree and Continue';
+            termsConfirm.style.opacity = '0.5';
+            termsConfirm.style.cursor = 'not-allowed';
+            termsConfirm.style.background = '#9ca3af';
+          }
+          // Re-show T&C modal since we hid it earlier
+          if (termsModal) termsModal.hidden = false;
         }
       });
     }

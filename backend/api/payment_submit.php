@@ -52,6 +52,7 @@ $account_name    = trim((string)($_POST['account_name'] ?? ''));
 $account_number  = trim((string)($_POST['account_number'] ?? ''));
 $reference       = trim((string)($_POST['reference_number'] ?? $_POST['reference'] ?? ''));
 $amount_paid     = (float)($_POST['amount_paid'] ?? 0.0);
+$amount_due      = (float)($_POST['amount_due'] ?? 0.0); // Expected amount from selected payment option
 
 // quick debug (uncomment for troubleshooting)
 // @file_put_contents(__DIR__ . '/../logs/payment_submit_debug.log', date('[Y-m-d H:i:s] ') . "POST: " . json_encode($_POST) . PHP_EOL, FILE_APPEND);
@@ -122,37 +123,56 @@ if (!empty($_FILES['screenshot']['tmp_name'])) {
     $screenshot_path = 'uploads/payments/' . $fname;
 }
 
-// Validation: enforce minimum payment rules (same logic as earlier)
+// ✅ FIX 1: Validate against selected payment option amount (NOT order total)
 try {
+    // Get order total
     $st = $pdo->prepare("SELECT total_amount FROM orders WHERE id = :id LIMIT 1");
     $st->execute([':id' => $order_id]);
     $ordRow = $st->fetch(PDO::FETCH_ASSOC);
     if (!$ordRow) fail('Order not found.', 404);
     $total = (float)($ordRow['total_amount'] ?? 0);
 
+    // Get already verified payments
     $st = $pdo->prepare("SELECT COALESCE(SUM(amount_paid),0) AS paid FROM payments WHERE order_id = :id AND UPPER(COALESCE(status,'')) IN ('VERIFIED','APPROVED')");
     $st->execute([':id' => $order_id]);
     $paid = (float)($st->fetch(PDO::FETCH_ASSOC)['paid'] ?? 0);
-
     $remaining = max(0.0, round($total - $paid, 2));
     if ($remaining <= 0) fail('Order already fully paid.', 400);
 
-    // chosen deposit_rate if any (from payments table)
-    $st = $pdo->prepare("SELECT COALESCE(deposit_rate,0) AS deposit_rate FROM payments WHERE order_id = :id LIMIT 1");
-    $st->execute([':id' => $order_id]);
-    $depRow = $st->fetch(PDO::FETCH_ASSOC);
-    $chosenRate = (int)($depRow['deposit_rate'] ?? 0);
+    // ✅ NEW: Get the selected payment amount (amount_due) from payments table
 
-    $minThisPayment = 0.0;
-    if ($paid <= 0 && in_array($chosenRate, [30,50,100], true)) {
-        $minThisPayment = round($total * ($chosenRate / 100.0), 2);
-    } else {
-        $minThisPayment = round($remaining * 0.30, 2);
+    // This is the amount set by payment_decision.php based on the deposit_rate (30%, 50%, 100%)
+    $st = $pdo->prepare("SELECT amount_due, deposit_rate FROM payments WHERE order_id = :id LIMIT 1");
+    $st->execute([':id' => $order_id]);
+    $paymentRow = $st->fetch(PDO::FETCH_ASSOC);
+
+
+    if (!$paymentRow) {
+        fail('Payment record not found. Please restart the payment process.', 404);
     }
 
-    // ✅ FIXED: Added closing brace for if statement (line 152 in original)
-    if (abs($amount_paid - $remaining) >= 0.01) {
-        fail('Payment amount must exactly match the order total: ₱' . number_format($remaining,2), 400);
+    $selectedAmount = (float)($paymentRow['amount_due'] ?? 0);
+    $chosenRate = (int)($paymentRow['deposit_rate'] ?? 0);
+
+    if ($selectedAmount <= 0) {
+        fail('Invalid payment amount. Please restart the payment process.', 400);
+    }
+
+
+    // ✅ CRITICAL: Validate against selectedAmount (NOT remaining balance)
+    // Allow 0.01 tolerance for floating-point precision
+    if (abs($amount_paid - $selectedAmount) >= 0.01) {
+        fail(
+            'Payment amount does not match the selected payment option. Please pay exactly ₱' .
+            number_format($selectedAmount, 2) .
+            ' (You entered: ₱' . number_format($amount_paid, 2) . ')',
+            400
+        );
+    }
+
+    // ✅ Additional safety check: Don't allow payment greater than remaining balance
+    if ($amount_paid > $remaining + 0.01) {
+        fail('Payment amount exceeds remaining balance of ₱' . number_format($remaining, 2), 400);
     }
 } catch (Throwable $e) {
     local_log("Payment validation error: " . $e->getMessage());
