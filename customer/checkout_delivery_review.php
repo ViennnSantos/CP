@@ -765,6 +765,37 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
 
 <input type="hidden" id="paymentMethod">
 <input type="hidden" id="depositRate">
+<input type="hidden" id="termsAgreed" value="0">
+
+<!-- Terms & Conditions Modal -->
+<div id="termsModal" class="rt-modal" hidden>
+  <div class="rt-modal__backdrop"></div>
+  <div class="rt-card rt-step" style="max-width: 600px; display: block; max-height: 80vh; overflow-y: auto;">
+    <h3 style="color: #2f5b88; margin-bottom: 20px; text-align: center;">
+      Terms & Conditions
+    </h3>
+    <div style="color: #555; line-height: 1.6; margin-bottom: 24px; text-align: left;">
+      <p style="margin-bottom: 16px;">By confirming your purchase, you agree to the following terms and conditions:</p>
+      <ul style="padding-left: 20px; margin-bottom: 16px;">
+        <li style="margin-bottom: 8px;"><strong>Final Purchase:</strong> All purchases are final — no refunds once the payment has been processed and verified.</li>
+        <li style="margin-bottom: 8px;"><strong>Data Privacy:</strong> Your personal and payment information is securely stored and protected under our data privacy policy. We will not share your information with third parties without your consent.</li>
+        <li style="margin-bottom: 8px;"><strong>Accuracy of Information:</strong> Please ensure all details provided (delivery address, contact information, payment details) are correct before submitting your payment. RADS Tooling is not responsible for errors caused by incorrect information.</li>
+        <li style="margin-bottom: 8px;"><strong>Order Verification:</strong> Your payment will be verified by our admin team. Upon successful verification, your order will be processed and prepared for delivery or pickup.</li>
+        <li style="margin-bottom: 8px;"><strong>Delivery & Pickup:</strong> Delivery timeframes and pickup schedules will be communicated after payment verification. Additional shipping fees may apply based on your location.</li>
+      </ul>
+    </div>
+    <div style="margin-bottom: 20px; display: flex; align-items: center; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+      <input type="checkbox" id="termsCheckbox" style="margin-right: 10px; width: 20px; height: 20px; cursor: pointer;">
+      <label for="termsCheckbox" style="cursor: pointer; font-size: 14px; color: #333;">
+        I have read and agree to the Terms & Conditions
+      </label>
+    </div>
+    <div class="rt-actions" style="justify-content: space-between;">
+      <button type="button" class="rt-btn" id="termsCancel" style="min-width: 120px;">Cancel</button>
+      <button type="button" class="rt-btn main" id="termsConfirm" style="min-width: 120px;" disabled>I Agree and Continue</button>
+    </div>
+  </div>
+</div>
 
 <script>
 window.RT_ORDER = <?= json_encode([

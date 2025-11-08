@@ -171,6 +171,12 @@ if (empty($_SESSION['csrf_token'])) {
                 <div id="profile-tab" class="tab-content active">
 
                     <div class="content-header">
+                        <button onclick="history.back()" class="back-button" aria-label="Go back">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Back
+                        </button>
 
                         <h2>My Profile</h2>
 
@@ -192,7 +198,7 @@ if (empty($_SESSION['csrf_token'])) {
 
                                         <label>Username</label>
 
-                                        <input type="text" id="username" disabled>
+                                        <input type="text" id="username" name="username">
 
                                     </div>
 
