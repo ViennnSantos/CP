@@ -839,7 +839,6 @@ function rt_img_url($raw)
                     method: 'POST',
                     credentials: 'same-origin'
                 }).finally(function() {
-                    // Cart persists through logout - will reload from database on next login
                     sessionStorage.clear();
                     window.location.href = '/index.php';
                 });

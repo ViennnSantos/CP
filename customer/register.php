@@ -171,6 +171,7 @@ $next = $_GET['next'] ?? '/customer/homepage.php';
       width: 100%;
       padding-right: 45px;
     }
+
     .toggle-password {
       position: absolute;
       right: 12px;

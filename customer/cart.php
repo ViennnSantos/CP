@@ -846,7 +846,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
             let selectedItems = new Set();
             let itemToRemove = null;
 
-            // Load cart from localStorage and database (merged)
+// Load cart from localStorage and database (merged)
             async function loadCartFromDatabase() {
                 // First load from localStorage
                 const stored = localStorage.getItem('cart');
@@ -1147,7 +1147,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
 
                 item.quantity = newQty;
                 localStorage.setItem('cart', JSON.stringify(cart));
-                syncCartToDatabase(cart); // Sync to database
+                syncCartToDatabase(cart);
                 window.renderCart();
             };
 
@@ -1163,7 +1163,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
                     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
                     cart = cart.filter(i => i.id !== itemToRemove);
                     localStorage.setItem('cart', JSON.stringify(cart));
-                    syncCartToDatabase(cart); // Sync to database
+                    syncCartToDatabase(cart);
                     selectedItems.delete(itemToRemove);
                     closeModal('removeItemModal');
                     window.renderCart();
@@ -1214,12 +1214,10 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
                 window.location.href = url;
             });
 
-            // Initialize - Load cart from database then render
             (async function() {
                 await loadCartFromDatabase();
                 window.renderCart();
             })();
-
         })();
     </script>
 </body>

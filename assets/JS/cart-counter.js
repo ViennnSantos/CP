@@ -1,4 +1,4 @@
-/ /assets/JS/cart-counter.js
+//assets/JS/cart-counter.js
 // Lightweight cart count updater for ALL pages
 
 (function() {

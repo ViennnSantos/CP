@@ -87,6 +87,7 @@
   }
 
   // Save cart to localStorage and database
+
   function saveCart() {
 
     localStorage.setItem('cart', JSON.stringify(cart));

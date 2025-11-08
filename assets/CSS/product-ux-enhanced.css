@@ -389,7 +389,7 @@
 .product-description-box,
 .product-detail .product-description,
 .product-detail-container .product-description {
-  bacground: #fff;
+  background: #fff;
   padding: 18px;
   border-radius: 12px;
   box-shadow: var(--rt-shadow-sm);

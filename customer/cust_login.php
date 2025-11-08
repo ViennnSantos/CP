@@ -52,10 +52,6 @@ $next = $_GET['next'] ?? '/customer/homepage.php';
       pointer-events: none;
     }
   </style>
-<<<<<<< HEAD
-=======
-
->>>>>>> aaaa32eef604de9e448e442948c715dd8221ca5f
 </head>
 
 <body>
