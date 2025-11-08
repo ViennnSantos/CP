@@ -1,12 +1,15 @@
 <?php
-// /RADS-TOOLING/backend/api/order_create.php
-// ✅ FINAL FIXED VERSION - handles nested payload structure + better error messages
-
 declare(strict_types=1);
+
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/_bootstrap.php';
+
 
 // ✅ IMPROVED: Better session check with detailed error
 if (!isset($_SESSION['customer']) || empty($_SESSION['customer'])) {
@@ -15,7 +18,7 @@ if (!isset($_SESSION['customer']) || empty($_SESSION['customer'])) {
     echo json_encode([
         'success' => false,
         'message' => 'Please login to place an order',
-        'redirect' => '/RADS-TOOLING/customer/login.php'
+        'redirect' => '/customer/login.php'
     ]);
     exit;
 }
@@ -125,18 +128,23 @@ try {
         )");
 
     $stmt->execute([
-        ':cid'  => $uid,
-        ':mode' => $mode,
-        ':sub'  => $subtotal,
-        ':vat'  => $vat,
-        ':tot'  => $total
-    ]);
+    ':cid'  => $uid,
+    ':mode' => $mode,
+    ':sub'  => $subtotal,
+    ':vat'  => $vat,
+    ':tot'  => $total
+]);
 
-    $order_id = (int)$pdo->lastInsertId();
+$err = $stmt->errorInfo();
+if ($err[0] !== '00000') {
+    throw new Exception('SQL Insert Error on orders: ' . implode(' | ', $err));
+}
 
-    if (!$order_id) {
-        throw new Exception('Failed to create order');
-    }
+$order_id = (int)$pdo->lastInsertId();
+if (!$order_id) {
+    throw new Exception('Failed to create order: No insert ID returned');
+}
+
 
     // Fetch the generated order_code
     $stmt = $pdo->prepare("SELECT order_code FROM orders WHERE id = :id LIMIT 1");

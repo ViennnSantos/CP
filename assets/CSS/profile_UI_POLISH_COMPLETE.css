@@ -1,0 +1,1013 @@
+/**
+ * ============================================
+ * RADS TOOLING - ADDRESS UI POLISH
+ * ============================================
+ * 
+ * This CSS file contains VISUAL ADJUSTMENTS ONLY
+ * to make the Address section match the reference design
+ * 
+ * NO functionality changes - pure UI polish!
+ * 
+ * Add this to the END of profile.css or include separately
+ * ============================================
+ */
+
+/* ========================================
+   PAGE HEADER & BACK BUTTON
+   ======================================== */
+
+/* Back button at top of page (if exists) */
+.page-back-btn,
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    margin-bottom: 24px;
+}
+
+.page-back-btn:hover,
+.back-btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    color: #374151;
+}
+
+.page-back-btn svg,
+.back-btn svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* ========================================
+   ADDRESS SECTION HEADER
+   ======================================== */
+
+.content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.content-header h2 {
+    margin: 0 0 4px 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.content-header p {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+
+/* Add New Address Button */
+.content-header .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 20px;
+    background: #2f5b88;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.content-header .btn-primary:hover {
+    background: #1e3a5f;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.content-header .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* ========================================
+   ADDRESS CARDS - REFINEMENTS
+   ======================================== */
+
+.address-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+}
+
+.address-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #d1d5db;
+    transform: translateY(-2px);
+}
+
+/* Address Card Header */
+.address-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.address-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.address-header-left strong {
+    color: #111827;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+/* Address Actions (Edit, Delete, Set Default icons) */
+.address-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: #6b7280;
+    transition: stroke 0.2s;
+}
+
+.btn-icon:hover {
+    background: #f9fafb;
+    border-color: #2f5b88;
+}
+
+.btn-icon:hover svg {
+    stroke: #2f5b88;
+}
+
+.btn-icon.btn-delete:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+}
+
+.btn-icon.btn-delete:hover svg {
+    stroke: #ef4444;
+}
+
+/* Address Card Body */
+.address-card-body {
+    line-height: 1.6;
+}
+
+.address-card-body p {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.5;
+}
+
+.address-card-body p:last-child {
+    margin-bottom: 0;
+}
+
+.address-card-body strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+.address-card-body .address-text {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 12px;
+    line-height: 1.6;
+}
+
+/* Badge Styling */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
+}
+
+.badge-primary {
+    background: #3b82f6;
+    color: #fff;
+}
+
+/* ========================================
+   ADDRESS MODAL - REFINEMENTS
+   ======================================== */
+
+/* Modal Overlay */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+/* Modal Card - Address Form Specific */
+#addressFormModal .modal-card {
+    max-width: 600px !important;
+    width: 100%;
+    padding: 0 !important;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Modal Header */
+#addressFormModal .modal-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 12px 12px 0 0;
+    flex-shrink: 0;
+}
+
+/* Modal Title */
+#addressFormModal .modal-card-header h3 {
+    margin: 0 !important;
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.3;
+}
+
+/* Back Button in Modal */
+.modal-back-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px !important;
+    border: 1px solid #e5e7eb !important;
+    background: #fff !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    font-size: 14px;
+    color: #6b7280 !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.modal-back-btn:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+}
+
+.modal-back-btn svg {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+}
+
+/* Close Button (X) */
+.modal-close-btn {
+    background: none !important;
+    border: none !important;
+    font-size: 24px;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0 !important;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.modal-close-btn:hover {
+    background: #f3f4f6 !important;
+    color: #374151;
+}
+
+/* Form Container */
+#addressFormModal form {
+    padding: 24px 32px 32px 32px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+/* Form Labels */
+#addressFormModal label {
+    display: block;
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+}
+
+#addressFormModal label .required {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+/* Form Inputs */
+#addressFormModal input[type="text"],
+#addressFormModal input[type="email"],
+#addressFormModal input[type="tel"],
+#addressFormModal textarea,
+#addressFormModal select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #111827;
+    background: #fff;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+#addressFormModal input:focus,
+#addressFormModal textarea:focus,
+#addressFormModal select:focus {
+    outline: none;
+    border-color: #2f5b88;
+    box-shadow: 0 0 0 3px rgba(47, 91, 136, 0.1);
+}
+
+#addressFormModal input::placeholder,
+#addressFormModal textarea::placeholder {
+    color: #9ca3af;
+}
+
+/* Form Groups */
+#addressFormModal .form-group {
+    margin-bottom: 20px;
+}
+
+#addressFormModal .form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+/* Phone Input - Split Style */
+#addressFormModal .phone-input-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+#addressFormModal .phone-prefix {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+#addressFormModal .phone-input-wrapper input {
+    flex: 1;
+}
+
+/* Textarea */
+#addressFormModal textarea {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+/* Select Dropdowns */
+#addressFormModal select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 12px center;
+    background-repeat: no-repeat;
+    background-size: 20px;
+    padding-right: 40px;
+}
+
+/* Checkbox */
+#addressFormModal input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+#addressFormModal .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #374151;
+    cursor: pointer;
+    margin-top: 16px;
+}
+
+/* Form Actions (Buttons) */
+#addressFormModal .form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+#addressFormModal .btn {
+    padding: 11px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+#addressFormModal .btn-primary {
+    background: #2f5b88;
+    color: #fff;
+}
+
+#addressFormModal .btn-primary:hover {
+    background: #1e3a5f;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#addressFormModal .btn-primary:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+#addressFormModal .btn-outline {
+    background: #fff;
+    border: 1px solid #d1d5db;
+    color: #374151;
+}
+
+#addressFormModal .btn-outline:hover {
+    background: #f9fafb;
+    border-color: #9ca3af;
+}
+
+/* Loading Spinner in Button */
+.btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Message Display */
+.msg {
+    margin-top: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.msg.error {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.msg.success {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+/* ========================================
+   RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Modal adjustments for mobile */
+    #addressFormModal .modal-card {
+        max-width: 100% !important;
+        max-height: 95vh;
+        margin: 10px;
+    }
+    
+    #addressFormModal .modal-card-header {
+        padding: 16px 20px;
+    }
+    
+    #addressFormModal .modal-card-header h3 {
+        font-size: 16px;
+    }
+    
+    #addressFormModal form {
+        padding: 20px 24px 24px 24px;
+    }
+    
+    /* Address cards */
+    .address-card {
+        padding: 16px;
+    }
+    
+    /* Header adjustments */
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    
+    .content-header .btn-primary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-header h2 {
+        font-size: 20px;
+    }
+    
+    .content-header p {
+        font-size: 13px;
+    }
+    
+    .address-card {
+        padding: 14px;
+    }
+    
+    #addressFormModal .modal-card-header {
+        padding: 14px 16px;
+    }
+    
+    #addressFormModal form {
+        padding: 16px 20px 20px 20px;
+    }
+}
+
+/* ========================================
+   LOADING STATE
+   ======================================== */
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #2f5b88;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+
+#no-addresses {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+#no-addresses svg {
+    margin: 0 auto 20px;
+    opacity: 0.3;
+}
+
+#no-addresses h3 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #6b7280;
+    margin: 0 0 8px 0;
+}
+
+#no-addresses p {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0;
+}
+
+/* ========================================
+   FINAL POLISH
+   ======================================== */
+
+/* Smooth transitions everywhere */
+* {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+    outline: 2px solid #2f5b88;
+    outline-offset: 2px;
+}
+
+/* ============================================
+   END OF UI POLISH
+   ============================================ */
+/**
+ * ============================================
+ * MODAL HEADER FIX - CRITICAL ADDITION
+ * ============================================
+ * 
+ * This ensures the modal header is ALWAYS visible
+ * exactly like reference Image 2
+ * 
+ * Add this AFTER profile_UI_POLISH.css
+ * or merge into it
+ * ============================================
+ */
+
+/* ========================================
+   MODAL HEADER - FORCED VISIBILITY
+   ======================================== */
+
+#addressFormModal .modal-card {
+    display: flex !important;
+    flex-direction: column !important;
+    max-width: 600px !important;
+    width: 100% !important;
+    max-height: 90vh !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    overflow: visible !important;
+}
+
+#addressFormModal .modal-card-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 20px 24px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    border-radius: 12px 12px 0 0 !important;
+    flex-shrink: 0 !important;
+    min-height: 68px !important;
+    gap: 12px !important;
+}
+
+#addressFormModal .modal-card-header h3 {
+    flex: 1 !important;
+    text-align: center !important;
+    margin: 0 !important;
+    padding: 0 20px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #2f5b88 !important;
+    line-height: 1.3 !important;
+}
+
+/* Back Button - Visible and Styled */
+.modal-back-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 8px 14px !important;
+    border: 1px solid #e5e7eb !important;
+    background: #fff !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+}
+
+.modal-back-btn:hover {
+    background: #f9fafb !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+}
+
+.modal-back-btn svg {
+    flex-shrink: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Close Button - Properly Styled */
+.modal-close-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer !important;
+    font-size: 28px !important;
+    line-height: 1 !important;
+    color: #6b7280 !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
+}
+
+.modal-close-btn:hover {
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+}
+
+/* Form Container - Scrollable */
+#addressFormModal form {
+    padding: 24px 32px 32px 32px !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+    background: #ffffff !important;
+}
+
+/* Form Groups - Proper Spacing */
+#addressFormModal .form-group {
+    margin-bottom: 20px !important;
+}
+
+#addressFormModal .form-group:last-of-type {
+    margin-bottom: 0 !important;
+}
+
+/* Labels */
+#addressFormModal label {
+    display: block !important;
+    margin-bottom: 8px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+}
+
+/* Required Asterisk */
+#addressFormModal label span {
+    color: #ef4444 !important;
+}
+
+/* Input Fields */
+#addressFormModal input[type="text"],
+#addressFormModal input[type="email"],
+#addressFormModal input[type="tel"],
+#addressFormModal textarea,
+#addressFormModal select {
+    width: 100% !important;
+    padding: 10px 14px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    color: #111827 !important;
+    background: #ffffff !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.2s ease !important;
+}
+
+#addressFormModal input:focus,
+#addressFormModal textarea:focus,
+#addressFormModal select:focus {
+    outline: none !important;
+    border-color: #2f5b88 !important;
+    box-shadow: 0 0 0 3px rgba(47, 91, 136, 0.1) !important;
+}
+
+/* Placeholders */
+#addressFormModal input::placeholder,
+#addressFormModal textarea::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Phone Input Group */
+#addressFormModal .phone-group {
+    display: flex !important;
+    gap: 8px !important;
+}
+
+#addressFormModal .phone-prefix {
+    display: flex !important;
+    align-items: center !important;
+    padding: 10px 14px !important;
+    background: #f9fafb !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+    flex-shrink: 0 !important;
+}
+
+#addressFormModal .phone-group input {
+    flex: 1 !important;
+}
+
+/* Select Dropdowns */
+#addressFormModal select {
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E") !important;
+    background-position: right 12px center !important;
+    background-repeat: no-repeat !important;
+    background-size: 20px !important;
+    padding-right: 40px !important;
+}
+
+/* Textarea */
+#addressFormModal textarea {
+    min-height: 80px !important;
+    resize: vertical !important;
+    line-height: 1.5 !important;
+}
+
+/* Checkbox */
+#addressFormModal input[type="checkbox"] {
+    width: auto !important;
+    margin-right: 8px !important;
+    cursor: pointer !important;
+}
+
+/* Form Actions */
+#addressFormModal .form-actions {
+    display: flex !important;
+    gap: 12px !important;
+    justify-content: flex-end !important;
+    margin-top: 28px !important;
+    padding-top: 20px !important;
+    border-top: 1px solid #e5e7eb !important;
+}
+
+/* Buttons */
+#addressFormModal .btn {
+    padding: 11px 24px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+#addressFormModal .btn-primary {
+    background: #2f5b88 !important;
+    color: #ffffff !important;
+    border: none !important;
+}
+
+#addressFormModal .btn-primary:hover {
+    background: #1e3a5f !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+#addressFormModal .btn-primary:disabled {
+    background: #9ca3af !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+#addressFormModal .btn-outline {
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    color: #374151 !important;
+}
+
+#addressFormModal .btn-outline:hover {
+    background: #f9fafb !important;
+    border-color: #9ca3af !important;
+}
+
+/* Loading Spinner */
+.btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Message */
+.msg {
+    margin-top: 12px !important;
+    padding: 10px 14px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+}
+
+.msg.error {
+    background: #fef2f2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fecaca !important;
+}
+
+.msg.success {
+    background: #f0fdf4 !important;
+    color: #166534 !important;
+    border: 1px solid #bbf7d0 !important;
+}
+
+/* ========================================
+   RESPONSIVE - MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+    #addressFormModal .modal-card {
+        max-width: 100% !important;
+        width: calc(100% - 20px) !important;
+        max-height: 95vh !important;
+        margin: 10px !important;
+    }
+    
+    #addressFormModal .modal-card-header {
+        padding: 16px 20px !important;
+        min-height: 60px !important;
+    }
+    
+    #addressFormModal .modal-card-header h3 {
+        font-size: 16px !important;
+        padding: 0 10px !important;
+    }
+    
+    #addressFormModal form {
+        padding: 20px 24px 24px 24px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #addressFormModal .modal-card-header {
+        padding: 14px 16px !important;
+        min-height: 56px !important;
+    }
+    
+    #addressFormModal .modal-card-header h3 {
+        font-size: 15px !important;
+    }
+    
+    #addressFormModal form {
+        padding: 16px 20px 20px 20px !important;
+    }
+}
+
+/* ============================================
+   END OF MODAL HEADER FIX
+   ============================================ */

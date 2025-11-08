@@ -1,755 +1,2372 @@
-/* assets/css/profile.css - Shopee-Style Profile */
-
 * {
+
     margin: 0;
+
     padding: 0;
+
     box-sizing: border-box;
+
 }
+
+ 
 
 :root {
+
     --primary: #2f5b88;
+
     --primary-dark: #1e3a5f;
+
     --primary-light: #4a7ba7;
+
     --secondary: #667eea;
+
     --success: #10b981;
+
     --error: #ef4444;
+
     --orange: #ee4d2d;
+
     --bg-gray: #f5f5f5;
+
     --bg-white: #ffffff;
+
     --text-dark: #333333;
+
     --text-medium: #666666;
+
     --text-light: #999999;
+
     --border: #ebebeb;
+
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+
 }
+
+ 
 
 body {
+
     font-family: Poppins;
+
     background: var(--bg-gray);
+
     color: var(--text-dark);
+
     line-height: 1.6;
+
 }
+
+ 
 
 /* ===== TOP NAVBAR ===== */
+
 .top-navbar {
+
     background: white;
+
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+
     position: sticky;
+
     top: 0;
+
     z-index: 100;
+
 }
+
+ 
 
 .nav-container {
+
     max-width: 1200px;
+
     margin: 0 auto;
+
     padding: 0 24px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
+
     height: 64px;
+
 }
+
+ 
 
 .nav-logo h2 {
+
     color: var(--primary);
+
     font-size: 1.5rem;
+
     font-weight: 600;
+
 }
+
+ 
 
 .nav-links {
+
     display: flex;
+
     gap: 2rem;
+
 }
+
+ 
 
 .nav-links a {
+
     color: var(--text-medium);
+
     text-decoration: none;
+
     font-weight: 500;
+
     transition: color 0.2s;
+
 }
+
+ 
 
 .nav-links a:hover,
+
 .nav-links a.active {
+
     color: var(--primary);
+
 }
+
+ 
 
 .nav-user {
+
     display: flex;
+
     align-items: center;
+
     gap: 1rem;
+
 }
+
+ 
 
 .nav-user span {
+
     color: var(--text-dark);
+
     font-weight: 500;
+
 }
+
+ 
 
 .btn-logout {
+
     color: var(--error);
+
     text-decoration: none;
+
     font-weight: 500;
+
 }
+
+ 
 
 /* ===== PROFILE WRAPPER ===== */
+
 .profile-wrapper {
+
     max-width: 1200px;
+
     margin: 24px auto;
+
     padding: 0 24px;
+
 }
+
+ 
 
 .profile-layout {
+
     display: grid;
+
     grid-template-columns: 220px 1fr;
+
     gap: 24px;
+
 }
+
+ 
 
 /* ===== SIDEBAR ===== */
+
 .profile-sidebar {
+
     background: white;
+
     border-radius: 2px;
+
     overflow: hidden;
+
 }
+
+ 
 
 .sidebar-profile {
+
     padding: 20px;
+
     border-bottom: 1px solid var(--border);
+
     display: flex;
+
     align-items: center;
+
     gap: 12px;
+
 }
+
+ 
 
 .sidebar-avatar {
+
     width: 50px;
+
     height: 50px;
+
     border-radius: 50%;
+
     overflow: hidden;
+
     flex-shrink: 0;
+
 }
+
+ 
 
 .sidebar-avatar img {
+
     width: 100%;
+
     height: 100%;
+
     object-fit: cover;
+
 }
+
+ 
 
 .avatar-placeholder {
+
     width: 100%;
+
     height: 100%;
+
     background: linear-gradient(135deg, var(--primary), var(--secondary));
+
     color: white;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     font-weight: 600;
+
     font-size: 1.2rem;
+
 }
+
+ 
 
 .sidebar-info {
+
     flex: 1;
+
     min-width: 0;
+
 }
+
+ 
 
 .sidebar-name {
+
     font-weight: 600;
+
     color: var(--text-dark);
+
     overflow: hidden;
+
     text-overflow: ellipsis;
+
     white-space: nowrap;
+
 }
+
+ 
 
 .sidebar-edit {
+
     display: flex;
+
     align-items: center;
+
     gap: 4px;
+
     color: var(--text-medium);
+
     text-decoration: none;
+
     font-size: 0.85rem;
+
     margin-top: 4px;
+
 }
+
+ 
 
 .sidebar-edit:hover {
+
     color: var(--primary);
+
 }
+
+ 
 
 /* ===== SIDEBAR MENU ===== */
+
 .sidebar-menu {
+
     padding: 12px 0;
+
 }
+
+ 
 
 .menu-section {
+
     margin-bottom: 12px;
+
 }
+
+ 
 
 .menu-title {
+
     display: flex;
+
     align-items: center;
+
     gap: 8px;
+
     padding: 8px 20px;
+
     color: var(--text-dark);
+
     font-weight: 600;
+
     font-size: 0.9rem;
+
 }
+
+ 
 
 .menu-item {
+
     display: block;
+
     padding: 10px 20px 10px 44px;
+
     color: var(--text-dark);
+
     text-decoration: none;
+
     font-size: 0.9rem;
+
     transition: all 0.2s;
+
 }
+
+ 
 
 .menu-item:hover {
+
     background: var(--bg-gray);
+
     color: var(--primary);
+
 }
+
+ 
 
 .menu-item.active {
+
     background: rgba(47, 91, 136, 0.08);
+
     color: var(--primary);
+
     font-weight: 500;
+
 }
+
+ 
 
 /* ===== PROFILE CONTENT ===== */
+
 .profile-content {
+
     background: white;
+
     border-radius: 2px;
+
     min-height: 600px;
+
 }
+
+ 
 
 .content-header {
+
     padding: 24px 32px;
+
     border-bottom: 1px solid var(--border);
+
 }
+
+ 
 
 .content-header h2 {
-    font-size: 1.25rem;
+
+    font-size: 1.375rem;
+
     color: var(--text-dark);
+
     margin-bottom: 4px;
+
+    font-weight: 600;
+
 }
+
+ 
 
 .content-header p {
+
     color: var(--text-medium);
-    font-size: 0.9rem;
+
+    font-size: 0.875rem;
+
 }
+
+ 
 
 .content-body {
+
     padding: 32px;
+
+    max-width: 1020px;
+
 }
+
+ 
 
 /* ===== TAB CONTENT ===== */
+
 .tab-content {
+
     display: none;
+
 }
+
+ 
 
 .tab-content.active {
+
     display: block;
+
 }
+
+ 
 
 /* ===== FORM STYLES ===== */
+
 .form-split {
+
     display: grid;
+
     grid-template-columns: 1fr auto 300px;
+
     gap: 32px;
+
 }
+
+ 
 
 .form-divider {
+
     width: 1px;
+
     background: var(--border);
+
 }
+
+ 
 
 .form-group {
+
     margin-bottom: 24px;
+
 }
+
+ 
 
 .form-group label {
+
     display: block;
+
     color: var(--text-medium);
+
     font-size: 0.9rem;
+
     margin-bottom: 8px;
+
 }
+
+ 
 
 .form-group input,
+
 .form-group textarea {
+
     width: 100%;
+
     padding: 10px 12px;
+
     border: 1px solid var(--border);
+
     border-radius: 2px;
+
     font-family: Poppins;
+
     font-size: 0.95rem;
+
     transition: border-color 0.2s;
+
 }
+
+ 
 
 .form-group input:focus,
+
 .form-group textarea:focus {
+
     outline: none;
+
     border-color: var(--primary);
+
 }
+
+ 
 
 .form-group input:disabled {
+
     background: var(--bg-gray);
+
     color: var(--text-light);
+
     cursor: not-allowed;
+
 }
+
+ 
 
 textarea {
+
     resize: vertical;
+
 }
+
+ 
 
 /* ===== AVATAR UPLOAD ===== */
+
 .avatar-section {
+
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
+
     padding-top: 20px;
+
 }
+
+ 
 
 .avatar-upload {
+
     text-align: center;
+
 }
+
+ 
 
 .avatar-preview {
+
     width: 120px;
+
     height: 120px;
+
     border-radius: 50%;
+
     overflow: hidden;
+
     margin: 0 auto 16px;
+
     border: 1px solid var(--border);
+
 }
+
+ 
 
 .avatar-preview img {
+
     width: 100%;
+
     height: 100%;
+
     object-fit: cover;
+
 }
+
+ 
 
 .avatar-placeholder-large {
+
     width: 100%;
+
     height: 100%;
+
     background: linear-gradient(135deg, var(--primary), var(--secondary));
+
     color: white;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     font-weight: 600;
+
     font-size: 3rem;
+
 }
+
+ 
 
 .upload-hint {
+
     color: var(--text-light);
+
     font-size: 0.8rem;
+
     margin-top: 12px;
+
     line-height: 1.5;
+
 }
+
+ 
 
 /* ===== BUTTONS ===== */
+
 .btn {
+
     padding: 10px 24px;
+
     border-radius: 2px;
+
     font-family: Poppins;
+
     font-weight: 500;
+
     font-size: 0.9rem;
+
     cursor: pointer;
+
     transition: all 0.2s;
+
     border: none;
+
     text-decoration: none;
+
     display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
+
     gap: 8px;
+
 }
+
+ 
 
 .btn-primary {
+
     background: var(--primary);
+
     color: white;
+
 }
+
+ 
 
 .btn-primary:hover:not(:disabled) {
+
     background: var(--primary-dark);
+
 }
+
+ 
 
 .btn-primary:disabled {
+
     opacity: 0.6;
+
     cursor: not-allowed;
+
 }
+
+ 
 
 .btn-outline {
+
     background: white;
+
     color: var(--primary);
+
     border: 1px solid var(--primary);
+
 }
+
+ 
 
 .btn-outline:hover {
+
     background: var(--primary);
+
     color: white;
+
 }
+
+ 
 
 .form-actions {
+
     margin-top: 32px;
+
 }
+
+ 
 
 /* ===== LOADING & MESSAGES ===== */
+
 .loading-state {
+
     display: flex;
+
     flex-direction: column;
+
     align-items: center;
+
     justify-content: center;
+
     padding: 4rem 2rem;
+
     gap: 1rem;
+
 }
+
+ 
 
 .spinner {
+
     width: 50px;
+
     height: 50px;
+
     border: 4px solid var(--border);
+
     border-top-color: var(--primary);
+
     border-radius: 50%;
+
     animation: spin 1s linear infinite;
+
 }
+
+ 
 
 .mini-spinner {
+
     width: 16px;
+
     height: 16px;
+
     border: 2px solid rgba(255, 255, 255, 0.3);
+
     border-top-color: white;
+
     border-radius: 50%;
+
     animation: spin 0.6s linear infinite;
+
 }
+
+ 
 
 @keyframes spin {
+
     to {
+
         transform: rotate(360deg);
+
     }
+
 }
+
+ 
 
 .loading-state p {
+
     color: var(--text-medium);
+
     font-size: 0.95rem;
+
 }
+
+ 
 
 /* ===== ALERTS ===== */
+
 .alert {
+
     display: flex;
+
     align-items: center;
+
     gap: 12px;
+
     padding: 12px 16px;
+
     border-radius: 4px;
+
     margin-bottom: 16px;
+
     animation: slideDown 0.3s ease-out;
+
 }
+
+ 
 
 .alert svg {
+
     flex-shrink: 0;
+
 }
+
+ 
 
 .alert-success {
+
     background: #d1fae5;
+
     color: #065f46;
+
     border: 1px solid #a7f3d0;
+
 }
+
+ 
 
 .alert-error {
+
     background: #fee2e2;
+
     color: #991b1b;
+
     border: 1px solid #fecaca;
+
 }
+
+ 
 
 @keyframes slideDown {
+
     from {
+
         opacity: 0;
+
         transform: translateY(-10px);
+
     }
 
+ 
+
     to {
+
         opacity: 1;
+
         transform: translateY(0);
+
     }
+
 }
+
+ 
 
 /* ===== INFO BOX ===== */
+
 .info-box {
+
     display: flex;
+
     gap: 12px;
+
     padding: 16px;
+
     background: #eff6ff;
+
     border: 1px solid #bfdbfe;
+
     border-radius: 4px;
+
     margin-bottom: 24px;
+
 }
+
+ 
 
 .info-box svg {
+
     flex-shrink: 0;
+
     color: #3b82f6;
+
 }
+
+ 
 
 .info-box strong {
+
     display: block;
+
     color: var(--text-dark);
+
     margin-bottom: 4px;
+
 }
+
+ 
 
 .info-box p {
+
     color: var(--text-medium);
+
     font-size: 0.9rem;
+
     margin: 0;
+
 }
+
+ 
 
 /* ===== RESPONSIVE ===== */
+
 @media (max-width: 1024px) {
+
     .form-split {
+
         grid-template-columns: 1fr;
+
     }
+
+ 
 
     .form-divider {
+
         display: none;
+
     }
+
+ 
 
     .avatar-section {
+
         order: -1;
+
         padding-top: 0;
+
         padding-bottom: 32px;
+
         border-bottom: 1px solid var(--border);
+
     }
+
 }
+
+ 
 
 @media (max-width: 768px) {
+
     .nav-links {
+
         display: none;
+
     }
+
+ 
 
     .profile-layout {
+
         grid-template-columns: 1fr;
+
     }
+
+ 
 
     .profile-sidebar {
+
         display: none;
+
     }
+
+ 
 
     .content-body {
+
         padding: 20px;
+
     }
+
+ 
 
     .nav-container {
+
         padding: 0 16px;
+
     }
+
+ 
 
     .profile-wrapper {
+
         padding: 0 16px;
+
         margin: 16px auto;
+
     }
+
 }
+
+ 
 
 @media (max-width: 480px) {
+
     .nav-user span {
+
         display: none;
+
     }
+
+ 
 
     .content-header {
+
         padding: 20px;
+
     }
+
+ 
 
     .content-header h2 {
+
         font-size: 1.1rem;
+
     }
+
+ 
 
     .avatar-preview {
+
         width: 100px;
+
         height: 100px;
+
     }
+
+ 
 
     .avatar-placeholder-large {
+
         font-size: 2.5rem;
+
     }
+
 }
+
+ 
 
 /* ===== ANIMATIONS ===== */
+
 .tab-content {
+
     animation: fadeIn 0.3s ease-in;
+
 }
+
+ 
 
 @keyframes fadeIn {
+
     from {
+
         opacity: 0;
+
         transform: translateY(10px);
+
     }
+
+ 
 
     to {
+
         opacity: 1;
+
         transform: translateY(0);
+
     }
+
 }
+
+ 
 
 /* ===== CUSTOM SCROLLBAR ===== */
+
 .profile-sidebar::-webkit-scrollbar {
+
     width: 6px;
+
 }
+
+ 
 
 .profile-sidebar::-webkit-scrollbar-track {
+
     background: var(--bg-gray);
+
 }
+
+ 
 
 .profile-sidebar::-webkit-scrollbar-thumb {
+
     background: var(--border);
+
     border-radius: 3px;
+
 }
+
+ 
 
 .profile-sidebar::-webkit-scrollbar-thumb:hover {
+
     background: var(--text-light);
+
 }
+
+ 
 
 .modal {
+
     position: fixed;
+
     inset: 0;
+
     background: rgba(0, 0, 0, .35);
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
+
     z-index: 9999
+
 }
+
+ 
 
 .modal.hidden {
+
     display: none
+
 }
+
+ 
 
 .modal-card {
+
     background: #fff;
+
     border-radius: 12px;
+
     min-width: 340px;
+
     max-width: 420px;
+
     padding: 20px;
+
     box-shadow: 0 10px 30px rgba(0, 0, 0, .2)
+
 }
+
+ 
 
 .modal-card h3 {
+
     margin: 0 0 6px
+
 }
-.modal-card-header {
 
-    position: relative;
+ 
 
-    margin-bottom: 15px;
+.modal-card .muted {
 
-    padding-bottom: 10px;
+    color: #6b7280;
+
+    margin: 0 0 14px;
+
+    font-size: .95rem
+
+}
+
+ 
+
+.modal-card label {
+
+    display: block;
+
+    margin: 12px 0 6px;
+
+    font-weight: 600
+
+}
+
+ 
+
+.modal-card input {
+
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 8px
+
+}
+
+ 
+
+.modal-card .row {
+
+    display: flex;
+
+    gap: 10px;
+
+    justify-content: flex-end;
+
+    margin-top: 16px
+
+}
+
+ 
+
+.modal-card .btn {
+
+    padding: 10px 14px;
+
+    border-radius: 8px;
+
+    border: 0;
+
+    cursor: pointer
+
+}
+
+ 
+
+.btn-primary {
+
+    background: #23486A;
+
+    color: #fff
+
+}
+
+ 
+
+.btn-outline {
+
+    background: #fff;
+
+    border: 1px solid #cbd5e1;
+
+    color: #111827
+
+}
+
+ 
+
+.msg {
+
+    margin-top: 10px;
+
+    font-size: .9rem
+
+}
+
+ 
+
+.msg.error {
+
+    color: #b91c1c
+
+}
+
+ 
+
+.msg.success {
+
+    color: #065f46
+
+}
+
+ 
+
+#nav-avatar,
+
+#dd-avatar {
+
+    border-radius: 50%;
+
+    overflow: hidden;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+}
+
+ 
+
+#nav-avatar {
+
+    width: 32px;
+
+    height: 32px;
+
+}
+
+ 
+
+#dd-avatar {
+
+    width: 50px;
+
+    height: 50px;
+
+}
+
+ 
+
+#nav-avatar img,
+
+#dd-avatar img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: cover;
+
+    object-position: center;
+
+    border-radius: 50%;
+
+}
+
+ 
+
+/* ========================================
+
+   ADDRESS MODAL ENHANCED STYLING
+
+   Add this to the END of your profile.css
+
+   Pure UI changes - NO functionality affected
+
+   ======================================== */
+
+ 
+
+/* ===== ADDRESS MODAL SPECIFIC OVERRIDES ===== */
+
+ 
+
+/* Wider modal for address form */
+
+#addressFormModal .modal-card {
+
+    max-width: 550px !important;
+
+    width: 90%;
+
+    padding: 0 !important;
+
+    border-radius: 8px;
+
+}
+
+ 
+
+/* Modal Header with Back button styling */
+
+#addressFormModal .modal-card-header {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 20px 24px;
 
     border-bottom: 1px solid #e5e7eb;
 
+    background: #fff;
+
+    border-radius: 8px 8px 0 0;
+
 }
 
-.modal-card-header h3 {
-    margin: 0;
-    padding-right: 35px;
+ 
+
+/* Back Button Styling */
+
+.modal-back-btn {
+
+    display: flex !important;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 8px 14px !important;
+
+    border: 1px solid #d1d5db !important;
+
+    background: #fff !important;
+
+    border-radius: 6px !important;
+
+    cursor: pointer;
+
+    font-size: 0.9rem;
+
+    color: #6b7280 !important;
+
+    font-weight: 500;
+
+    transition: all 0.2s ease;
+
 }
+
+ 
+
+.modal-back-btn:hover {
+
+    background: #f9fafb !important;
+
+    border-color: #9ca3af !important;
+
+    color: #374151 !important;
+
+}
+
+ 
+
+.modal-back-btn svg {
+
+    flex-shrink: 0;
+
+}
+
+ 
+
+/* Modal Title */
+
+#addressFormModal .modal-card-header h3 {
+
+    margin: 0 !important;
+
+    flex: 1;
+
+    text-align: center;
+
+    font-size: 1.1rem;
+
+    font-weight: 600;
+
+    color: #111827;
+
+}
+
+ 
+
+/* Close Button (X) */
 
 .modal-close-btn {
-    position: absolute;
-    top: 0;
-    right: 0;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    line-height: 1;
-    color: #6b7280;
+
+    background: none !important;
+
+    border: none !important;
+
+    font-size: 1.8rem;
+
+    color: #9ca3af;
+
     cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
+
+    padding: 0 !important;
+
+    width: 32px;
+
+    height: 32px;
+
     display: flex;
+
     align-items: center;
+
     justify-content: center;
-    transition: color 0.2s, background-color 0.2s;
-    border-radius: 6px;
+
+    border-radius: 4px;
+
+    transition: all 0.2s ease;
+
+    line-height: 1;
+
 }
+
+ 
 
 .modal-close-btn:hover {
-    color: #23486A;
-    background-color: #f3f4f6;
+
+    background: #f3f4f6 !important;
+
+    color: #374151;
+
 }
 
-.modal-close-btn:focus {
-    outline: 2px solid #23486A;
-    outline-offset: 2px;
+ 
+
+/* Form Container - Better Padding */
+
+#addressFormModal form {
+
+    padding: 24px 32px 32px 32px;
+
 }
 
-.modal-card .muted {
-    color: #6b7280;
-    margin: 0 0 14px;
-    font-size: .95rem
+ 
+
+/* Form Groups - Enhanced Spacing */
+
+#addressFormModal .form-group {
+
+    margin-bottom: 20px !important;
+
 }
 
-.modal-card label {
+ 
+
+/* Labels - Better Typography */
+
+#addressFormModal .form-group label {
+
     display: block;
-    margin: 12px 0 6px;
-    font-weight: 600
+
+    margin-bottom: 8px !important;
+
+    font-weight: 500 !important;
+
+    font-size: 0.9rem;
+
+    color: #374151;
+
 }
 
-.modal-card input {
+ 
+
+/* Input Fields - Cleaner Look */
+
+#addressFormModal .form-group input[type="text"],
+
+#addressFormModal .form-group input[type="email"],
+
+#addressFormModal .form-group input[type="tel"],
+
+#addressFormModal .form-group select,
+
+#addressFormModal .form-group textarea {
+
     width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px
-}
 
-.modal-card .row {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 16px
-}
+    padding: 11px 14px !important;
 
-.modal-card .btn {
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 0;
-    cursor: pointer
-}
+    border: 1px solid #d1d5db !important;
 
-.btn-primary {
-    background: #23486A;
-    color: #fff
-}
+    border-radius: 6px !important;
 
-.btn-outline {
+    font-size: 0.95rem;
+
+    font-family: 'Poppins', sans-serif;
+
+    color: #111827;
+
     background: #fff;
-    border: 1px solid #cbd5e1;
-    color: #111827
+
+    transition: all 0.2s ease;
+
 }
 
-.msg {
-    margin-top: 10px;
-    font-size: .9rem
+ 
+
+#addressFormModal .form-group input:focus,
+
+#addressFormModal .form-group select:focus,
+
+#addressFormModal .form-group textarea:focus {
+
+    outline: none;
+
+    border-color: #2f5b88 !important;
+
+    box-shadow: 0 0 0 3px rgba(47, 91, 136, 0.1);
+
 }
 
-.msg.error {
-    color: #b91c1c
+ 
+
+/* Select Dropdowns - Better Appearance */
+
+#addressFormModal .form-group select {
+
+    appearance: none;
+
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236B7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+
+    background-repeat: no-repeat;
+
+    background-position: right 14px center;
+
+    padding-right: 40px !important;
+
+    cursor: pointer;
+
 }
 
-.msg.success {
-    color: #065f46
+ 
+
+/* Textarea - Better Height */
+
+#addressFormModal .form-group textarea {
+
+    min-height: 80px;
+
+    resize: vertical;
+
+    line-height: 1.5;
+
 }
 
-#nav-avatar,
-#dd-avatar {
-    border-radius: 50%;
-    overflow: hidden;
-    display: inline-flex;
+ 
+
+/* Phone Group Layout */
+
+#addressFormModal .phone-group {
+
+    display: flex;
+
     align-items: center;
+
+    gap: 8px;
+
+}
+
+ 
+
+#addressFormModal .phone-prefix {
+
+    padding: 11px 14px;
+
+    background: #f9fafb;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 6px;
+
+    font-weight: 500;
+
+    color: #6b7280;
+
+    font-size: 0.95rem;
+
+    white-space: nowrap;
+
+}
+
+ 
+
+#addressFormModal .phone-group input[type="tel"] {
+
+    flex: 1;
+
+}
+
+ 
+
+/* Checkbox Group Alignment */
+
+#addressFormModal .form-group input[type="checkbox"] {
+
+    width: 18px !important;
+
+    height: 18px;
+
+    cursor: pointer;
+
+    accent-color: #2f5b88;
+
+}
+
+ 
+
+#addressFormModal .form-group input[type="checkbox"] + label {
+
+    margin-bottom: 0 !important;
+
+    cursor: pointer;
+
+    user-select: none;
+
+}
+
+ 
+
+/* Button Row - Better Spacing */
+
+#addressFormModal .row {
+
+    display: flex;
+
+    gap: 12px;
+
+    justify-content: flex-end;
+
+    margin-top: 28px !important;
+
+    padding-top: 20px;
+
+    border-top: 1px solid #f3f4f6;
+
+}
+
+ 
+
+/* Buttons - Enhanced Styling */
+
+#addressFormModal .btn {
+
+    padding: 11px 24px !important;
+
+    border-radius: 6px !important;
+
+    font-weight: 500 !important;
+
+    font-size: 0.95rem;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+    display: inline-flex;
+
+    align-items: center;
+
     justify-content: center;
+
+    gap: 8px;
+
+    border: none;
+
 }
 
-#nav-avatar {
-    width: 32px;
-    height: 32px;
+ 
+
+#addressFormModal .btn-outline {
+
+    background: #fff !important;
+
+    border: 1px solid #d1d5db !important;
+
+    color: #374151 !important;
+
 }
 
-#dd-avatar {
-    width: 50px;
-    height: 50px;
+ 
+
+#addressFormModal .btn-outline:hover {
+
+    background: #f9fafb !important;
+
+    border-color: #9ca3af !important;
+
 }
 
-#nav-avatar img,
-#dd-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
+ 
+
+#addressFormModal .btn-primary {
+
+    background: #2f5b88 !important;
+
+    color: #fff !important;
+
+    border: none !important;
+
+}
+
+ 
+
+#addressFormModal .btn-primary:hover:not(:disabled) {
+
+    background: #1e3a5f !important;
+
+    box-shadow: 0 2px 8px rgba(47, 91, 136, 0.3);
+
+}
+
+ 
+
+#addressFormModal .btn-primary:disabled {
+
+    opacity: 0.6;
+
+    cursor: not-allowed;
+
+}
+
+ 
+
+/* Required Asterisk Styling */
+
+#addressFormModal .form-group label span[style*="color: red"] {
+
+    color: #ef4444 !important;
+
+    font-weight: 600;
+
+}
+
+ 
+
+/* Message Area */
+
+#addressFormModal #addressFormMsg {
+
+    margin-top: 16px !important;
+
+    padding: 12px;
+
+    border-radius: 6px;
+
+    font-size: 0.9rem;
+
+    text-align: center;
+
+}
+
+ 
+
+#addressFormModal #addressFormMsg.error {
+
+    background: #fee2e2;
+
+    color: #991b1b;
+
+    border: 1px solid #fecaca;
+
+}
+
+ 
+
+#addressFormModal #addressFormMsg.success {
+
+    background: #d1fae5;
+
+    color: #065f46;
+
+    border: 1px solid #a7f3d0;
+
+}
+
+ 
+
+/* Placeholder Text Styling */
+
+#addressFormModal input::placeholder,
+
+#addressFormModal textarea::placeholder {
+
+    color: #9ca3af;
+
+    opacity: 1;
+
+}
+
+ 
+
+/* Hidden Inputs - Ensure they don't affect layout */
+
+#addressFormModal input[type="hidden"] {
+
+    display: none !important;
+
+}
+
+ 
+
+/* Responsive Adjustments */
+
+@media (max-width: 640px) {
+
+    #addressFormModal .modal-card {
+
+        max-width: 95% !important;
+
+        margin: 20px;
+
+    }
+
+ 
+
+    #addressFormModal form {
+
+        padding: 20px 20px 24px 20px;
+
+    }
+
+ 
+
+    #addressFormModal .modal-card-header {
+
+        padding: 16px 20px;
+
+    }
+
+ 
+
+    #addressFormModal .modal-card-header h3 {
+
+        font-size: 1rem;
+
+    }
+
+ 
+
+    #addressFormModal .row {
+
+        flex-direction: column-reverse;
+
+        gap: 10px;
+
+    }
+
+ 
+
+    #addressFormModal .btn {
+
+        width: 100%;
+
+    }
+
+}
+
+ 
+
+/* Scrollbar Styling for Modal */
+
+#addressFormModal .modal-card::-webkit-scrollbar {
+
+    width: 6px;
+
+}
+
+ 
+
+#addressFormModal .modal-card::-webkit-scrollbar-track {
+
+    background: #f3f4f6;
+
+}
+
+ 
+
+#addressFormModal .modal-card::-webkit-scrollbar-thumb {
+
+    background: #d1d5db;
+
+    border-radius: 3px;
+
+}
+
+ 
+
+#addressFormModal .modal-card::-webkit-scrollbar-thumb:hover {
+
+    background: #9ca3af;
+
+}
+
+ 
+
+/* Loading Spinner inside Button */
+
+#addressFormModal .btn-spinner {
+
+    display: none;
+
+}
+
+ 
+
+#addressFormModal .btn-spinner .mini-spinner {
+
+    width: 16px;
+
+    height: 16px;
+
+    border: 2px solid rgba(255, 255, 255, 0.3);
+
+    border-top-color: #fff;
+
     border-radius: 50%;
+
+    animation: spin 0.6s linear infinite;
+
 }
+
+ 
+
+/* Animation for modal appearance */
+
+#addressFormModal.modal:not(.hidden) .modal-card {
+
+    animation: modalSlideIn 0.3s ease-out;
+
+}
+
+ 
+
+@keyframes modalSlideIn {
+
+    from {
+
+        opacity: 0;
+
+        transform: scale(0.95) translateY(-20px);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: scale(1) translateY(0);
+
+    }
+
+}
+
+ 
+
+/* ===== END OF ADDRESS MODAL STYLES ===== */
+
+ 
+
+/* ========================================
+
+   ADDRESS CARD LIST STYLES
+
+   Clean card-based design for address list
+
+   ======================================== */
+
+ 
+
+/* Address List Container */
+
+#address-list {
+
+    display: grid;
+
+    gap: 16px;
+
+    max-width: 980px;
+
+}
+
+ 
+
+/* Address Card Styles */
+
+.address-card {
+
+    background: white;
+
+    border: 1px solid #e6e6e6;
+
+    border-radius: 8px;
+
+    padding: 18px;
+
+    margin-bottom: 22px;
+
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+
+    transition: all 0.2s ease;
+
+}
+
+ 
+
+.address-card:hover {
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    transform: translateY(-2px);
+
+}
+
+ 
+
+.address-card-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-bottom: 14px;
+
+    padding-bottom: 12px;
+
+    border-bottom: 1px solid #e6e6e6;
+
+}
+
+ 
+
+.address-header-left {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+
+}
+
+ 
+
+.address-header-left strong {
+
+    color: #333;
+
+    font-size: 15px;
+
+    font-weight: 600;
+
+}
+
+ 
+
+.address-actions {
+
+    display: flex;
+
+    gap: 6px;
+
+}
+
+ 
+
+.btn-icon {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 32px;
+
+    height: 32px;
+
+    padding: 0;
+
+    background: white;
+
+    border: 1px solid #e6e6e6;
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+
+}
+
+ 
+
+.btn-icon svg {
+
+    width: 16px;
+
+    height: 16px;
+
+    stroke: #666;
+
+    transition: stroke 0.2s;
+
+}
+
+ 
+
+.btn-icon:hover {
+
+    background: #f8f9fa;
+
+    border-color: #2f5b88;
+
+}
+
+ 
+
+.btn-icon:hover svg {
+
+    stroke: #2f5b88;
+
+}
+
+ 
+
+.btn-icon.btn-delete:hover {
+
+    background: #fff5f5;
+
+    border-color: #dc3545;
+
+}
+
+ 
+
+.btn-icon.btn-delete:hover svg {
+
+    stroke: #dc3545;
+
+}
+
+ 
+
+.address-card-body {
+
+    line-height: 1.6;
+
+}
+
+ 
+
+.address-card-body p {
+
+    margin: 6px 0;
+
+    font-size: 14px;
+
+    color: #333;
+
+}
+
+ 
+
+.address-card-body .address-text {
+
+    color: #666;
+
+    font-size: 13px;
+
+    margin-top: 10px;
+
+    line-height: 1.5;
+
+}
+
+ 
+
+.badge {
+
+    display: inline-block;
+
+    padding: 4px 10px;
+
+    border-radius: 12px;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.3px;
+
+}
+
+.badge-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+ 

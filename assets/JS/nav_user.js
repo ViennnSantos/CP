@@ -1,5 +1,5 @@
 (function () {
-    const API_BASE = '/RADS-TOOLING/backend/api';
+    const API_BASE = '/backend/api';
 
     function setNavFromUser(user) {
         const headAvatar = document.getElementById('nav-avatar');
@@ -10,7 +10,7 @@
 
         const fullName = user.full_name || user.username || 'Customer';
         const initials = (fullName.split(' ').map(s => s[0]).join('').slice(0, 2) || 'U').toUpperCase();
-        const imgPath = user.profile_image ? `/RADS-TOOLING/${user.profile_image}?v=${Date.now()}` : null;
+        const imgPath = user.profile_image ? `/${user.profile_image}?v=${Date.now()}` : null;
 
         if (headName) headName.textContent = fullName;
         if (ddName) ddName.textContent = fullName;

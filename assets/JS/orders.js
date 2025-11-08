@@ -25,7 +25,9 @@ async function loadCustomerOrders(status = 'all') {
     `;
 
     try {
-        const response = await fetch(`/RADS-TOOLING/backend/api/customer_orders.php?status=${status}`);
+        // For loading list
+const response = await fetch(`/backend/api/customer_orders.php?status=${status}`);
+
         const data = await response.json();
 
         if (data.success) {
@@ -71,10 +73,10 @@ function createOrderCard(order) {
     const items = order.items || [];
     const itemsHtml = items.slice(0, 3).map(item => `
         <div class="order-item">
-            <img src="${item.image || '/RADS-TOOLING/assets/images/cab1.jpg'}" 
+            <img src="${item.image || '/assets/images/cab1.jpg'}" 
                  alt="${escapeHtml(item.name)}" 
                  class="item-thumbnail"
-                 onerror="this.src='/RADS-TOOLING/assets/images/cab1.jpg'">
+                 onerror="this.src='/assets/images/cab1.jpg'">
             <div class="item-info">
                 <div class="item-name">${escapeHtml(item.name)}</div>
                 <div class="item-meta">Qty: ${item.quantity}</div>
@@ -185,7 +187,9 @@ async function viewOrderDetails(orderId) {
     document.body.style.overflow = 'hidden';
 
     try {
-        const response = await fetch(`/RADS-TOOLING/backend/api/customer_orders.php?action=details&id=${orderId}`);
+        // For viewing details
+const response = await fetch(`/backend/api/customer_orders.php?action=details&id=${orderId}`);
+
         const data = await response.json();
 
         if (data.success && data.order) {
@@ -268,7 +272,7 @@ function renderOrderDetails(order) {
         <div class="detail-section">
             <div class="detail-section-title">
                 <span class="material-symbols-rounded">location_on</span>
-                Customer Information & Delivery Address
+                Delivery Address
             </div>
             <div class="detail-value" style="white-space: pre-line;">${deliveryAddress}</div>
         </div>

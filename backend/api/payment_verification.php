@@ -121,7 +121,8 @@ function listPaymentVerifications(PDO $conn): void {
 }
 
 function getPaymentDetails(PDO $conn): void {
-    $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+    // 🔍 Get payment verification ID (supports GET, POST, or JSON body)
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
     if (!$id) send_json(['success' => false, 'message' => 'Invalid id'], 400);
 
     try {
@@ -136,6 +137,7 @@ function getPaymentDetails(PDO $conn): void {
             $st->execute([':tbl' => $table]);
             return (bool)$st->fetchColumn();
         };
+
 
         // detect available order/customer address columns
         $orderCandidates = [

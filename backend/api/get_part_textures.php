@@ -70,7 +70,7 @@ try {
         $tex['image_url'] = '';
         if (!empty($tex['texture_image'])) {
             // make absolute-ish URL path (adjust if your uploads folder differs)
-            $tex['image_url'] = '/RADS-TOOLING/uploads/textures/' . ltrim($tex['texture_image'], '/');
+            $tex['image_url'] = '/uploads/textures/' . ltrim($tex['texture_image'], '/');
         }
     }
     unset($tex);

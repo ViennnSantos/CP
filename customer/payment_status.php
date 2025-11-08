@@ -14,7 +14,7 @@ if (!$orderId) {
   <meta charset="utf-8">
   <title>Payment Status</title>
   <link rel="stylesheet" href="/assets/css/checkout.css">
-  <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
+  <link rel="stylesheet" href="/assets/CSS/responsive.css">
 </head>
 
 <body>
@@ -28,7 +28,7 @@ if (!$orderId) {
     const state = document.getElementById('state');
     const extra = document.getElementById('extra');
     async function tick() {
-      const r = await fetch('/RADS-TOOLING/backend/api/payment_status.php?order=<?= urlencode($orderId) ?>');
+      const r = await fetch('/backend/api/payment_status.php?order=<?= urlencode($orderId) ?>');
       const j = await r.json();
       if (!j.success) {
         state.textContent = 'Error';

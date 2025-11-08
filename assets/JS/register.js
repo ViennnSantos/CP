@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
       // live duplicate check
       phoneTimeout = setTimeout(async () => {
         try {
-          const r = await fetch('/RADS-TOOLING/backend/api/auth.php?action=check_phone', {
+          const r = await fetch('/backend/api/auth.php?action=check_phone', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'same-origin',
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
     payload.phone_local = local;
 
     try {
-      const res = await fetch('/RADS-TOOLING/backend/api/auth.php?action=register', {
+      const res = await fetch('/backend/api/auth.php?action=register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -147,13 +147,13 @@ document.addEventListener('DOMContentLoaded', function () {
         title: 'Account created',
         html: 'Please check your email for the verification code.',
         actions: [
-          { label: 'Verify now', cls: 'btn btn-primary', onClick: () => { location.href = `/RADS-TOOLING/customer/verify.php?email=${encodeURIComponent(payload.email)}`; } }
+          { label: 'Verify now', cls: 'btn btn-primary', onClick: () => { location.href = `/customer/verify.php?email=${encodeURIComponent(payload.email)}`; } }
         ]
       });
 
       // Fallback redirect if modal not available
       setTimeout(() => {
-        window.location.href = `/RADS-TOOLING/customer/verify.php?email=${encodeURIComponent(payload.email)}`;
+        window.location.href = `/customer/verify.php?email=${encodeURIComponent(payload.email)}`;
       }, 1200);
 
     } catch (err) {
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
     clearTimeout(emailTimeout);
     emailTimeout = setTimeout(async () => {
       try {
-        const r = await fetch('/RADS-TOOLING/backend/api/auth.php?action=check_email', {
+        const r = await fetch('/backend/api/auth.php?action=check_email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
     clearTimeout(usernameTimeout);
     usernameTimeout = setTimeout(async () => {
       try {
-        const r = await fetch('/RADS-TOOLING/backend/api/auth.php?action=check_username', {
+        const r = await fetch('/backend/api/auth.php?action=check_username', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',

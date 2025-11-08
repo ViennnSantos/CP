@@ -72,24 +72,74 @@ switch ($action) {
 function get_stats(PDO $pdo)
 {
     try {
-        // totals
-        $q1 = $pdo->query("SELECT COUNT(*) AS total_orders, COALESCE(SUM(total_amount),0) AS total_sales FROM orders");
-        $o  = $q1->fetch(PDO::FETCH_ASSOC) ?: ['total_orders' => 0, 'total_sales' => 0];
 
+        // Total orders count
+        $q1 = $pdo->query("SELECT COUNT(*) AS total_orders FROM orders");
+        $o  = $q1->fetch(PDO::FETCH_ASSOC) ?: ['total_orders' => 0];
+
+        //Total customers count
         $q2 = $pdo->query("SELECT COUNT(*) AS total_customers FROM customers");
         $c  = $q2->fetch(PDO::FETCH_ASSOC) ?: ['total_customers' => 0];
 
-        $q3 = $pdo->query("SELECT COUNT(*) AS total_feedback FROM feedback");
-        $f  = $q3->fetch(PDO::FETCH_ASSOC) ?: ['total_feedback' => 0];
+        // Total Sales Calculation:
+        // For active (non-cancelled) orders: sum of total_amount
+        // For cancelled orders: only the amount already paid
+        $q3 = $pdo->query("
+            SELECT COALESCE(SUM(total_amount), 0) AS active_sales
+            FROM orders
+            WHERE status != 'Cancelled'
+        ");
+        $activeSales = $q3->fetch(PDO::FETCH_ASSOC);
+
+        $q4 = $pdo->query("
+            SELECT COALESCE(SUM(p.amount_paid), 0) AS cancelled_paid
+            FROM payments p
+            INNER JOIN orders o ON p.order_id = o.id
+            WHERE o.status = 'Cancelled'
+            AND p.status = 'VERIFIED'
+        ");
+        $cancelledPaid = $q4->fetch(PDO::FETCH_ASSOC);
+
+        $totalSales = (float)($activeSales['active_sales'] ?? 0) + (float)($cancelledPaid['cancelled_paid'] ?? 0);
+
+        // Total Down Payments: sum of all verified payments
+        $q5 = $pdo->query("
+            SELECT COALESCE(SUM(amount_paid), 0) AS total_down_payments
+            FROM payments
+            WHERE status = 'VERIFIED'
+        ");
+        $downPayments = $q5->fetch(PDO::FETCH_ASSOC);
+        $totalDownPayments = (float)($downPayments['total_down_payments'] ?? 0);
+
+        // Incoming Sales: remaining balance on active orders (unpaid portion)
+        // This is the total amount of active orders minus what's been paid on them
+        $q6a = $pdo->query("
+            SELECT COALESCE(SUM(total_amount), 0) AS total_active
+            FROM orders
+            WHERE status != 'Cancelled'
+        ");
+        $totalActive = $q6a->fetch(PDO::FETCH_ASSOC);
+
+        $q6b = $pdo->query("
+            SELECT COALESCE(SUM(p.amount_paid), 0) AS total_paid_active
+            FROM payments p
+            INNER JOIN orders o ON p.order_id = o.id
+            WHERE o.status != 'Cancelled'
+            AND p.status = 'VERIFIED'
+        ");
+        $totalPaidActive = $q6b->fetch(PDO::FETCH_ASSOC);
+
+        $incomingSales = (float)($totalActive['total_active'] ?? 0) - (float)($totalPaidActive['total_paid_active'] ?? 0);
 
         echo json_encode([
             'success' => true,
             'message' => 'Dashboard stats retrieved',
             'data' => [
-                'total_orders'    => (int)($o['total_orders'] ?? 0),
-                'total_sales'     => (float)($o['total_sales'] ?? 0),
-                'total_customers' => (int)($c['total_customers'] ?? 0),
-                'total_feedback'  => (int)($f['total_feedback'] ?? 0),
+                'total_orders'        => (int)($o['total_orders'] ?? 0),
+                'total_sales'         => $totalSales,
+                'total_customers'     => (int)($c['total_customers'] ?? 0),
+                'total_down_payments' => $totalDownPayments,
+                'incoming_sales'      => $incomingSales,
             ]
         ]);
     } catch (Throwable $e) {

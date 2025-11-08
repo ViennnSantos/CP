@@ -15,7 +15,7 @@ if (!$orderId) {
   <meta charset="utf-8">
   <title>Payment</title>
   <link rel="stylesheet" href="/assets/css/checkout.css">
-  <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
+  <link rel="stylesheet" href="/assets/CSS/responsive.css">
 </head>
 
 <body>

@@ -1,9 +1,18 @@
-// /RADS-TOOLING/assets/JS/checkout.js
+// /assets/JS/checkout.js
+
 // 🔥 COMPLETE ULTIMATE FIXED VERSION - All bugs squashed!
 
 (function () {
+
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+  // ===== HTML Escaping for XSS Prevention =====
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
   // ===== Modal Management =====
   function openModal(id) {
@@ -32,7 +41,7 @@
     }
   }
 
-  // ===== ✅ IMPROVED: Better Modal Alert System =====
+  // ===== ✅ IMPROVED: Better Modal Alert System with XSS Protection =====
   function showModalAlert(title, message, type = 'error') {
     const existing = $('#customAlertModal');
     if (existing) existing.remove();
@@ -61,10 +70,10 @@
           <span style="font-size: 48px;">${iconMap[type]}</span>
         </div>
         <h3 style="color: ${colorMap[type]}; margin-bottom: 16px; text-align: center;">
-          ${title}
+          ${escapeHtml(title)}
         </h3>
         <p style="color: #666; margin-bottom: 24px; line-height: 1.6; text-align: center;">
-          ${message}
+          ${escapeHtml(message)}
         </p>
         <div class="rt-actions" style="justify-content: center;">
           <button class="rt-btn main" style="min-width: 120px;" onclick="document.getElementById('customAlertModal').remove()">OK</button>
@@ -78,376 +87,139 @@
       modal.remove();
     });
   }
- // ===== SAVED ADDRESSES FUNCTIONALITY =====
 
+  // ===== SAVED ADDRESSES FUNCTIONALITY =====
   async function loadSavedAddresses() {
     const container = $('#savedAddressesContainer');
     const select = $('#savedAddressSelect');
-    if (!select) return; // Not on delivery page
+    if (!select) {
+      console.log('⚠️ Saved address select element not found - not on delivery page');
+      return;
+    }
 
     try {
-      const response = await fetch('/RADS-TOOLING/backend/api/customer_addresses.php?action=list', {
+      console.log('🔄 Loading saved addresses...');
+
+      const response = await fetch('/backend/api/customer_addresses.php?action=list', {
         credentials: 'include'
       });
-      const data = await response.json();
+
+      // Validate response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text();
+      if (!text || text.trim() === '') {
+        throw new Error('Empty response from server');
+      }
+
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (jsonError) {
+        console.error('❌ Invalid JSON response:', text);
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('📦 Saved addresses response:', data);
 
       if (!data.success || !data.addresses || data.addresses.length === 0) {
         // No saved addresses - hide the container
         if (container) container.style.display = 'none';
+        console.log('⚠️ No saved addresses found');
         return;
       }
 
       // Show the container
       if (container) container.style.display = 'block';
 
-      // Populate select options
-      select.innerHTML = '<option value="">-- Select a saved address --</option>';
+      // Find default address first
+      const defaultAddr = data.addresses.find(addr => addr.is_default == 1);
+      console.log('🔍 Default address:', defaultAddr ? `ID ${defaultAddr.id} - ${defaultAddr.full_name}` : 'None');
 
+      // Build options - only add placeholder if NO default address exists
+      let optionsHTML = '';
+
+      if (!defaultAddr) {
+        optionsHTML = '<option value="">-- Select a saved address --</option>';
+        console.log('ℹ️ No default address - showing placeholder');
+      } else {
+        console.log('✅ Default address exists - skipping placeholder');
+      }
+
+      // Add all address options
       data.addresses.forEach(addr => {
-        const option = document.createElement('option');
-        option.value = addr.id;
-        option.textContent = addr.address_nickname
-          ? `${addr.address_nickname} (${addr.street_block_lot.substring(0, 30)}...)`
+        const nickname = addr.address_nickname || '';
+        const preview = addr.street_block_lot.substring(0, 30);
+        const label = nickname
+          ? `${nickname} (${preview}...)`
           : `${addr.full_name} - ${addr.city_municipality}`;
-        option.dataset.address = JSON.stringify(addr);
 
-        if (addr.is_default == 1) {
-          option.textContent += ' (Default)';
-        }
-        select.appendChild(option);
+        const defaultTag = addr.is_default == 1 ? ' (Default)' : '';
+        const addressJSON = JSON.stringify(addr).replace(/'/g, '&apos;');
+
+        optionsHTML += `<option value="${addr.id}" data-address='${addressJSON}'>${label}${defaultTag}</option>`;
       });
 
-      // Handle address selection
-       select.addEventListener('change', async (e) => {
+      select.innerHTML = optionsHTML;
+      console.log(`✅ Added ${data.addresses.length} address options to dropdown`);
+
+      // Handle address selection (only add listener once)
+      select.removeEventListener('change', handleAddressChange);
+      select.addEventListener('change', handleAddressChange);
+
+      async function handleAddressChange(e) {
         const selectedOption = e.target.options[e.target.selectedIndex];
         if (!selectedOption.value) {
-          // "Add New Address" selected - clear form and make editable
+          console.log('ℹ️ Placeholder selected - clearing form');
           showNewAddressForm();
           return;
         }
-        const addr = JSON.parse(selectedOption.dataset.address);
+
+        const addr = JSON.parse(selectedOption.dataset.address.replace(/&apos;/g, "'"));
+        console.log('🔄 Address selected:', addr.id, addr.full_name);
         await fillDeliveryForm(addr, true); // true = make fields read-only
-      });
+      }
 
-    } catch (error) {
-      console.error('Failed to load saved addresses:', error);
-      const defaultAddr = data.addresses.find(addr => addr.is_default == 1);
-
+      // ✅ AUTO-SELECT DEFAULT ADDRESS
       if (defaultAddr) {
-        // Set select value to default address
-        console.log('🔍 Default address found:', defaultAddr.id, defaultAddr.full_name);
+        console.log('🔧 Setting default address:', defaultAddr.id);
+
         // Set select value to default address (ensure string type)
         select.value = String(defaultAddr.id);
-        console.log('✅ Select value set to:', select.value);
+
+        const selectedText = select.options[select.selectedIndex]?.text || 'N/A';
+        console.log('✅ Select value set to:', select.value, '| Selected text:', selectedText);
 
         // Wait a bit for PSGC to be fully ready, then auto-fill
         setTimeout(async () => {
+          console.log('🚀 Starting auto-fill for default address...');
           await fillDeliveryForm(defaultAddr, true); // true = make fields read-only
           console.log('✅ Default address auto-filled in delivery form (read-only)');
-        }, 1000); // Increased to 1s to ensure PSGC is ready
+        }, 1000);
       } else {
-        console.log('⚠️ No default address found in:', data.addresses);
+        console.log('⚠️ No default address found - user must select manually');
       }
+
+    } catch (error) {
+      console.error('❌ Failed to load saved addresses:', error);
       if (container) container.style.display = 'none';
     }
   }
 
   async function fillDeliveryForm(addr, isReadOnly = false) {
-
     console.log('📝 Filling delivery form with:', addr.full_name, 'isReadOnly:', isReadOnly);
 
- 
-
     // Split full name into first and last name
-
     const nameParts = addr.full_name.trim().split(' ');
-
     const firstName = nameParts[0] || '';
-
     const lastName = nameParts.slice(1).join(' ') || '';
 
- 
-
     // Fill personal information
-
     const firstNameInput = $('input[name="first_name"]');
-
     const lastNameInput = $('input[name="last_name"]');
-
     if (firstNameInput) {
-
-      firstNameInput.value = firstName;
-
-      firstNameInput.readOnly = isReadOnly;
-
-    }
-
-    if (lastNameInput) {
-
-      lastNameInput.value = lastName;
-
-      lastNameInput.readOnly = isReadOnly;
-
-    }
-
- 
-
-    // Fill phone number
-
-    const phoneLocalInput = $('#phoneLocal');
-
-    if (phoneLocalInput && addr.mobile_number) {
-
-      const localNumber = addr.mobile_number.replace('+63', '');
-
-      phoneLocalInput.value = localNumber;
-
-      phoneLocalInput.readOnly = isReadOnly;
-
-      phoneLocalInput.dispatchEvent(new Event('input'));
-
-    }
-
- 
-
-    // Fill email
-
-    const emailInput = $('input[name="email"]');
-
-    if (emailInput && addr.email) {
-
-      emailInput.value = addr.email;
-
-      emailInput.readOnly = isReadOnly;
-
-    }
-
- 
-
-    // Fill address fields
-
-    const provinceSelect = $('#province');
-
-    const citySelect = $('#city');
-
-    const barangaySelect = $('#barangaySelect');
-
-    const streetInput = $('input[name="street"]');
-
-    const postalInput = $('input[name="postal"]');
-
- 
-
-    if (streetInput) {
-
-      streetInput.value = addr.street_block_lot;
-
-      streetInput.readOnly = isReadOnly;
-
-    }
-
-    if (postalInput && addr.postal_code) {
-
-      postalInput.value = addr.postal_code;
-
-      postalInput.readOnly = isReadOnly;
-
-    }
-
- 
-
-    // Helper function to wait for dropdown to be populated
-
-    const waitForDropdown = (selectElement, expectedValue, maxWait = 3000) => {
-
-      return new Promise((resolve) => {
-
-        const startTime = Date.now();
-
-        const checkInterval = setInterval(() => {
-
-          // Check if the option exists
-
-          const option = Array.from(selectElement.options).find(opt => opt.value === expectedValue);
-
-          if (option) {
-
-            clearInterval(checkInterval);
-
-            resolve(true);
-
-          } else if (Date.now() - startTime > maxWait) {
-
-            clearInterval(checkInterval);
-
-            console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
-
-            resolve(false);
-
-          }
-
-        }, 100); // Check every 100ms
-
-      });
-
-    };
-
- 
-
-    // Fill province and trigger cascading load
-
-    if (provinceSelect && addr.province) {
-
-      console.log('🔄 Setting province:', addr.province);
-
-      provinceSelect.value = addr.province;
-
-      provinceSelect.disabled = isReadOnly;
-
-      provinceSelect.dispatchEvent(new Event('change'));
-
- 
-
-      // Wait for cities to load
-
-      if (citySelect && addr.city_municipality) {
-
-        console.log('⏳ Waiting for cities to load...');
-
-        const cityLoaded = await waitForDropdown(citySelect, addr.city_municipality);
-
- 
-
-        if (cityLoaded) {
-
-          console.log('🔄 Setting city:', addr.city_municipality);
-
-          citySelect.value = addr.city_municipality;
-
-          citySelect.disabled = isReadOnly;
-
-          citySelect.dispatchEvent(new Event('change'));
-
- 
-
-          // Wait for barangays to load
-
-          if (barangaySelect && addr.barangay) {
-
-            console.log('⏳ Waiting for barangays to load...');
-
-            const barangayLoaded = await waitForDropdown(barangaySelect, addr.barangay);
-
- 
-
-            if (barangayLoaded) {
-
-              console.log('🔄 Setting barangay:', addr.barangay);
-
-              barangaySelect.value = addr.barangay;
-
-              barangaySelect.disabled = isReadOnly;
-
-            }
-
-          }
-
-        }
-
-      }
-
-    }
-
- 
-
-    console.log('✅ Form fill complete');
-
-  }
-  // Function to clear form and show new address form
-  window.showNewAddressForm = function() {
-    const select = $('#savedAddressSelect');
-    if (select) select.value = '';
-
-    // Clear all form fields
-    const form = $('#deliveryForm');
-    if (form) {
-      form.reset();
-
-      // Remove read-only/disabled attributes from all fields
-      const inputs = form.querySelectorAll('input:not([type="hidden"])');
-      inputs.forEach(input => {
-        input.readOnly = false;
-      });
-
-      const selects = form.querySelectorAll('select');
-      selects.forEach(select => {
-        select.disabled = false;
-      });
-    }
-  };
-// ===== AUTO-FILL PICKUP FORM FROM PROFILE =====
-  async function autoFillPickupForm() {
-    const pickupForm = $('#pickupForm');
-    if (!pickupForm) return; // Not on pickup page
-
-    try {
-      const response = await fetch('/RADS-TOOLING/backend/api/customer_profile.php', {
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (!data.success || !data.customer) {
-        console.log('No customer data available for auto-fill');
-        return;
-      }
-      const customer = data.customer;
-
-      // Split full name into first and last name
-      if (customer.full_name) {
-        const nameParts = customer.full_name.trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        const firstNameInput = pickupForm.querySelector('input[name="first_name"]');
-        const lastNameInput = pickupForm.querySelector('input[name="last_name"]');
-
-        if (firstNameInput && !firstNameInput.value) firstNameInput.value = firstName;
-        if (lastNameInput && !lastNameInput.value) lastNameInput.value = lastName;
-      }
-
-      // Fill phone number
-      if (customer.phone) {
-        const phoneLocalInput = pickupForm.querySelector('#phoneLocal');
-        if (phoneLocalInput && !phoneLocalInput.value) {
-          const localNumber = customer.phone.replace('+63', '');
-          phoneLocalInput.value = localNumber;
-          phoneLocalInput.dispatchEvent(new Event('input'));
-        }
-      }
-      // Fill email
-      if (customer.email) {
-        const emailInput = pickupForm.querySelector('input[name="email"]');
-        if (emailInput && !emailInput.value) emailInput.value = customer.email;
-      }
-      console.log('✅ Pickup form auto-filled from customer profile');
-    } catch (error) {
-      console.error('Failed to auto-fill pickup form:', error);
-    }
-  }
-
- async function fillDeliveryForm(addr, isReadOnly = false) {
-    console.log('📝 Filling delivery form with:', addr.full_name, 'isReadOnly:', isReadOnly);
-
-    // Split full name into first and last name
-    const nameParts = addr.full_name.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    // Fill personal information
-    const firstNameInput = $('input[name="first_name"]');
-    const lastNameInput = $('input[name="last_name"]');
-    if (firstNameInput) { 
       firstNameInput.value = firstName;
       firstNameInput.readOnly = isReadOnly;
     }
@@ -472,7 +244,6 @@
       emailInput.readOnly = isReadOnly;
     }
 
-
     // Fill address fields
     const provinceSelect = $('#province');
     const citySelect = $('#city');
@@ -484,7 +255,6 @@
       streetInput.value = addr.street_block_lot;
       streetInput.readOnly = isReadOnly;
     }
-
     if (postalInput && addr.postal_code) {
       postalInput.value = addr.postal_code;
       postalInput.readOnly = isReadOnly;
@@ -505,10 +275,9 @@
             console.warn(`⚠️ Timeout waiting for ${selectElement.id} to have value:`, expectedValue);
             resolve(false);
           }
-        }, 100); // Check every 100ms
+        }, 100);
       });
     };
-
 
     // Fill province and trigger cascading load
     if (provinceSelect && addr.province) {
@@ -517,12 +286,10 @@
       provinceSelect.disabled = isReadOnly;
       provinceSelect.dispatchEvent(new Event('change'));
 
-
       // Wait for cities to load
       if (citySelect && addr.city_municipality) {
         console.log('⏳ Waiting for cities to load...');
         const cityLoaded = await waitForDropdown(citySelect, addr.city_municipality);
-
 
         if (cityLoaded) {
           console.log('🔄 Setting city:', addr.city_municipality);
@@ -544,6 +311,7 @@
         }
       }
     }
+
     console.log('✅ Form fill complete');
   }
 
@@ -573,10 +341,10 @@
   // ===== AUTO-FILL PICKUP FORM FROM PROFILE =====
   async function autoFillPickupForm() {
     const pickupForm = $('#pickupForm');
-    if (!pickupForm) return; // Not on pickup page
+    if (!pickupForm) return;
 
     try {
-      const response = await fetch('/RADS-TOOLING/backend/api/customer_profile.php', {
+      const response = await fetch('/backend/api/customer_profile.php', {
         credentials: 'include'
       });
 
@@ -623,6 +391,7 @@
       console.error('Failed to auto-fill pickup form:', error);
     }
   }
+
   // Close modal handlers
   document.addEventListener('click', (e) => {
     const closeBtn = e.target.closest('[data-close]');
@@ -675,11 +444,9 @@
 
     // ✅ FIXED: NCR + CALABARZON provinces
     const ALLOWED_PROVINCES = [
-      // NCR variations
       'National Capital Region',
       'Metro Manila',
       'NCR',
-      // Calabarzon provinces
       'Cavite',
       'Laguna',
       'Batangas',
@@ -746,8 +513,7 @@
 
     // ✅ FETCH PROVINCES (with NCR)
     async function fetchProvinces() {
-      // Try local API first
-       let j = await getJSON('/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces');
+      let j = await getJSON('/backend/api/psgc.php?endpoint=provinces');
       if (Array.isArray(j) && j.length) {
         const filtered = j.map(x => x.name || x).filter(name =>
           ALLOWED_PROVINCES.some(allowed =>
@@ -758,7 +524,6 @@
         if (filtered.length) return filtered;
       }
 
-      // Try cloud API
       j = await getJSON('https://psgc.cloud/api/provinces');
       if (Array.isArray(j) && j.length) {
         const filtered = j.map(x => x.name).filter(name =>
@@ -770,20 +535,11 @@
         if (filtered.length) return filtered;
       }
 
-      // ✅ FALLBACK: Return hardcoded list with NCR
-      return [
-        'Metro Manila',
-        'Cavite',
-        'Laguna',
-        'Batangas',
-        'Rizal',
-        'Quezon'
-      ];
+      return ['Metro Manila', 'Cavite', 'Laguna', 'Batangas', 'Rizal', 'Quezon'];
     }
 
     // ✅ FETCH CITIES (with NCR special handling)
     async function fetchCities(provinceName) {
-      // ✅ SPECIAL HANDLING: NCR cities
       const isNCR = provinceName && (
         provinceName.toLowerCase().includes('ncr') ||
         provinceName.toLowerCase().includes('metro manila') ||
@@ -795,10 +551,6 @@
         return NCR_CITIES;
       }
 
-      // Try local API
-      // Try local API (FIXED: cities endpoint no longer supported, use cloud API)
-      // Skip local API for cities as it requires province code, not name
-      // Try cloud API
       const provList = await getJSON('https://psgc.cloud/api/provinces');
       if (Array.isArray(provList) && provList.length) {
         const found = provList.find(p => (p.name || '').toLowerCase() === (provinceName || '').toLowerCase());
@@ -813,15 +565,13 @@
 
     // ✅ FETCH BARANGAYS
     async function fetchBarangays(cityName, provinceName) {
-      // Skip local API for barangays as it requires city code, not name
-
       const norm = s => (s || '').toLowerCase().trim();
 
       let cityData = await getJSON('https://psgc.cloud/api/cities');
       if (Array.isArray(cityData)) {
         let hit = cityData.find(x => norm(x.name) === norm(cityName));
         if (hit && hit.code) {
-          j = await getJSON(`https://psgc.cloud/api/cities/${hit.code}/barangays`);
+          let j = await getJSON(`https://psgc.cloud/api/cities/${hit.code}/barangays`);
           if (Array.isArray(j) && j.length) return j.map(x => x.name).filter(Boolean);
         }
       }
@@ -830,7 +580,7 @@
       if (Array.isArray(munData)) {
         let hit = munData.find(x => norm(x.name) === norm(cityName));
         if (hit && hit.code) {
-          j = await getJSON(`https://psgc.cloud/api/municipalities/${hit.code}/barangays`);
+          let j = await getJSON(`https://psgc.cloud/api/municipalities/${hit.code}/barangays`);
           if (Array.isArray(j) && j.length) return j.map(x => x.name).filter(Boolean);
         }
       }
@@ -841,7 +591,7 @@
     // ✅ BOOTSTRAP PROVINCES
     console.log('🔄 Loading PSGC data...');
     const provinces = await fetchProvinces();
-    
+
     if (!provinces.length) {
       console.warn('⚠️ No provinces loaded, showing text inputs');
       showText('province', true);
@@ -968,7 +718,6 @@
     const btnBuy = $('#inlineBuyBtn');
     if (!btnBuy) return;
 
-    // ✅ FIXED: Payment method selection with visual feedback
     $$('[data-pay]').forEach(btn => {
       btn.addEventListener('click', () => {
         $$('[data-pay]').forEach(b => b.classList.remove('is-active'));
@@ -979,7 +728,6 @@
       });
     });
 
-    // ✅ FIXED: Deposit selection with visual feedback
     $$('[data-dep]').forEach(btn => {
       btn.addEventListener('click', () => {
         $$('[data-dep]').forEach(b => b.classList.remove('is-active'));
@@ -1001,7 +749,6 @@
       console.log('💰 Deposit selection opened');
     });
 
-    // ✅ FIXED: Order creation with proper payload
     $('#btnPayNow')?.addEventListener('click', async () => {
       const method = $('#paymentMethod')?.value;
       const dep = parseInt($('#depositRate')?.value || '0', 10);
@@ -1010,17 +757,15 @@
         showModalAlert('Selection Required', 'Please select both payment method and deposit amount.', 'warning');
         return;
       }
-      
+
       PAYMENT_METHOD = method;
 
       const orderData = window.RT_ORDER || {};
 
-      // ✅ STEP 1: Create order
       if (!ORDER_ID) {
         try {
-          const url = `${location.origin}/RADS-TOOLING/backend/api/order_create.php`;
-          
-          // ✅ FIXED: Proper payload structure matching backend expectations
+          const url = `${location.origin}/backend/api/order_create.php`;
+
           const payload = {
             pid: orderData.pid || 0,
             qty: orderData.qty || 1,
@@ -1061,8 +806,8 @@
           }
 
           let result;
-          try { 
-            result = JSON.parse(raw1); 
+          try {
+            result = JSON.parse(raw1);
           } catch {
             showModalAlert('Invalid Response', 'Server returned invalid data. Please contact support.', 'error');
             return;
@@ -1091,9 +836,8 @@
         }
       }
 
-      // ✅ STEP 2: Save payment decision
       try {
-        const url = `${location.origin}/RADS-TOOLING/backend/api/payment_decision.php`;
+        const url = `${location.origin}/backend/api/payment_decision.php`;
         const r2 = await fetch(url, {
           method: 'POST',
           headers: {
@@ -1104,34 +848,33 @@
           credentials: 'same-origin',
           body: JSON.stringify({ order_id: ORDER_ID, method: method, deposit_rate: dep })
         });
-        
+
         const raw2 = await r2.text();
         console.log('📥 Payment decision response:', r2.status, raw2);
-        
+
         if (!r2.ok) {
           showModalAlert('Payment Setup Error', `Could not setup payment terms (Status ${r2.status}).`, 'error');
           return;
         }
-        
+
         const result2 = JSON.parse(raw2);
 
         if (!result2 || !result2.success) {
           showModalAlert('Payment Failed', result2?.message || 'Could not set payment terms.', 'error');
           return;
         }
-        
+
         AMOUNT_DUE = result2.data.amount_due || 0;
         console.log('✅ Payment decision saved. Amount due:', AMOUNT_DUE);
-        
+
       } catch (err) {
         console.error('❌ Payment decision error:', err);
         showModalAlert('Network Error', 'Could not set payment terms.', 'error');
         return;
       }
 
-      // ✅ STEP 3: Fetch QR code
       try {
-        const url = `${location.origin}/RADS-TOOLING/backend/api/content_mgmt.php`;
+        const url = `${location.origin}/backend/api/content_mgmt.php`;
         const r3 = await fetch(url, {
           method: 'POST',
           headers: {
@@ -1142,10 +885,10 @@
           credentials: 'same-origin',
           body: 'action=get_payment_qr'
         });
-        
+
         const raw3 = await r3.text();
         console.log('📥 QR fetch response:', r3.status, raw3);
-        
+
         let result3;
         try { result3 = JSON.parse(raw3); } catch { result3 = null; }
 
@@ -1153,16 +896,16 @@
         if (qrBox) {
           if (result3 && result3.success && result3.data) {
             const qrData = method === 'gcash' ? result3.data.gcash : result3.data.bpi;
-            
+
             if (qrData && qrData.image_path) {
-              const imageUrl = `/RADS-TOOLING/${qrData.image_path}`;
+              const imageUrl = `/${qrData.image_path}`;
               console.log(`✅ Displaying ${method.toUpperCase()} QR:`, imageUrl);
-              
+
               qrBox.innerHTML = `
-                <img 
-                  src="${imageUrl}?v=${Date.now()}" 
-                  alt="${method.toUpperCase()} QR" 
-                  style="width:100%;height:100%;object-fit:contain;cursor:pointer;padding:8px;" 
+                <img
+                  src="${imageUrl}?v=${Date.now()}"
+                  alt="${method.toUpperCase()} QR"
+                  style="width:100%;height:100%;object-fit:contain;cursor:pointer;padding:8px;"
                   onclick="window.openQrZoom('${imageUrl}')"
                   onerror="this.parentElement.innerHTML='<span style=\\'color:#e74c3c;\\'>❌ Failed to load QR</span>'"
                 >`;
@@ -1192,7 +935,6 @@
       console.log('📝 Verification form opened');
     });
 
-    // ✅ FIXED: Verify payment with validation
     $('#btnVerify')?.addEventListener('click', async () => {
       const name = $('#vpName');
       const num = $('#vpNum');
@@ -1215,36 +957,31 @@
 
       const accountNum = num.value.trim();
       const refNum = ref.value.trim();
-      
-     // Validate account number (digits only)
+
       if (!/^\d+$/.test(accountNum)) {
         showModalAlert('Invalid Account Number', 'Account number must contain only digits.', 'error');
         num.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate GCash account number (max 11 digits)
-       if (PAYMENT_METHOD === 'gcash' && accountNum.length > 11) {
+      if (PAYMENT_METHOD === 'gcash' && accountNum.length > 11) {
         showModalAlert('Invalid GCash Account', 'GCash account number must be maximum 11 digits.', 'error');
         num.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate reference number (digits only, flexible length)
       if (!/^\d+$/.test(refNum)) {
         showModalAlert('Invalid Reference Number', 'Reference number must contain only digits.', 'error');
         ref.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate reference number length (reasonable limit)
       if (refNum.length > 30) {
         showModalAlert('Invalid Reference Number', 'Reference number too long (max 30 digits).', 'error');
         ref.style.borderColor = '#ef4444';
         return;
       }
 
-      // Validate amount paid (must EXACTLY match the expected amount)
       const amountPaid = parseFloat(amt.value);
       const expectedAmount = AMOUNT_DUE;
 
@@ -1258,10 +995,8 @@
         return;
       }
 
-      // Show T&C modal instead of directly submitting
       showStep('#termsModal');
 
-      // Store form data for later submission
       window.VERIFICATION_DATA = {
         account_name: name.value,
         account_number: num.value,
@@ -1273,7 +1008,6 @@
       console.log('✅ Verification data validated, showing T&C modal');
     });
 
-    // Handle T&C checkbox
     const termsCheckbox = $('#acceptTermsCheckbox');
     const btnAcceptTerms = $('#btnAcceptTerms');
 
@@ -1290,7 +1024,6 @@
       });
     }
 
-    // Handle final payment submission after T&C acceptance
     btnAcceptTerms?.addEventListener('click', async () => {
       const verData = window.VERIFICATION_DATA;
       if (!verData) {
@@ -1307,27 +1040,25 @@
       form.append('reference_number', verData.reference_number);
       form.append('amount_paid', verData.amount_paid);
       form.append('screenshot', verData.screenshot);
-      form.append('terms_accepted', '1'); // Flag that T&C was accepted
+      form.append('terms_accepted', '1');
 
       try {
         console.log('📤 Submitting payment verification with T&C acceptance...');
 
-        // Disable button to prevent double submission
         btnAcceptTerms.disabled = true;
         btnAcceptTerms.textContent = 'Submitting...';
 
-        const r = await fetch('/RADS-TOOLING/backend/api/payment_submit.php', {
+        const r = await fetch('/backend/api/payment_submit.php', {
           method: 'POST',
           body: form,
           credentials: 'same-origin'
         });
-        
+
         const result = await r.json();
         console.log('📥 Verification response:', result);
 
         if (!result || !result.success) {
           showModalAlert('Verification Failed', result?.message || 'Payment verification failed.', 'error');
-          // Re-enable button on error
           btnAcceptTerms.disabled = false;
           btnAcceptTerms.textContent = 'Accept & Submit Payment';
           return;
@@ -1338,7 +1069,6 @@
 
         setTimeout(() => {
           showStep('#finalNotice');
-          // Reset T&C checkbox for next time
           if (termsCheckbox) termsCheckbox.checked = false;
           btnAcceptTerms.disabled = true;
           btnAcceptTerms.textContent = 'Accept & Submit Payment';
@@ -1347,14 +1077,13 @@
       } catch (err) {
         console.error('❌ Payment submit error:', err);
         showModalAlert('Network Error', 'Could not submit payment verification.', 'error');
-        // Re-enable button on error
         btnAcceptTerms.disabled = false;
         btnAcceptTerms.textContent = 'Accept & Submit Payment';
       }
     });
 
     $('#btnGoOrders')?.addEventListener('click', () => {
-      location.href = '/RADS-TOOLING/customer/orders.php';
+      location.href = '/customer/orders.php';
     });
   }
 
@@ -1389,30 +1118,30 @@
   window.openQrZoom = function(qrUrl) {
     const modal = $('#qrZoomModal');
     const img = $('#zoomQrImage');
-    
+
     if (!modal || !img) {
       console.warn('⚠️ QR Zoom elements not found');
       return;
     }
-    
+
     img.src = qrUrl;
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
-    
+
     const handleBackdropClick = (e) => {
       if (e.target === modal) {
         window.closeQrZoom();
       }
     };
     modal.addEventListener('click', handleBackdropClick);
-    
+
     console.log('🔍 QR Zoom opened:', qrUrl);
   };
 
   window.closeQrZoom = function() {
     const modal = $('#qrZoomModal');
     if (!modal) return;
-    
+
     modal.classList.remove('show');
     document.body.style.overflow = '';
     console.log('✅ QR Zoom closed');
@@ -1430,15 +1159,25 @@
   // ===== Initialize Everything =====
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Checkout.js loading...');
+
     wirePhone();
+
     // Load PSGC data first (needed for autofill to work properly)
     await loadPSGC();
     console.log('✅ PSGC data loaded');
+
     // Then load saved addresses and autofill (needs PSGC dropdowns ready)
-    await loadSavedAddresses(); // Load saved addresses for delivery auto-fill
+    await loadSavedAddresses();
     console.log('✅ Saved addresses loaded and autofilled');
+
+    autoFillPickupForm();
+    wireContinue();
+    wireClear();
+    wirePayment();
+    setupNumericInputs();
+
     console.log('✅ Checkout.js COMPLETE FIXED VERSION loaded!');
     console.log('✅ Features: NCR support, delivery/pickup auto-fill, active states, better errors, proper payload');
-
   });
+
 })();

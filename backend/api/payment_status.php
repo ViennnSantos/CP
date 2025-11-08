@@ -68,5 +68,5 @@ echo json_encode([
     'success'     => true,
     'status'      => $status,       // 'pending' | 'approved' | 'rejected'
     'status_text' => $status_text,
-    // 'receipt_url' => '/RADS-TOOLING/customer/receipt.php?order='.$orderId // kung meron ka
+    // 'receipt_url' => '/customer/receipt.php?order='.$orderId // kung meron ka
 ]);

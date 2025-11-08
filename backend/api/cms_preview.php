@@ -102,13 +102,13 @@ if ($page === 'home_customer') {
 
 /* All other pages */
 $pageFiles = [
-  'home_public' => '/public/index.php',
+  'home_public' => '/index.php',
   'about'       => '/public/about.php',
   'privacy'     => '/public/privacy.php',
   'terms'       => '/public/terms.php',
 ];
 
-$filePath = __DIR__ . '/../..' . ($pageFiles[$page] ?? '/public/index.php');
+$filePath = __DIR__ . '/../..' . ($pageFiles[$page] ?? '/index.php');
 
 if (!file_exists($filePath)) {
   http_response_code(404);

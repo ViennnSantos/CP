@@ -1,4 +1,5 @@
-/* /RADS-TOOLING/assets/css/checkout.css */
+/* /assets/css/checkout.css */
+/* 🔥 FIXED: Added color to select dropdowns for visibility */
 *{box-sizing:border-box}
 :root{
   --ink:#0f172a; --muted:#6b7280; --line:#e5e7eb; --bg:#fff; --dark:#111827;
@@ -33,7 +34,24 @@ a{color:inherit;text-decoration:none}
 .rt-btn-dark:hover,.rt-btn.main:hover{background:#1f2937}
 .rt-btn-outline,.rt-btn.ghost{background:#fff;color:#1e3a8a}
 
-.rt-input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:14px}
+/* 🔥 FIXED: Added color: #111827 to make select text visible */
+.rt-input,select{
+  width:100%;
+  padding:10px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  font-family:inherit;
+  font-size:14px;
+  color:#111827; /* ← ADDED: Makes text black and visible! */
+  background:#fff; /* ← ADDED: White background */
+}
+
+/* 🔥 FIXED: Added color to option elements */
+select option{
+  color:#111827; /* ← ADDED: Makes option text visible */
+  background:#fff; /* ← ADDED: White background for options */
+}
+
 .rt-input:focus,select:focus{outline:none;border-color:#cbd5e1;box-shadow:0 0 0 3px rgba(59,130,246,.1)}
 .rt-field{margin-bottom:10px}
 .rt-field label{display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:#374151}

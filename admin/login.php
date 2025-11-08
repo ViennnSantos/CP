@@ -19,7 +19,7 @@ if (!empty($_SESSION['user']) && ($_SESSION['user']['aud'] ?? '') === 'staff') {
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/login.css">
+    <link rel="stylesheet" href="/assets/CSS/login.css">
 </head>
 
 <body>
@@ -52,7 +52,7 @@ if (!empty($_SESSION['user']) && ($_SESSION['user']['aud'] ?? '') === 'staff') {
 
     </div>
 
-    <script src="/RADS-TOOLING/assets/JS/login.js"> </script>
+    <script src="/assets/JS/login.js"> </script>
 
 </body>
 

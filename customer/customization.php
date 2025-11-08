@@ -9,7 +9,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 // Accept ?pid= or ?id=
 $pid = (int)($_GET['pid'] ?? ($_GET['id'] ?? 0));
 if ($pid <= 0) {
-    header('Location: /RADS-TOOLING /customer/products.php');
+    header('Location:  /customer/products.php');
     exit;
 }
 
@@ -24,7 +24,7 @@ if (!$isPreview) {
     guard_require_customer();
     $user = $_SESSION['user'] ?? null;
     if (!($user && (($user['aud'] ?? '') === 'customer'))) {
-        header('Location: /RADS-TOOLING/customer/cust_login.php');
+        header('Location: /customer/cust_login.php');
         exit;
     }
 } else {
@@ -38,7 +38,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
 $customerId   = (int)($user['id'] ?? 0);
 $img          = $_SESSION['user']['profile_image'] ?? '';
 $avatarHtml   = $img
-    ? '<img src="/RADS-TOOLING/' . htmlspecialchars($img, ENT_QUOTES, 'UTF-8') . '?v=' . time() . '" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
+    ? '<img src="/' . htmlspecialchars($img, ENT_QUOTES, 'UTF-8') . '?v=' . time() . '" alt="Avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">'
     : strtoupper(substr($customerName, 0, 1));
 ?>
 <!DOCTYPE html>
@@ -55,11 +55,10 @@ $avatarHtml   = $img
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- App CSS -->
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/Homepage.css" />
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-widget.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/customize.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/checkout_modal.css">
+    <link rel="stylesheet" href="/assets/CSS/Homepage.css" />
+    <link rel="stylesheet" href="/assets/CSS/chat-widget.css">
+    <link rel="stylesheet" href="/assets/CSS/customize.css">
+    <link rel="stylesheet" href="/assets/CSS/checkout_modal.css">
 
     <!-- === Add-to-Cart / Buy-Now minimal CSS from product_detail.php === -->
     <style>
@@ -190,12 +189,12 @@ $avatarHtml   = $img
         <header class="navbar">
             <div class="navbar-container">
                 <div class="navbar-brand">
-                    <a href="/RADS-TOOLING/customer/homepage.php" class="logo-link">
+                    <a href="/customer/homepage.php" class="logo-link">
                         <span class="logo-text">R</span>ADS <span class="logo-text">T</span>OOLING
                     </a>
                 </div>
 
-                <form class="search-container" action="/RADS-TOOLING/public/products.php" method="get">
+                <form class="search-container" action="/public/products.php" method="get">
                     <input type="text" name="q" class="search-input" placeholder="Search cabinets..." />
                     <button type="submit" class="search-btn" aria-label="Search">
                         <span class="material-symbols-rounded">search</span>
@@ -224,8 +223,8 @@ $avatarHtml   = $img
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a href="/RADS-TOOLING/customer/profile.php" class="dropdown-item"><span class="material-symbols-rounded">person</span><span>My Profile</span></a>
-                            <a href="/RADS-TOOLING/customer/orders.php" class="dropdown-item"><span class="material-symbols-rounded">receipt_long</span><span>My Orders</span></a>
+                            <a href="/customer/profile.php" class="dropdown-item"><span class="material-symbols-rounded">person</span><span>My Profile</span></a>
+                            <a href="/customer/orders.php" class="dropdown-item"><span class="material-symbols-rounded">receipt_long</span><span>My Orders</span></a>
 
                             <div class="dropdown-divider"></div>
                             <button onclick="showLogoutModal()" class="dropdown-item dropdown-logout" type="button">
@@ -235,7 +234,7 @@ $avatarHtml   = $img
                     </div>
 
                     <!-- Cart -->
-                    <a href="/RADS-TOOLING/customer/cart.php" class="cart-button">
+                    <a href="/customer/cart.php" class="cart-button">
                         <span class="material-symbols-rounded">shopping_cart</span>
                         <span id="cartCount" class="cart-badge">0</span>
                     </a>
@@ -243,15 +242,15 @@ $avatarHtml   = $img
             </div>
 
             <nav class="navbar-menu">
-                <a href="/RADS-TOOLING/customer/homepage.php" class="nav-menu-item">Home</a>
-                <a href="/RADS-TOOLING/customer/about.php" class="nav-menu-item">About</a>
-                <a href="/RADS-TOOLING/customer/products.php" class="nav-menu-item">Products</a>
+                <a href="/customer/homepage.php" class="nav-menu-item">Home</a>
+                <a href="/customer/about.php" class="nav-menu-item">About</a>
+                <a href="/customer/products.php" class="nav-menu-item">Products</a>
             </nav>
         </header>
 
         <!-- === CUSTOMIZER UI START === -->
         <div class="cz-topbar">
-            <a href="/RADS-TOOLING/customer/products.php" class="cz-back">←</a>
+            <a href="/customer/products.php" class="cz-back">←</a>
             <div class="cz-breadcrumb">CUSTOMIZING</div>
         </div>
 
@@ -424,7 +423,7 @@ $avatarHtml   = $img
         window.PID = <?= (int)$pid ?>;
     </script>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/customize.js" defer></script>
+    <script src="/assets/JS/customize.js" defer></script>
     <script>
         (function() {
             'use strict';
@@ -505,8 +504,8 @@ $avatarHtml   = $img
                     if (!selectedPID || !selectedMode) return;
 
                     const url = selectedMode === 'delivery' ?
-                        '/RADS-TOOLING/customer/checkout_delivery.php?pid=' + selectedPID :
-                        '/RADS-TOOLING/customer/checkout_pickup.php?pid=' + selectedPID;
+                        '/customer/checkout_delivery.php?pid=' + selectedPID :
+                        '/customer/checkout_pickup.php?pid=' + selectedPID;
 
                     window.location.href = url;
                 });
@@ -603,12 +602,12 @@ $avatarHtml   = $img
             };
 
             window.confirmLogout = function() {
-                fetch('/RADS-TOOLING/backend/api/auth.php?action=logout', {
+                fetch('/backend/api/auth.php?action=logout', {
                     method: 'POST',
                     credentials: 'same-origin'
                 }).finally(function() {
                     localStorage.removeItem('cart');
-                    window.location.href = '/RADS-TOOLING/public/index.php';
+                    window.location.href = '/index.php';
                 });
             };
 
@@ -681,8 +680,8 @@ $avatarHtml   = $img
                 if (!pid || !mode) return;
 
                 const url = (mode === 'delivery') ?
-                    `/RADS-TOOLING/customer/checkout_delivery.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}` :
-                    `/RADS-TOOLING/customer/checkout_pickup.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}`;
+                    `/customer/checkout_delivery.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}` :
+                    `/customer/checkout_pickup.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}`;
 
                 modal.hidden = true;
                 window.location.href = url;
@@ -757,8 +756,8 @@ $avatarHtml   = $img
 
 
     <!-- External Scripts -->
-    <script src="/RADS-TOOLING/assets/JS/nav_user.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/chat_widget.js"></script>
+    <script src="/assets/JS/nav_user.js"></script>
+    <script src="/assets/JS/chat_widget.js"></script>
 
     <!-- === BUY CHOICE MODAL (ported from product_detail.php) === -->
     <div id="buyChoiceModal" class="rt-modal" hidden>

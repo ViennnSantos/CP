@@ -1,8 +1,7 @@
 <?php
-// backend/api/auth.php - Authentication API (staff + customer)
 declare(strict_types=1);
 
-ini_set('display_errors', 1);
+ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -18,13 +17,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once dirname(__DIR__, 2) . '/includes/logger.pdo.php';
+
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../../includes/logger.pdo.php';
 require_once __DIR__ . '/../../includes/guard.php';
-require_once dirname(__DIR__, 2) . '/includes/phone_util.php';
+require_once __DIR__ . '/../../includes/phone_util.php';
 
-
-// Include mailer if it exists
 $mailerPath = __DIR__ . '/../lib/mailer.php';
 if (file_exists($mailerPath)) {
     require_once $mailerPath;
@@ -403,7 +401,7 @@ class AuthAPI
 
         // 🔴 Not verified → tell frontend to go to verify.php
         if ((int)$user['email_verified'] !== 1) {
-            $verifyUrl = '/RADS-TOOLING/customer/verify.php?email=' . urlencode($user['email']);
+            $verifyUrl = '/customer/verify.php?email=' . urlencode($user['email']);
             $this->send(true, 'Verification required', [
                 'verify_required' => true,
                 'email'           => $user['email'],
@@ -443,7 +441,7 @@ class AuthAPI
         $this->send(true, 'Login successful', [
             'user'           => $_SESSION['user'],
             'session_token'  => $token,
-            'redirect'       => '/RADS-TOOLING/customer/homepage.php'
+            'redirect'       => '/customer/homepage.php'
         ]);
     }
 

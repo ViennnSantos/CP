@@ -1,5 +1,5 @@
 <?php
-// /RADS-TOOLING/customer/product_detail.php - Product Detail Page (simplified info: name, description, price, quantity, add/buy)
+// /customer/product_detail.php - Product Detail Page (simplified info: name, description, price, quantity, add/buy)
 declare(strict_types=1);
 
 require_once __DIR__ . '/../backend/config/app.php';
@@ -11,7 +11,7 @@ guard_require_customer();
 $user = $_SESSION['user'] ?? null;
 $isCustomer = $user && (($user['aud'] ?? '') === 'customer');
 if (!$isCustomer) {
-    header('Location: /RADS-TOOLING/customer/cust_login.php');
+    header('Location: /customer/cust_login.php');
     exit;
 }
 
@@ -21,7 +21,7 @@ $customerId = (int)($user['id'] ?? 0);
 // Get product ID
 $productId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 if ($productId <= 0) {
-    header('Location: /RADS-TOOLING/customer/products.php');
+    header('Location: /customer/products.php');
     exit;
 }
 
@@ -30,7 +30,7 @@ function rt_img_url(string $raw): string
 {
     $raw = trim($raw);
     if ($raw === '') {
-        return '/RADS-TOOLING/uploads/products/placeholder.jpg';
+        return '/uploads/products/placeholder.jpg';
     }
     if (preg_match('~^https?://~i', $raw)) return $raw;
     if ($raw[0] === '/') return $raw;
@@ -45,10 +45,10 @@ function rt_img_url(string $raw): string
     ];
     foreach ($knownRoots as $root) {
         if (strpos($raw, $root) === 0) {
-            return '/RADS-TOOLING/' . ltrim($raw, '/');
+            return '/' . ltrim($raw, '/');
         }
     }
-    return '/RADS-TOOLING/uploads/products/placeholder.jpg';
+    return '/uploads/products/placeholder.jpg';
 }
 
 // Fetch product details
@@ -58,12 +58,12 @@ try {
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     error_log("Product fetch error: " . $e->getMessage());
-    header('Location: /RADS-TOOLING/customer/products.php');
+    header('Location: /customer/products.php');
     exit;
 }
 
 if (!$product) {
-    header('Location: /RADS-TOOLING/customer/products.php');
+    header('Location: /customer/products.php');
     exit;
 }
 
@@ -129,12 +129,12 @@ function e($val)
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/Homepage.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-widget.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product.css">
+    <link rel="stylesheet" href="/assets/CSS/Homepage.css">
+    <link rel="stylesheet" href="/assets/CSS/chat-widget.css">
+    <link rel="stylesheet" href="/assets/CSS/product.css">
     <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product-ux-enhanced.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/checkout_modal.css">
+    <link rel="stylesheet" href="/assets/CSS/checkout_modal.css">
+    <link rel="stylesheet" href="/assets/CSS/responsive.css">
 
     <style>
         :root {
@@ -355,39 +355,23 @@ function e($val)
             justify-content: center;
         }
 
-  /* Image Modal Styles - FIX: hide by default, show with .active class */
-
         .image-modal {
-
             position: fixed;
-
             inset: 0;
-
             background: rgba(0, 0, 0, 0.9);
-
             z-index: 15000;
-
             display: none;
-
             align-items: center;
-
             justify-content: center;
-
             opacity: 0;
-
             transition: opacity 0.3s ease;
-
         }
-
- 
 
         .image-modal.active {
-
             display: flex;
-
             opacity: 1;
-
         }
+		
         @media (max-width:820px) {
             .product-detail-container {
                 grid-template-columns: 1fr;
@@ -416,10 +400,10 @@ function e($val)
         <header class="navbar">
             <div class="navbar-container">
                 <div class="navbar-brand">
-                    <a href="/RADS-TOOLING/customer/homepage.php" class="logo-link"><span class="logo-text">R</span>ADS <span class="logo-text">T</span>OOLING</a>
+                    <a href="/customer/homepage.php" class="logo-link"><span class="logo-text">R</span>ADS <span class="logo-text">T</span>OOLING</a>
                 </div>
 
-                <form class="search-container" action="/RADS-TOOLING/customer/products.php" method="get">
+                <form class="search-container" action="/customer/products.php" method="get">
                     <input type="text" name="q" class="search-input" placeholder="Search cabinets..." value="">
                     <button type="submit" class="search-btn" aria-label="Search"><span class="material-symbols-rounded">search</span></button>
                 </form>
@@ -441,28 +425,28 @@ function e($val)
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a href="/RADS-TOOLING/customer/profile.php" class="dropdown-item"><span class="material-symbols-rounded">person</span><span>My Profile</span></a>
-                            <a href="/RADS-TOOLING/customer/orders.php" class="dropdown-item"><span class="material-symbols-rounded">receipt_long</span><span>My Orders</span></a>
+                            <a href="/customer/profile.php" class="dropdown-item"><span class="material-symbols-rounded">person</span><span>My Profile</span></a>
+                            <a href="/customer/orders.php" class="dropdown-item"><span class="material-symbols-rounded">receipt_long</span><span>My Orders</span></a>
                             <div class="dropdown-divider"></div>
                             <button onclick="showLogoutModal()" class="dropdown-item dropdown-logout" type="button"><span class="material-symbols-rounded">logout</span><span>Logout</span></button>
                         </div>
                     </div>
 
-                    <a href="/RADS-TOOLING/customer/cart.php" class="cart-button"><span class="material-symbols-rounded">shopping_cart</span><span id="cartCount" class="cart-badge">0</span></a>
+                    <a href="/customer/cart.php" class="cart-button"><span class="material-symbols-rounded">shopping_cart</span><span id="cartCount" class="cart-badge">0</span></a>
                 </div>
             </div>
 
             <nav class="navbar-menu">
-                <a href="/RADS-TOOLING/customer/homepage.php" class="nav-menu-item">Home</a>
-                <a href="/RADS-TOOLING/customer/about.php" class="nav-menu-item">About</a>
-                <a href="/RADS-TOOLING/customer/products.php" class="nav-menu-item active">Products</a>
-                <a href="/RADS-TOOLING/customer/testimonials.php" class="nav-menu-item">Testimonials</a>
+                <a href="/customer/homepage.php" class="nav-menu-item">Home</a>
+                <a href="/customer/about.php" class="nav-menu-item">About</a>
+                <a href="/customer/products.php" class="nav-menu-item active">Products</a>
+                <a href="/customer/testimonials.php" class="nav-menu-item">Testimonials</a>
             </nav>
         </header>
 
         <!-- MAIN -->
         <main class="product-detail-container" role="main">
-            <a class="back-link" href="/RADS-TOOLING/customer/products.php"><span class="material-symbols-rounded">arrow_back</span> Back to Products</a>
+            <a class="back-link" href="/customer/products.php"><span class="material-symbols-rounded">arrow_back</span> Back to Products</a>
 
             <!-- LEFT: Images -->
             <div class="product-images-section">
@@ -526,9 +510,9 @@ function e($val)
                 <div class="footer-section">
                     <h3>Quick Links</h3>
                     <ul class="footer-links">
-                        <li><a href="/RADS-TOOLING/customer/homepage.php">Home</a></li>
-                        <li><a href="/RADS-TOOLING/customer/about.php">About Us</a></li>
-                        <li><a href="/RADS-TOOLING/customer/products.php">Products</a></li>
+                        <li><a href="/customer/homepage.php">Home</a></li>
+                        <li><a href="/customer/about.php">About Us</a></li>
+                        <li><a href="/customer/products.php">Products</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
@@ -543,45 +527,12 @@ function e($val)
     </div>
 
 
-    <!-- Image Modal with Navigation -->
+    <!-- Image Modal -->
     <div id="imageModal" class="image-modal" aria-hidden="true" role="dialog">
         <button class="image-modal-close" aria-label="Close image gallery (Esc)" data-modal-close>
             <span class="material-symbols-rounded">close</span>
         </button>
-
-        <div class="image-modal-content">
-            <!-- Previous/Next Navigation Arrows -->
-            <?php if (count($productImages) > 1): ?>
-            <button class="modal-nav-btn modal-nav-prev" aria-label="Previous image">
-                <span class="material-symbols-rounded">chevron_left</span>
-            </button>
-            <button class="modal-nav-btn modal-nav-next" aria-label="Next image">
-                <span class="material-symbols-rounded">chevron_right</span>
-            </button>
-            <?php endif; ?>
-
-            <!-- Main Modal Image -->
-            <img id="modalImage" class="modal-content-img" alt="Enlarged image">
-
-            <!-- Image Counter -->
-            <?php if (count($productImages) > 1): ?>
-            <div class="modal-image-counter">
-                <span id="modalImageNum">1</span> / <?= count($productImages) ?>
-            </div>
-            <?php endif; ?>
-
-            <!-- Thumbnail Strip (Optional) -->
-            <?php if (count($productImages) > 1): ?>
-            <div class="modal-thumbnails">
-                <?php foreach ($productImages as $i => $img): ?>
-                    <img src="<?= e($img['url']) ?>"
-                         class="modal-thumb <?= $i === 0 ? 'active' : '' ?>"
-                         data-index="<?= $i ?>"
-                         alt="Thumbnail <?= $i + 1 ?>">
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
-        </div>
+        <img id="modalImage" class="modal-content-img" alt="Enlarged image">
     </div>
 
     <!-- BUY CHOICE MODAL (same structure as products.php) -->
@@ -634,10 +585,8 @@ function e($val)
     </div>
 
     <!-- scripts -->
-    <script src="/RADS-TOOLING/assets/js/script.js"></script>
-    <script src="/RADS-TOOLING/assets/js/cart.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/product-modal.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/product-drag.js"></script>
+    <script src="/assets/js/script.js"></script>
+    <script src="/assets/js/cart.js"></script>
 
     <script>
         // ===== Quantity control and buy/add handlers =====
@@ -865,7 +814,7 @@ function e($val)
                 const qty = modal.dataset.qty || '1';
                 const mode = modal.dataset.mode || '';
                 if (!pid || !mode) return;
-                const url = mode === 'delivery' ? `/RADS-TOOLING/customer/checkout_delivery.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}` : `/RADS-TOOLING/customer/checkout_pickup.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}`;
+                const url = mode === 'delivery' ? `/customer/checkout_delivery.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}` : `/customer/checkout_pickup.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}`;
                 modal.hidden = true;
                 // redirect to checkout
                 window.location.href = url;
@@ -884,15 +833,10 @@ function e($val)
                 // FIX: Ensure body overflow is always reset on page load
                 document.body.style.overflow = '';
                 // FIX: Ensure image modal is hidden on page load
-
                 const imgModal = document.getElementById('imageModal');
-
                 if (imgModal) {
-
                     imgModal.classList.remove('active');
-
                     imgModal.setAttribute('aria-hidden', 'true');
-
                 }
             });
         })();
@@ -928,12 +872,12 @@ function e($val)
                 if (m) m.style.display = 'none';
             };
             window.confirmLogout = function() {
-                fetch('/RADS-TOOLING/backend/api/auth.php?action=logout', {
+                fetch('/backend/api/auth.php?action=logout', {
                     method: 'POST',
                     credentials: 'same-origin'
                 }).finally(() => {
                     localStorage.removeItem('cart');
-                    window.location.href = '/RADS-TOOLING/public/index.php';
+                    window.location.href = '/index.php';
                 });
             };
 
@@ -949,10 +893,11 @@ function e($val)
     </script>
 
     <!-- nav + chat widget scripts (existing) -->
-     <script src="/RADS-TOOLING/assets/JS/product-modal.js"></script>
+    <script src="/assets/JS/nav_user.js"></script>
+    <script src="/assets/JS/chat_widget.js"></script>
+    <script src="/RADS-TOOLING/assets/JS/product-modal.js"></script>
     <script src="/RADS-TOOLING/assets/JS/product-drag.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/nav_user.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/chat_widget.js"></script>
+
 </body>
 
 </html>

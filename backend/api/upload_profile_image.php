@@ -1,5 +1,5 @@
 <?php
-// /RADS-TOOLING/backend/api/upload_profile_image.php
+// /backend/api/upload_profile_image.php
 declare(strict_types=1);
 session_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -12,7 +12,7 @@ require_once dirname(__DIR__)     . '/config/database.php'; // backend/config/da
 // Auth
 if (empty($_SESSION['user']) || (($_SESSION['user']['aud'] ?? '') !== 'customer')) {
   http_response_code(401);
-  echo json_encode(['success' => false, 'code' => 'AUTH', 'message' => 'Login required', 'redirect' => '/RADS-TOOLING/customer/login.php']);
+  echo json_encode(['success' => false, 'code' => 'AUTH', 'message' => 'Login required', 'redirect' => '/customer/login.php']);
   exit;
 }
 

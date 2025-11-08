@@ -1,5 +1,5 @@
 <?php
-// /RADS-TOOLING/backend/api/payment_qr.php
+// /backend/api/payment_qr.php
 // ✅ FIXED VERSION - Returns QR code URL from database with proper data wrapper
 
 declare(strict_types=1);
@@ -29,8 +29,8 @@ $row = $stmt->fetch();
 // Build QR code URL
 $qr = null;
 if ($row && !empty($row['image_path'])) {
-    // Add /RADS-TOOLING/ prefix and ensure no double slashes
-    $qr = '/RADS-TOOLING/' . ltrim($row['image_path'], '/');
+    // Add / prefix and ensure no double slashes
+    $qr = '/' . ltrim($row['image_path'], '/');
 }
 
 // ✅ FIXED: Return with 'data' wrapper to match checkout.js expectation

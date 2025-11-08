@@ -7,7 +7,7 @@
  * Safe globals - avoid redeclaring API_BASE/CSRF_TOKEN if they already exist.
  * Use internal names (__API_BASE, __CSRF_TOKEN) to prevent SyntaxError.
  */
-const __API_BASE = (typeof API_BASE !== 'undefined') ? API_BASE : '/RADS-TOOLING/backend/api';
+const __API_BASE = (typeof API_BASE !== 'undefined') ? API_BASE : '/backend/api';
 const __CSRF_TOKEN = (typeof CSRF_TOKEN !== 'undefined')
     ? CSRF_TOKEN
     : (document.querySelector('input[name="csrf_token"]')?.value || (typeof CSRF !== 'undefined' ? CSRF : ''));
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initializePSGC() {
     try {
         // Load provinces
-        const response = await fetch('/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces');
+        const response = await fetch('/backend/api/psgc.php?endpoint=provinces');
         const provinces = await response.json();
 
         // Filter to NCR and Calabarzon only
@@ -97,6 +97,15 @@ function setupAddressModal() {
     closeBtn?.addEventListener('click', () => closeModal(modal));
     // Close on Escape key (optional)
     
+    // ADD THIS: Phone input validation
+    const phoneLocalInput = document.getElementById('addressPhoneLocal');
+    if (phoneLocalInput) {
+        phoneLocalInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+        });
+    }
+    // END ADD
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
             closeModal(modal);
@@ -143,7 +152,7 @@ function setupAddressModal() {
                 return;
             }
 
-            const response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
+            const response = await fetch(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
             const cities = await response.json();
 
             // Cache the cities
@@ -185,11 +194,11 @@ function setupAddressModal() {
 
             // Try cities endpoint first
 
-            let response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
+            let response = await fetch(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
             let barangays = await response.json();
             // If cities endpoint fails or returns empty, try municipalities endpoint
             if (!Array.isArray(barangays) || barangays.length === 0) {
-                response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
+                response = await fetch(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
                 barangays = await response.json();
             }
             // Cache the barangays
@@ -437,7 +446,7 @@ async function editAddress(addressId) {
                     loadBarangaysForEdit(addr);
                 }, 100);
             } else {
-                const citiesResponse = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities`);
+                const citiesResponse = await fetch(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities`);
                 const cities = await citiesResponse.json();
                 psgcCities[provinceCode] = cities;
                 populateCitySelect(citySelect, cities);
@@ -474,12 +483,12 @@ async function loadBarangaysForEdit(addr) {
 
     try {
         // Try cities endpoint first
-        let response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
+        let response = await fetch(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
         let barangays = await response.json();
 
         // If cities endpoint fails or returns empty, try municipalities endpoint
         if (!Array.isArray(barangays) || barangays.length === 0) {
-            response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
+            response = await fetch(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
             barangays = await response.json();
         }
         psgcBarangays[cityCode] = barangays;
@@ -512,6 +521,20 @@ async function saveAddress(e) {
     btnSpinner.style.display = 'inline-block';
     msgEl.textContent = '';
     msgEl.className = 'msg';
+
+// ADD THIS: Phone validation and composition
+    const phoneLocal = document.getElementById('addressPhoneLocal').value.trim();
+    if (!phoneLocal || phoneLocal.length !== 10) {
+        msgEl.textContent = 'Please enter 10 digits after +63 (e.g., 9123456789)';
+        msgEl.className = 'msg error';
+        submitBtn.disabled = false;
+        btnText.style.display = 'inline';
+        btnSpinner.style.display = 'none';
+        return;
+    }
+    const composedPhone = `+63${phoneLocal}`;
+    document.getElementById('addressPhone').value = composedPhone;
+    // END ADD
 
     const addressId = document.getElementById('addressEditId').value;
     const isEdit = !!addressId;
@@ -558,6 +581,10 @@ async function saveAddress(e) {
         setTimeout(() => {
             closeModal(document.getElementById('addressFormModal'));
             loadAddresses();
+
+            submitBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnSpinner.style.display = 'none';
         }, 1000);
 
     } catch (error) {

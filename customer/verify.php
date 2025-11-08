@@ -12,7 +12,7 @@ require_once __DIR__ . '/../backend/config/database.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Email - RADS Tooling</title>
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/login.css">
+    <link rel="stylesheet" href="/assets/CSS/login.css">
     <style>
         .verify-container {
             max-width: 450px;
@@ -106,7 +106,7 @@ require_once __DIR__ . '/../backend/config/database.php';
             </form>
 
             <p style="margin-top: 2rem; font-size: 0.9rem;">
-                <a href="/RADS-TOOLING/customer/register.php" style="color: var(--brand);">Back to Registration</a>
+                <a href="/customer/register.php" style="color: var(--brand);">Back to Registration</a>
             </p>
         </div>
     </main>
@@ -194,7 +194,7 @@ require_once __DIR__ . '/../backend/config/database.php';
             }
 
             try {
-                const response = await fetch('/RADS-TOOLING/backend/api/auth.php?action=verify_email', {
+                const response = await fetch('/backend/api/auth.php?action=verify_email', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -217,7 +217,7 @@ require_once __DIR__ . '/../backend/config/database.php';
                     sessionStorage.removeItem('verify_email');
                 } catch (_) {}
 
-                const loginUrl = '/RADS-TOOLING/customer/cust_login.php';
+                const loginUrl = '/customer/cust_login.php';
 
                 if (window.showModal) {
                     modal({
@@ -259,7 +259,7 @@ require_once __DIR__ . '/../backend/config/database.php';
             }
 
             try {
-                const response = await fetch('/RADS-TOOLING/backend/api/auth.php?action=resend_verification', {
+                const response = await fetch('/backend/api/auth.php?action=resend_verification', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -426,7 +426,7 @@ require_once __DIR__ . '/../backend/config/database.php';
             };
         })();
     </script>
-    <script src="/RADS-TOOLING/assets/JS/register.js"></script>
+    <script src="/assets/JS/register.js"></script>
 
 </body>
 

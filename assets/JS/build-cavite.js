@@ -1,6 +1,6 @@
 // scripts/build-cavite.js
 // Generates ALL Cavite city/municipality barangay JSONs
-// Output dir: /RADS-TOOLING/assets/data/calabarzon/cavite
+// Output dir: /assets/data/calabarzon/cavite
 // Source: PSGC Cloud API (fast, official JSON)
 
 import fs from "node:fs/promises";
@@ -9,7 +9,7 @@ import path from "node:path";
 const API = "https://psgc.cloud/api/v1";
 
 // EXACT output folder base you asked for (no /geo/)
-const OUT_DIR = "/RADS-TOOLING/assets/data/calabarzon/cavite";
+const OUT_DIR = "/assets/data/calabarzon/cavite";
 
 // Cavite province code (PSGC)
 const CAVITE_CODE = "042100000";
@@ -31,7 +31,7 @@ const NAME_TO_FILE = {
 };
 
 const PATH_FOR = (file) => path.join(OUT_DIR, file);
-const ABS_TO_URL = (file) => `/RADS-TOOLING/assets/data/calabarzon/cavite/${file}`;
+const ABS_TO_URL = (file) => `/assets/data/calabarzon/cavite/${file}`;
 
 async function ensureDir(p) { await fs.mkdir(p, { recursive: true }); }
 

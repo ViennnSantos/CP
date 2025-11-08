@@ -369,7 +369,7 @@ function viewProduct(PDO $conn): void
         }
 
         // Base path used by frontend for images/models (adjust if necessary)
-        $publicBasePrefix = '/RADS-TOOLING/'; // <- change if different
+        $publicBasePrefix = '/'; // <- change if different
         $uploadsProductsPrefix = 'uploads/products/';
 
         // Normalize main image (if stored as filename or relative path)

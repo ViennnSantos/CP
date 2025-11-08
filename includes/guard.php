@@ -56,9 +56,9 @@ function guard_require_login(string $redirect = '/customer/login.php'): void {
 }
 
 function guard_require_staff(): void {
-    guard_require_login('/RADS-TOOLING/admin/login.php');
+    guard_require_login('/admin/login.php');
     if (($_SESSION['user']['aud'] ?? '') !== 'staff') {
-        header('Location: /RADS-TOOLING/public/index.php');
+        header('Location: /index.php');
         exit;
     }
 }

@@ -312,39 +312,6 @@
     }
   });
 
-  /**
-   * Modal navigation arrows
-   */
-  const prevBtn = document.querySelector('.modal-nav-prev');
-  const nextBtn = document.querySelector('.modal-nav-next');
-
-  if (prevBtn) {
-    prevBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      previousImage();
-    });
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      nextImage();
-    });
-  }
-
-  /**
-   * Modal thumbnail clicks
-   */
-  document.addEventListener('click', function(e) {
-    const modalThumb = e.target.closest('.modal-thumb');
-    if (!modalThumb) return;
-
-    const index = parseInt(modalThumb.dataset.index || '0', 10);
-    showImageByIndex(isNaN(index) ? 0 : index);
-  });
-
   // ==================== INITIALIZATION ====================
 
   /**

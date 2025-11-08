@@ -2,6 +2,9 @@
 // backend/api/payment_submit.php
 declare(strict_types=1);
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
@@ -30,7 +33,6 @@ function require_customer_id(): int {
     fail('Unauthorized', 401);
 }
 
-// DB connection via Database class (project likely has this)
 require_once __DIR__ . '/../config/database.php';
 
 try {

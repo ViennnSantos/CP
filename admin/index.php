@@ -39,9 +39,9 @@ if (!$isLoggedIn) {
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
     <!-- Main CSS -->
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/style.css" />
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-admin.css" />
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/content_mgmt.css" />
+    <link rel="stylesheet" href="/assets/CSS/style.css" />
+    <link rel="stylesheet" href="/assets/CSS/chat-admin.css" />
+    <link rel="stylesheet" href="/assets/CSS/content_mgmt.css" />
 
     <style>
         /* ===== Consolidated Modal, Loading, and UI styles (merged) ===== */
@@ -368,7 +368,7 @@ if (!$isLoggedIn) {
             <div class="topbar-profile">
                 <span class="admin-name">Welcome, <?php echo htmlspecialchars($adminName); ?></span>
                 <div class="profile-menu">
-                    <img src="/RADS-TOOLING/assets/images/profile.png" alt="Admin" class="profile-avatar" id="profileIcon" />
+                    <img src="/assets/images/profile.png" alt="Admin" class="profile-avatar" id="profileIcon" />
                     <div class="profile-dropdown" id="profileDropdown">
                         <button id="btnEditProfile"><span class="material-symbols-rounded">person</span> Edit Profile</button>
                         <button id="btnChangePassword"><span class="material-symbols-rounded">key</span> Change Password</button>
@@ -389,13 +389,17 @@ if (!$isLoggedIn) {
                     <div class="card-title">Total Sales</div>
                     <div class="card-value" id="dash-sales">Loading...</div>
                 </div>
+                <div class="dashboard-card card-down-payments">
+                    <div class="card-title">Total Down Payments</div>
+                    <div class="card-value" id="dash-down-payments">Loading...</div>
+                </div>
+                <div class="dashboard-card card-incoming-sales">
+                    <div class="card-title">Incoming Sales</div>
+                    <div class="card-value" id="dash-incoming-sales">Loading...</div>
+                </div>
                 <div class="dashboard-card card-customers">
                     <div class="card-title">Customers</div>
                     <div class="card-value" id="dash-customers">Loading...</div>
-                </div>
-                <div class="dashboard-card card-feedback">
-                    <div class="card-title">Feedback Received</div>
-                    <div class="card-value" id="dash-feedback">Loading...</div>
                 </div>
             </div>
 
@@ -908,7 +912,7 @@ if (!$isLoggedIn) {
                 </div>
                 <form id="editProfileForm" style="padding:16px">
                     <div class="edit-profile-pic-group" style="display:flex;flex-direction:column;align-items:center;margin-bottom:1rem">
-                        <img id="editProfileAvatar" class="edit-profile-avatar" src="/RADS-TOOLING/assets/images/profile.png" alt="Avatar" />
+                        <img id="editProfileAvatar" class="edit-profile-avatar" src="/assets/images/profile.png" alt="Avatar" />
                         <label class="edit-pic-label" for="editProfilePic" style="cursor:pointer;margin-top:6px">Change Photo</label>
                         <input id="editProfilePic" type="file" accept="image/*" hidden />
                     </div>
@@ -1343,11 +1347,11 @@ if (!$isLoggedIn) {
 
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/script.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/product_management.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/chat_admin.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/chat-notification.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/content_mgmt.js"></script>
+    <script src="/assets/JS/script.js"></script>
+    <script src="/assets/JS/product_management.js"></script>
+    <script src="/assets/JS/chat_admin.js"></script>
+    <script src="/assets/JS/chat-notification.js"></script>
+    <script src="/assets/JS/content_mgmt.js"></script>
 
     <script>
         // Open modals
@@ -1372,7 +1376,7 @@ if (!$isLoggedIn) {
             formData.append('image', file);
 
             try {
-                const response = await fetch('/RADS-TOOLING/backend/api/admin_customization.php?action=upload_texture_image', {
+                const response = await fetch('/backend/api/admin_customization.php?action=upload_texture_image', {
                     method: 'POST',
                     body: formData
                 });
@@ -1381,7 +1385,7 @@ if (!$isLoggedIn) {
 
                 if (data.success) {
                     const preview = document.getElementById('textureImagePreview');
-                    preview.src = `/RADS-TOOLING/uploads/textures/${data.data.filename}`;
+                    preview.src = `/uploads/textures/${data.data.filename}`;
                     preview.style.display = 'block';
                     preview.dataset.filename = data.data.filename;
                     showNotification('success', 'Texture image uploaded successfully');
@@ -1464,7 +1468,7 @@ if (!$isLoggedIn) {
             const formData = new FormData();
             formData.append('image', file);
             try {
-                const response = await fetch('/RADS-TOOLING/backend/api/admin_customization.php?action=upload_texture_image', {
+                const response = await fetch('/backend/api/admin_customization.php?action=upload_texture_image', {
                     method: 'POST',
                     body: formData
                 });
@@ -1472,7 +1476,7 @@ if (!$isLoggedIn) {
                 if (data.success) {
                     const preview = document.getElementById('textureImagePreview');
                     if (preview) {
-                        preview.src = `/RADS-TOOLING/uploads/textures/${data.data.filename}`;
+                        preview.src = `/uploads/textures/${data.data.filename}`;
                         preview.style.display = 'block';
                         preview.dataset.filename = data.data.filename;
                     }
@@ -1492,7 +1496,7 @@ if (!$isLoggedIn) {
             const formData = new FormData();
             formData.append('image', file);
             try {
-                const response = await fetch('/RADS-TOOLING/backend/api/admin_customization.php?action=upload_handle_image', {
+                const response = await fetch('/backend/api/admin_customization.php?action=upload_handle_image', {
                     method: 'POST',
                     body: formData
                 });
@@ -1500,7 +1504,7 @@ if (!$isLoggedIn) {
                 if (data.success) {
                     const preview = document.getElementById('handleImagePreview');
                     if (preview) {
-                        preview.src = `/RADS-TOOLING/uploads/handles/${data.data.filename}`;
+                        preview.src = `/uploads/handles/${data.data.filename}`;
                         preview.style.display = 'block';
                         preview.dataset.filename = data.data.filename;
                     }
@@ -1530,7 +1534,7 @@ if (!$isLoggedIn) {
                 allowed_parts: allowedParts
             };
             try {
-                const res = await fetch('/RADS-TOOLING/backend/api/admin_customization.php?action=add_texture', {
+                const res = await fetch('/backend/api/admin_customization.php?action=add_texture', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1568,7 +1572,7 @@ if (!$isLoggedIn) {
 
             console.log('Sending color data:', colorData);
 
-            fetch('/RADS-TOOLING/backend/api/admin_customization.php?action=add_color', {
+            fetch('/backend/api/admin_customization.php?action=add_color', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1603,7 +1607,7 @@ if (!$isLoggedIn) {
                 handle_image: document.getElementById('handleImagePreview')?.dataset?.filename || ''
             };
             try {
-                const res = await fetch('/RADS-TOOLING/backend/api/admin_customization.php?action=add_handle', {
+                const res = await fetch('/backend/api/admin_customization.php?action=add_handle', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

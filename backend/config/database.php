@@ -6,10 +6,10 @@ class Database
     // 🔹 NEW: singleton holder
     private static $instance = null;
 
-    private $host = "localhost";
+    private $host = "localhost:3306";
     private $database_name = "rads_tooling";
-    private $username = "root";
-    private $password = "";
+    private $username = "rads_tooling";
+    private $password = "8Umj%ZpyvGa?5va7";
     private $conn = null;
 
     // 🔹 NEW: global accessor (works alongside "new Database()")

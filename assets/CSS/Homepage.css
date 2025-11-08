@@ -484,11 +484,6 @@ body {
   color: #2c3e50;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 200px; /* Ensure consistent height */
 }
 
 .action-card:hover {
@@ -499,7 +494,7 @@ body {
 .action-icon {
   width: 70px;
   height: 70px;
-  margin: 0 0 1.5rem 0; /* Remove auto margin since card is flex */
+  margin: 0 auto 1.5rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -507,20 +502,16 @@ body {
   color: white;
   background: linear-gradient(135deg, #2f5b88, #3a77b8);
   font-size: 2rem;
-  flex-shrink: 0; /* Prevent icon from shrinking */
 }
 
 .action-card h3 {
   font-size: 1.25rem;
-  margin: 0 0 0.5rem 0;
-  font-weight: 600;
+  margin-bottom: 0.5rem;
 }
 
 .action-card p {
   color: #7f8c8d;
   font-size: 0.95rem;
-  margin: 0;
-  line-height: 1.5;
 }
 
 /* Products Grid */
@@ -1035,14 +1026,12 @@ body {
 
   .action-card {
     padding: 1.5rem;
-  min-height: 180px; /* Adjusted for mobile */
   }
 
   .action-icon {
     width: 60px;
     height: 60px;
     font-size: 1.75rem;
-    margin: 0 0 1.125rem 0;
   }
 
   /* Features */

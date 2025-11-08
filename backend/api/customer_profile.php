@@ -20,7 +20,7 @@ if (empty($_SESSION['user']) || (($_SESSION['user']['aud'] ?? '') !== 'customer'
         'success'  => false,
         'code'     => 'AUTH',
         'message'  => 'Login required',
-        'redirect' => '/RADS-TOOLING/customer/login.php'
+        'redirect' => '/customer/login.php'
     ]);
     exit;
 }

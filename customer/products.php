@@ -98,7 +98,7 @@ if (!$isPreview) {
     $user = $_SESSION['user'] ?? null;
     $isCustomer = $user && (($user['aud'] ?? '') === 'customer');
     if (!$isCustomer) {
-        header('Location: /RADS-TOOLING/customer/cust_login.php');
+        header('Location: /customer/cust_login.php');
         exit;
     }
 } else {
@@ -150,7 +150,7 @@ function rt_img_url($raw)
 
     // empty -> placeholder
     if ($raw === '') {
-        return '/RADS-TOOLING/uploads/products/placeholder.jpg';
+        return '/uploads/products/placeholder.jpg';
     }
 
     // absolute url -> return as-is
@@ -169,17 +169,17 @@ function rt_img_url($raw)
     ];
     foreach ($knownRoots as $root) {
         if (strpos($raw, $root) === 0) {
-            return '/RADS-TOOLING/' . ltrim($raw, '/');
+            return '/' . ltrim($raw, '/');
         }
     }
 
     // sensible fallback: if it contains uploads or products, prefix anyway
     if (stripos($raw, 'uploads/') !== false || stripos($raw, 'products/') !== false) {
-        return '/RADS-TOOLING/' . ltrim($raw, '/');
+        return '/' . ltrim($raw, '/');
     }
 
     // final fallback -> placeholder only (don't concat raw)
-    return '/RADS-TOOLING/uploads/products/placeholder.jpg';
+    return '/uploads/products/placeholder.jpg';
 }
 ?>
 <!DOCTYPE html>
@@ -192,12 +192,12 @@ function rt_img_url($raw)
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/Homepage.css" />
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/chat-widget.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/product-ux-enhanced.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/checkout_modal.css">
+    <link rel="stylesheet" href="/assets/CSS/Homepage.css" />
+    <link rel="stylesheet" href="/assets/CSS/chat-widget.css">
+    <link rel="stylesheet" href="/assets/CSS/product.css">
+    <link rel="stylesheet" href="/assets/CSS/product-ux-enhanced.css">
+    <link rel="stylesheet" href="/assets/CSS/checkout_modal.css">
+    <link rel="stylesheet" href="/assets/CSS/responsive.css">
     <style>
         /* small utility so grid imgs have a class we can target in JS patch */
         .product-grid-img { width:100%; height:180px; object-fit:cover; display:block; border-radius:6px; }
@@ -356,12 +356,12 @@ function rt_img_url($raw)
         <header class="navbar">
             <div class="navbar-container">
                 <div class="navbar-brand">
-                    <a href="/RADS-TOOLING/customer/homepage.php" class="logo-link">
+                    <a href="/customer/homepage.php" class="logo-link">
                         <span class="logo-text">R</span>ADS <span class="logo-text">T</span>OOLING
                     </a>
                 </div>
 
-                <form class="search-container" action="/RADS-TOOLING/customer/products.php" method="get">
+                <form class="search-container" action="/customer/products.php" method="get">
                     <input type="text" name="q" class="search-input" placeholder="Search cabinets..."
                         value="<?= htmlspecialchars($q) ?>" />
                     <button type="submit" class="search-btn" aria-label="Search">
@@ -395,11 +395,11 @@ function rt_img_url($raw)
                                 </div>
                             </div>
                             <div class="dropdown-divider"></div>
-                            <a href="/RADS-TOOLING/customer/profile.php" class="dropdown-item">
+                            <a href="/customer/profile.php" class="dropdown-item">
                                 <span class="material-symbols-rounded">person</span>
                                 <span>My Profile</span>
                             </a>
-                            <a href="/RADS-TOOLING/customer/orders.php" class="dropdown-item">
+                            <a href="/customer/orders.php" class="dropdown-item">
                                 <span class="material-symbols-rounded">receipt_long</span>
                                 <span>My Orders</span>
                             </a>
@@ -413,7 +413,7 @@ function rt_img_url($raw)
 
 
                     <!-- Cart -->
-                    <a href="/RADS-TOOLING/customer/cart.php" class="cart-button">
+                    <a href="/customer/cart.php" class="cart-button">
                         <span class="material-symbols-rounded">shopping_cart</span>
                         <span id="cartCount" class="cart-badge">0</span>
                     </a>
@@ -421,10 +421,10 @@ function rt_img_url($raw)
             </div>
 
             <nav class="navbar-menu">
-                <a href="/RADS-TOOLING/customer/homepage.php" class="nav-menu-item">Home</a>
-                <a href="/RADS-TOOLING/customer/about.php" class="nav-menu-item">About</a>
-                <a href="/RADS-TOOLING/customer/products.php" class="nav-menu-item active">Products</a>
-                <a href="/RADS-TOOLING/customer/testimonials.php" class="nav-menu-item">Testimonials</a>
+                <a href="/customer/homepage.php" class="nav-menu-item">Home</a>
+                <a href="/customer/about.php" class="nav-menu-item">About</a>
+                <a href="/customer/products.php" class="nav-menu-item active">Products</a>
+                <a href="/customer/testimonials.php" class="nav-menu-item">Testimonials</a>
             </nav>
 
             <!-- Category Tabs -->
@@ -433,7 +433,7 @@ function rt_img_url($raw)
                     <nav class="navbar-cats">
                         <?php
                         $cat = function ($label) use ($q, $activeType) {
-                            $href = "/RADS-TOOLING/customer/products.php?type=" . urlencode($label) . ($q !== '' ? "&q=" . urlencode($q) : "");
+                            $href = "/customer/products.php?type=" . urlencode($label) . ($q !== '' ? "&q=" . urlencode($q) : "");
                             $active = ($activeType === $label) ? 'active' : '';
                             echo '<a class="nav-menu-item ' . $active . '" href="' . htmlspecialchars($href) . '">' . htmlspecialchars($label) . '</a>';
                         };
@@ -468,10 +468,10 @@ function rt_img_url($raw)
                         <article class="rt-card" data-pid="<?= $id ?>">
                             <div class="rt-imgwrap">
                                 <img class="product-grid-img" src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($name) ?>"
-                                     onerror="this.onerror=null;this.src='/RADS-TOOLING/uploads/products/placeholder.jpg'">
+                                     onerror="this.onerror=null;this.src='/uploads/products/placeholder.jpg'">
 
                                 <?php if (!empty($p['is_customizable']) && (int)$p['is_customizable'] === 1): ?>
-                                    <a class="rt-ico rt-left-ico" href="/RADS-TOOLING/customer/customization.php?pid=<?= $id ?>" title="Customize">
+                                    <a class="rt-ico rt-left-ico" href="/customer/customization.php?pid=<?= $id ?>" title="Customize">
                                         <span class="material-symbols-rounded">edit_square</span>
                                     </a>
                                 <?php endif; ?>
@@ -523,10 +523,10 @@ function rt_img_url($raw)
                 <div class="footer-section">
                     <h3>Quick Links</h3>
                     <ul class="footer-links">
-                        <li><a href="/RADS-TOOLING/customer/homepage.php">Home</a></li>
-                        <li><a href="/RADS-TOOLING/customer/about.php">About Us</a></li>
-                        <li><a href="/RADS-TOOLING/customer/products.php">Products</a></li>
-                        <li><a href="/RADS-TOOLING/customer/testimonials.php">Testimonials</a></li>
+                        <li><a href="/customer/homepage.php">Home</a></li>
+                        <li><a href="/customer/about.php">About Us</a></li>
+                        <li><a href="/customer/products.php">Products</a></li>
+                        <li><a href="/customer/testimonials.php">Testimonials</a></li>
                     </ul>
                 </div>
 
@@ -534,11 +534,11 @@ function rt_img_url($raw)
                 <div class="footer-section">
                     <h3>Categories</h3>
                     <ul class="footer-links">
-                        <li><a href="/RADS-TOOLING/customer/products.php?type=Kitchen Cabinet">Kitchen Cabinet</a></li>
-                        <li><a href="/RADS-TOOLING/customer/products.php?type=Wardrobe">Wardrobe</a></li>
-                        <li><a href="/RADS-TOOLING/customer/products.php?type=Office Cabinet">Office Cabinet</a></li>
-                        <li><a href="/RADS-TOOLING/customer/products.php?type=Bathroom Cabinet">Bathroom Cabinet</a></li>
-                        <li><a href="/RADS-TOOLING/customer/products.php?type=Commercial">Storage Cabinet</a></li>
+                        <li><a href="/customer/products.php?type=Kitchen Cabinet">Kitchen Cabinet</a></li>
+                        <li><a href="/customer/products.php?type=Wardrobe">Wardrobe</a></li>
+                        <li><a href="/customer/products.php?type=Office Cabinet">Office Cabinet</a></li>
+                        <li><a href="/customer/products.php?type=Bathroom Cabinet">Bathroom Cabinet</a></li>
+                        <li><a href="/customer/products.php?type=Commercial">Storage Cabinet</a></li>
                     </ul>
                 </div>
 
@@ -565,8 +565,8 @@ function rt_img_url($raw)
                     © 2025 RADS TOOLING INC. All rights reserved.
                 </p>
                 <div class="footer-legal">
-                    <a href="/RADS-TOOLING/customer/privacy.php">Privacy Policy</a>
-                    <a href="/RADS-TOOLING/customer/terms.php">Terms & Conditions</a>
+                    <a href="/customer/privacy.php">Privacy Policy</a>
+                    <a href="/customer/terms.php">Terms & Conditions</a>
                 </div>
             </div>
         </footer>
@@ -737,8 +737,8 @@ function rt_img_url($raw)
                     if (!selectedPID || !selectedMode) return;
 
                     const url = selectedMode === 'delivery' ?
-                        '/RADS-TOOLING/customer/checkout_delivery.php?pid=' + selectedPID :
-                        '/RADS-TOOLING/customer/checkout_pickup.php?pid=' + selectedPID;
+                        '/customer/checkout_delivery.php?pid=' + selectedPID :
+                        '/customer/checkout_pickup.php?pid=' + selectedPID;
 
                     window.location.href = url;
                 });
@@ -835,12 +835,12 @@ function rt_img_url($raw)
             };
 
             window.confirmLogout = function() {
-                fetch('/RADS-TOOLING/backend/api/auth.php?action=logout', {
+                fetch('/backend/api/auth.php?action=logout', {
                     method: 'POST',
                     credentials: 'same-origin'
                 }).finally(function() {
                     localStorage.removeItem('cart');
-                    window.location.href = '/RADS-TOOLING/public/index.php';
+                    window.location.href = '/index.php';
                 });
             };
 
@@ -856,7 +856,7 @@ function rt_img_url($raw)
                     // For each product id, fetch primary image once
                     await Promise.all(productIds.map(async pid => {
                         try {
-                            const resp = await fetch(`/RADS-TOOLING/backend/api/product_images.php?action=list&product_id=${pid}`, { credentials: 'same-origin' });
+                            const resp = await fetch(`/backend/api/product_images.php?action=list&product_id=${pid}`, { credentials: 'same-origin' });
                             const json = await resp.json().catch(() => ({ success: false }));
                             if (!json.success) return;
 
@@ -869,7 +869,7 @@ function rt_img_url($raw)
                             const filename = String(primary.image_path || primary.path || primary.filename || '').split('/').pop();
                             if (!filename) return;
 
-                            const desiredSrc = `/RADS-TOOLING/uploads/products/${filename}`;
+                            const desiredSrc = `/uploads/products/${filename}`;
 
                             // apply to all matching card imgs for this pid if they are placeholder or different
                             imgs.forEach(imgEl => {
@@ -914,7 +914,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 // Redirect to product detail page
-                window.location.href = `/RADS-TOOLING/customer/product_detail.php?id=${productId}`;
+                window.location.href = `/customer/product_detail.php?id=${productId}`;
             });
         }
     });
@@ -927,9 +927,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <!-- External Scripts -->
-    <script src="/RADS-TOOLING/assets/JS/nav_user.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/chat_widget.js"></script>
-    <script src="/RADS-TOOLING/assets/JS/product-drag.js"></script>
+    <script src="/assets/JS/nav_user.js"></script>
+    <script src="/assets/JS/chat_widget.js"></script>
+    <script src="/assets/JS/product-drag.js"></script>
 </body>
 
 </html>

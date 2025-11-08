@@ -10,7 +10,7 @@
         return;
     }
 
-    const API_BASE = '/RADS-TOOLING/backend/api/chat.php';
+    const API_BASE = '/backend/api/chat.php';
     let checkInterval = null;
 
     async function checkUnreadMessages() {

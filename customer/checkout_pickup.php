@@ -1,5 +1,5 @@
 <?php
-// /RADS-TOOLING/customer/checkout_pickup.php
+// /customer/checkout_pickup.php
 // 🔥 COMPLETE FIXED VERSION with Material Symbols icons
 
 declare(strict_types=1);
@@ -10,7 +10,7 @@ require_once __DIR__ . '/../backend/config/app.php';
 $pid = (int)($_GET['pid'] ?? $_POST['pid'] ?? 0);
 
 if ($pid <= 0) {
-    header('Location: /RADS-TOOLING/customer/products.php');
+    header('Location: /customer/products.php');
     exit;
 }
 
@@ -19,7 +19,7 @@ $stmt->execute([$pid]);
 $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$product) {
-    header('Location: /RADS-TOOLING/customer/products.php');
+    header('Location: /customer/products.php');
     exit;
 }
 
@@ -45,8 +45,8 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
   <link rel="stylesheet" href="../assets/CSS/chat-widget.css">
   <link rel="stylesheet" href="../assets/CSS/about.css">
   <link rel="stylesheet" href="../assets/CSS/checkout.css">
-  <link rel="stylesheet" href="/RADS-TOOLING/assets/CSS/responsive.css">
   <link rel="stylesheet" href="../assets/CSS/checkout_modal.css">
+  <link rel="stylesheet" href="/assets/CSS/responsive.css">
   
   <style>
     /* ✅ Force Poppins everywhere */
@@ -334,22 +334,22 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
   <header class="navbar">
     <div class="navbar-container">
       <div class="navbar-brand">
-        <a class="logo-link" href="/RADS-TOOLING/customer/homepage.php">
+        <a class="logo-link" href="/customer/homepage.php">
           <span class="logo-text">R</span>ADS <span class="logo-text">T</span>OOLING
         </a>
       </div>
       <div class="navbar-actions">
-        <a class="cart-button" href="/RADS-TOOLING/cart.php">
+        <a class="cart-button" href="/cart.php">
           <span class="material-symbols-rounded">shopping_cart</span>
           <span id="cartCount" class="cart-badge">0</span>
         </a>
       </div>
     </div>
     <nav class="navbar-menu">
-      <a href="/RADS-TOOLING/customer/homepage.php" class="nav-menu-item">Home</a>
-      <a href="/RADS-TOOLING/customer/about.php" class="nav-menu-item">About</a>
-      <a href="/RADS-TOOLING/customer/products.php" class="nav-menu-item">Products</a>
-      <a href="/RADS-TOOLING/customer/testimonials.php" class="nav-menu-item">Testimonials</a>
+      <a href="/customer/homepage.php" class="nav-menu-item">Home</a>
+      <a href="/customer/about.php" class="nav-menu-item">About</a>
+      <a href="/customer/products.php" class="nav-menu-item">Products</a>
+      <a href="/customer/testimonials.php" class="nav-menu-item">Testimonials</a>
     </nav>
   </header>
 
@@ -446,6 +446,6 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
   </div>
 </div>
 
-<script src="/RADS-TOOLING/assets/JS/checkout.js" defer></script>
+<script src="/assets/JS/checkout.js" defer></script>
 </body>
 </html>

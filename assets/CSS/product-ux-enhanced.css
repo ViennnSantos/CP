@@ -27,9 +27,9 @@
   --rt-transition-slow: 250ms ease;
 }
 
-/* ==================== OVERRIDES FOR OLD CSS ==================== */
-
+/* ==================== PRODUCT GRID (LIST VIEW) ==================== */
 /* Override old product.css that limits description height */
+
 .rt-desc {
   height: auto !important;
   overflow: visible !important;
@@ -39,9 +39,6 @@
 .rt-card .rt-desc {
   overflow: hidden !important;
 }
-
-/* ==================== PRODUCT GRID (LIST VIEW) ==================== */
-
 .product-grid,
 .rt-grid {
   display: grid;
@@ -141,22 +138,21 @@
   white-space: nowrap;
 }
 
-/* Short description (CARD VIEW ONLY - show 3-4 lines max) */
+/* Short description */
 .rt-card .rt-desc,
 .product-card .product-short-desc {
   color: var(--rt-text-muted);
   font-size: 13px;
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0;
-  /* Limit to 4 lines on cards - more readable */
+  /* Limit to 3 lines on cards */
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
   height: auto !important; /* Override old product.css height:30px */
-  max-height: 6.4em; /* 4 lines × 1.6 line-height = 6.4em */
-  min-height: 3.2em; /* Ensure at least 2 lines of space */
+  max-height: 4.5em;
 }
 
 /* Price */
@@ -257,27 +253,21 @@
   align-items: start;
 }
 
-/* Back link - NO UNDERLINE (strong override) */
-.back-link,
-.back-link:link,
-.back-link:visited,
-.back-link:active {
+/* Back link - NO UNDERLINE */
+.back-link {
   grid-column: 1 / -1;
-  display: inline-flex !important;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: var(--rt-primary-blue) !important;
+  color: var(--rt-primary-blue);
   font-weight: 600;
-  text-decoration: none !important; /* ✅ Remove underline */
-  border-bottom: none !important;
+  text-decoration: none; /* ✅ Remove underline */
   margin-bottom: 8px;
   transition: color var(--rt-transition-fast);
 }
 
-.back-link:hover,
-.back-link:focus {
-  color: #234568 !important;
-  text-decoration: none !important;
+.back-link:hover {
+  color: #234568;
 }
 
 .back-link .material-symbols-rounded {
@@ -395,11 +385,11 @@
   margin-top: 8px;
 }
 
-/* Full description box (DETAIL PAGE - NO TRUNCATION) */
+/* Full description box */
 .product-description-box,
 .product-detail .product-description,
 .product-detail-container .product-description {
-  background: #fff;
+  bacground: #fff;
   padding: 18px;
   border-radius: 12px;
   box-shadow: var(--rt-shadow-sm);
@@ -407,6 +397,7 @@
   line-height: 1.7;
   margin-top: 4px;
   font-size: 14px;
+
   /* NO truncation - show full description */
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -437,24 +428,18 @@
   opacity: 1;
 }
 
-/* Modal content wrapper for proper positioning context */
 .image-modal img {
-  max-width: 85vw;
-  max-height: 85vh;
+  max-width: 90vw;
+  max-height: 90vh;
   object-fit: contain;
   border-radius: 8px;
-  position: relative;
-  z-index: 15001;
 }
 
-/* Close button (top-right X) - FIXED POSITIONING */
-.image-modal-close,
-.image-modal .image-modal-close {
-  position: fixed !important; /* Fixed to viewport, not modal */
-  top: 20px !important;
-  right: 20px !important;
-  left: auto !important;
-  bottom: auto !important;
+/* Close button (top-right X) */
+.image-modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -469,170 +454,17 @@
   font-weight: 700;
   transition: all var(--rt-transition-fast);
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  z-index: 15002 !important; /* Above modal content */
+  z-index: 15001;
 }
 
-.image-modal-close:hover,
-.image-modal .image-modal-close:hover {
-  background: var(--rt-primary-blue) !important;
-  color: #fff !important;
-  transform: scale(1.1) rotate(90deg);
-  box-shadow: 0 6px 20px rgba(47,91,136,0.4);
+.image-modal-close:hover {
+  background: var(--rt-primary-blue);
+  color: #fff;
+  transform: scale(1.1);
 }
 
 .image-modal-close .material-symbols-rounded {
   font-size: 28px;
-  line-height: 1;
-}
-
-/* Modal content wrapper */
-.image-modal-content {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  max-width: 90vw;
-  max-height: 90vh;
-}
-
-/* Navigation arrows (Previous/Next) */
-.modal-nav-btn {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--rt-text-dark);
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--rt-transition-fast);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  z-index: 15002;
-  opacity: 0.8;
-}
-
-.modal-nav-btn:hover {
-  background: var(--rt-primary-blue);
-  color: #fff;
-  opacity: 1;
-  transform: translateY(-50%) scale(1.1);
-}
-
-.modal-nav-prev {
-  left: 20px;
-}
-
-.modal-nav-next {
-  right: 20px;
-}
-
-.modal-nav-btn .material-symbols-rounded {
-  font-size: 32px;
-  line-height: 1;
-}
-
-/* Hide arrows on small screens */
-@media (max-width: 767px) {
-  .modal-nav-btn {
-    width: 44px;
-    height: 44px;
-  }
-  .modal-nav-prev {
-    left: 10px;
-  }
-  .modal-nav-next {
-    right: 10px;
-  }
-  .modal-nav-btn .material-symbols-rounded {
-    font-size: 28px;
-  }
-}
-
-/* Image counter overlay (inside modal) */
-.modal-image-counter {
-  position: fixed;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.7);
-  color: #fff;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 14px;
-  z-index: 15002;
-  pointer-events: none;
-}
-
-/* Modal thumbnails strip */
-.modal-thumbnails {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 10px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  z-index: 15002;
-  max-width: 90vw;
-  overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.3) transparent;
-}
-
-.modal-thumbnails::-webkit-scrollbar {
-  height: 4px;
-}
-
-.modal-thumbnails::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.3);
-  border-radius: 2px;
-}
-
-.modal-thumb {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  cursor: pointer;
-  border: 3px solid transparent;
-  flex-shrink: 0;
-  transition: all var(--rt-transition-fast);
-  opacity: 0.6;
-}
-
-.modal-thumb:hover {
-  opacity: 1;
-  transform: scale(1.1);
-  border-color: rgba(255,255,255,0.5);
-}
-
-.modal-thumb.active {
-  border-color: var(--rt-primary-blue);
-  opacity: 1;
-  transform: scale(1.05);
-}
-
-/* Hide thumbnails on very small screens */
-@media (max-width: 480px) {
-  .modal-thumbnails {
-    bottom: 10px;
-    padding: 8px;
-    gap: 6px;
-  }
-  .modal-thumb {
-    width: 48px;
-    height: 48px;
-  }
 }
 
 /* ==================== DRAG & DROP ==================== */

@@ -2,8 +2,8 @@
 // ==========================================
 // DEBUG SCRIPT - Test Connection & Session
 // ==========================================
-// Place this file in: /RADS-TOOLING/backend/api/debug_orders.php
-// Access it: http://yourdomain.com/RADS-TOOLING/backend/api/debug_orders.php
+// Place this file in: /backend/api/debug_orders.php
+// Access it: http://yourdomain.com/backend/api/debug_orders.php
 
 error_reporting(E_ALL);
 ini_set('display_errors', '1');

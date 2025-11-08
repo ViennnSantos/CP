@@ -6,7 +6,7 @@ session_start();
 
 // Authentication check
 if (empty($_SESSION['user']) || ($_SESSION['user']['aud'] ?? '') !== 'customer') {
-    header('Location: /RADS-TOOLING/customer/login.php');
+    header('Location: /customer/login.php');
     exit;
 }
 
@@ -36,7 +36,8 @@ $customerId = $_SESSION['user']['id'] ?? 0;
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
 
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="/RADS-TOOLING/assets/css/orders.css">
+    <link rel="stylesheet" href="/assets/CSS/orders.css">
+    <link rel="stylesheet" href="/assets/CSS/responsive.css">
     
     <style>
         /* Navigation Header */
@@ -144,10 +145,10 @@ $customerId = $_SESSION['user']['id'] ?? 0;
          ========================================== -->
     <nav class="orders-navbar">
         <div class="navbar-left">
-            <button class="navbar-menu-btn" onclick="window.location.href='/RADS-TOOLING/customer/homepage.php'" title="Back to Home">
+            <button class="navbar-menu-btn" onclick="window.location.href='/customer/homepage.php'" title="Back to Home">
                 <span class="material-symbols-rounded">menu</span>
             </button>
-            <a href="/RADS-TOOLING/customer/homepage.php" class="navbar-brand">
+            <a href="/customer/homepage.php" class="navbar-brand">
                 <span class="material-symbols-rounded">home</span>
                 <span>RADS Tooling</span>
             </a>
@@ -294,14 +295,10 @@ $customerId = $_SESSION['user']['id'] ?? 0;
         </div>
     </div>
 
-    <!-- ==========================================
-         JAVASCRIPT
-         ========================================== -->
-    <script src="/RADS-TOOLING/assets/JS/orders.js"></script>
+    
+    <script src="/assets/JS/orders.js"></script>
 
-    <!-- ==========================================
-         FEEDBACK MODAL LOGIC
-         ========================================== -->
+  
     <script>
         (function() {
             let currentOrderId = null;
@@ -354,7 +351,7 @@ $customerId = $_SESSION['user']['id'] ?? 0;
                 submitBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_empty</span> Submitting...';
 
                 try {
-                    const res = await fetch('/RADS-TOOLING/backend/api/feedback/create.php', {
+                    const res = await fetch('/backend/api/feedback/create.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'

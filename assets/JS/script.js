@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(error => {
             console.error('Initialization failed:', error);
-            window.location.href = '/RADS-TOOLING/public/index.php';
+            window.location.href = '/public/index.php';
         });
 });
 
@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function initializeSession() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/auth.php?action=check_session', {
+        const response = await fetch('/backend/api/auth.php?action=check_session', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -70,7 +70,7 @@ function updateUserInterface() {
 
     const profileAvatar = document.getElementById('profileIcon');
     if (profileAvatar && currentUserData.avatar) {
-        profileAvatar.src = '/RADS-TOOLING/' + currentUserData.avatar;
+        profileAvatar.src = '/' + currentUserData.avatar;
     }
 }
 
@@ -149,7 +149,7 @@ function initializeProfileActions() {
 
 async function loadCurrentProfile() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_profile.php?action=get_profile', {
+        const response = await fetch('/backend/api/admin_profile.php?action=get_profile', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -164,8 +164,8 @@ async function loadCurrentProfile() {
             const avatarImg = document.getElementById('editProfileAvatar');
             if (avatarImg) {
                 avatarImg.src = profile.profile_image ?
-                    '/RADS-TOOLING/' + profile.profile_image :
-                    '/RADS-TOOLING/assets/images/profile.png';
+                    '/' + profile.profile_image :
+                    '/assets/images/profile.png';
             }
         }
     } catch (error) {
@@ -184,7 +184,7 @@ async function handleEditProfile(e) {
     };
 
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_profile.php?action=update_profile', {
+        const response = await fetch('/backend/api/admin_profile.php?action=update_profile', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -243,7 +243,7 @@ async function handleChangePassword(e) {
     };
 
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_profile.php?action=change_password', {
+        const response = await fetch('/backend/api/admin_profile.php?action=change_password', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -276,7 +276,7 @@ async function handleAvatarUpload(e) {
     formData.append('avatar', file);
 
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_profile.php?action=upload_avatar', {
+        const response = await fetch('/backend/api/admin_profile.php?action=upload_avatar', {
             method: 'POST',
             credentials: 'same-origin',
             body: formData
@@ -348,7 +348,7 @@ function initializeAccountManagement() {
 
 async function loadUsers() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_accounts.php?action=list', {
+        const response = await fetch('/backend/api/admin_accounts.php?action=list', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -446,7 +446,7 @@ async function handleAddUser(e) {
     };
 
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_accounts.php?action=create', {
+        const response = await fetch('/backend/api/admin_accounts.php?action=create', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -474,7 +474,7 @@ async function handleAddUser(e) {
 
 async function resetUserPassword(userId) {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_accounts.php?action=list', {
+        const response = await fetch('/backend/api/admin_accounts.php?action=list', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -543,7 +543,7 @@ async function handleResetPassword(e) {
     };
 
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_accounts.php?action=reset_password', {
+        const response = await fetch('/backend/api/admin_accounts.php?action=reset_password', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -599,7 +599,7 @@ function initializeCustomerManagement() {
 
 async function loadCustomers(search = '') {
     try {
-        const url = `/RADS-TOOLING/backend/api/admin_customers.php?action=list${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+        const url = `/backend/api/admin_customers.php?action=list${search ? `&search=${encodeURIComponent(search)}` : ''}`;
 
         const response = await fetch(url, {
             credentials: 'same-origin',
@@ -658,7 +658,7 @@ function displayCustomers(customers) {
 
 async function viewCustomer(id) {
     try {
-        const response = await fetch(`/RADS-TOOLING/backend/api/admin_customers.php?action=view&id=${id}`, {
+        const response = await fetch(`/backend/api/admin_customers.php?action=view&id=${id}`, {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -767,7 +767,7 @@ async function loadOrders(search = '') {
         if (statusFilter) params.append('status', statusFilter);
         if (paymentFilter) params.append('payment_status', paymentFilter);
 
-        const url = `/RADS-TOOLING/backend/api/admin_orders.php?action=list&${params.toString()}`;
+        const url = `/backend/api/admin_orders.php?action=list&${params.toString()}`;
 
         const response = await fetch(url, {
             credentials: 'same-origin',
@@ -788,7 +788,7 @@ async function loadOrders(search = '') {
 }
 async function viewAdminOrderDetails(orderId) {
     try {
-        const response = await fetch(`/RADS-TOOLING/backend/api/admin_orders.php?action=details&id=${orderId}`, {
+        const response = await fetch(`/backend/api/admin_orders.php?action=details&id=${orderId}`, {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -974,7 +974,7 @@ async function handleStatusUpdate(e) {
     }
 
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/admin_orders.php?action=update_status', {
+        const response = await fetch('/backend/api/admin_orders.php?action=update_status', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -1151,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('Sending order data:', orderData);
 
-            const response = await fetch('/RADS-TOOLING/backend/api/order_create.php', {
+            const response = await fetch('/backend/api/order_create.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1174,7 +1174,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             // Success - redirect to payment submission page
-            window.location.href = '/RADS-TOOLING/customer/payment_submit.php?order_id=' + result.order_id + '&deposit_rate=' + depositRate;
+            window.location.href = '/customer/payment_submit.php?order_id=' + result.order_id + '&deposit_rate=' + depositRate;
 
         } catch (error) {
             console.error('Order creation error:', error);
@@ -1197,7 +1197,7 @@ function initializeDashboard() {
 
 async function updateDashboardStats() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/dashboard.php?action=stats', {
+        const response = await fetch('/backend/api/dashboard.php?action=stats', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -1208,30 +1208,31 @@ async function updateDashboardStats() {
             const ordersEl = document.getElementById('dash-orders');
             const salesEl = document.getElementById('dash-sales');
             const customersEl = document.getElementById('dash-customers');
-            const feedbackEl = document.getElementById('dash-feedback');
+            const downPaymentsEl = document.getElementById('dash-down-payments');
+            const incomingSalesEl = document.getElementById('dash-incoming-sales');
 
             if (ordersEl) ordersEl.textContent = result.data.total_orders.toLocaleString();
             if (salesEl) salesEl.textContent = '₱' + result.data.total_sales.toLocaleString();
             if (customersEl) customersEl.textContent = result.data.total_customers.toLocaleString();
-            if (feedbackEl) feedbackEl.textContent = result.data.total_feedback.toLocaleString();
+            if (downPaymentsEl) downPaymentsEl.textContent = '₱' + result.data.total_down_payments.toLocaleString();
+            if (incomingSalesEl) incomingSalesEl.textContent = '₱' + result.data.incoming_sales.toLocaleString();
         }
     } catch (error) {
         console.error('Error updating dashboard stats:', error);
         const ordersEl = document.getElementById('dash-orders');
         const salesEl = document.getElementById('dash-sales');
         const customersEl = document.getElementById('dash-customers');
-        const feedbackEl = document.getElementById('dash-feedback');
-
+        const downPaymentsEl = document.getElementById('dash-down-payments');
+        const incomingSalesEl = document.getElementById('dash-incoming-sales');
         if (ordersEl && ordersEl.textContent === 'Loading...') ordersEl.textContent = '0';
         if (salesEl && salesEl.textContent === 'Loading...') salesEl.textContent = '₱0';
         if (customersEl && customersEl.textContent === 'Loading...') customersEl.textContent = '0';
-        if (feedbackEl && feedbackEl.textContent === 'Loading...') feedbackEl.textContent = '0';
     }
 }
 
 async function loadRecentOrders() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/dashboard.php?action=recent_orders', {
+        const response = await fetch('/backend/api/dashboard.php?action=recent_orders', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -1263,7 +1264,7 @@ async function loadRecentOrders() {
 
 async function loadRecentFeedback() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/dashboard.php?action=recent_feedback', {
+        const response = await fetch('/backend/api/dashboard.php?action=recent_feedback', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -1312,7 +1313,7 @@ function initializeChart(period = 'week') {
 
 async function loadSalesChart(period) {
     try {
-        const response = await fetch(`/RADS-TOOLING/backend/api/dashboard.php?action=sales_chart&period=${period}`, {
+        const response = await fetch(`/backend/api/dashboard.php?action=sales_chart&period=${period}`, {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -1419,7 +1420,7 @@ async function generateReport() {
 
     try {
         // Fetch report data
-        const response = await fetch(`/RADS-TOOLING/backend/api/report_data.php?from=${fromDate}&to=${toDate}`, {
+        const response = await fetch(`/backend/api/report_data.php?from=${fromDate}&to=${toDate}`, {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -1481,7 +1482,7 @@ function exportReportPdf() {
 
     // Open PDF in new window (will trigger download)
     window.open(
-        `/RADS-TOOLING/backend/api/generate_report.php?from=${fromDate}&to=${toDate}`,
+        `/backend/api/generate_report.php?from=${fromDate}&to=${toDate}`,
         '_blank'
     );
 
@@ -1612,7 +1613,7 @@ function initializeActionBindings() {
             okText: newStatus === 'active' ? 'Activate' : 'Deactivate',
             onConfirm: async () => {
                 try {
-                    const response = await fetch('/RADS-TOOLING/backend/api/admin_accounts.php?action=toggle_status', {
+                    const response = await fetch('/backend/api/admin_accounts.php?action=toggle_status', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1727,14 +1728,14 @@ function setupLogout() {
             onConfirm: async () => {
                 try {
                     sessionStorage.removeItem('rads_admin_session');
-                    await fetch('/RADS-TOOLING/backend/api/auth.php?action=logout', {
+                    await fetch('/backend/api/auth.php?action=logout', {
                         method: 'POST',
                         credentials: 'same-origin'
                     });
                 } catch (_) {
                     // ignore network errors during logout 
                 }
-                location.href = '/RADS-TOOLING/public/index.php';
+                location.href = '/index.php';
             }
         });
     });
@@ -1875,7 +1876,7 @@ function escapeHtml(text) {
 // Check for unread messages and show notification dot
 async function checkUnreadMessages() {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/chat.php?action=threads', {
+        const response = await fetch('/backend/api/chat.php?action=threads', {
             credentials: 'same-origin'
         });
 
@@ -1932,7 +1933,7 @@ async function loadFeedback() {
     if (!tbody) return;
 
     try {
-        const resp = await fetch('/RADS-TOOLING/backend/api/feedback/admin_list.php', {
+        const resp = await fetch('/backend/api/feedback/admin_list.php', {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -2005,7 +2006,7 @@ function displayFeedback(feedbackList) {
 
 /*async function releaseFeedback(feedbackId) {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/feedback/release.php', {
+        const response = await fetch('/backend/api/feedback/release.php', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -2039,7 +2040,7 @@ async function hideFeedback(feedbackId) {
         okText: 'Hide',
         onConfirm: async () => {
             try {
-                const response = await fetch('/RADS-TOOLING/backend/api/feedback/release.php', {
+                const response = await fetch('/backend/api/feedback/release.php', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {
@@ -2139,7 +2140,7 @@ async function loadPaymentVerifications() {
 
     try {
         // Build URL with filters
-        let url = '/RADS-TOOLING/backend/api/payment_verification.php?action=list';
+        let url = '/backend/api/payment_verification.php?action=list';
         if (searchValue) url += '&search=' + encodeURIComponent(searchValue);
         if (statusFilter) url += '&payment_status=' + encodeURIComponent(statusFilter);
 
@@ -2214,7 +2215,7 @@ async function viewPaymentDetails(verificationId) {
 
     try {
         // fetch
-        const response = await fetch(`/RADS-TOOLING/backend/api/payment_verification.php?action=details&id=${verificationId}`, {
+        const response = await fetch(`/backend/api/payment_verification.php?action=details&id=${verificationId}`, {
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         });
@@ -2239,8 +2240,8 @@ async function viewPaymentDetails(verificationId) {
         let proofSrc = payment.screenshot_path || payment.proof_path || payment.image || '';
         if (proofSrc) {
             if (!/^https?:\/\//i.test(proofSrc) && !proofSrc.startsWith('/')) {
-                // prefix with project base - change '/RADS-TOOLING/' if different
-                proofSrc = window.location.origin + '/RADS-TOOLING/' + proofSrc.replace(/^(\.\/|\/)+/, '');
+                // prefix with project base - change '/' if different
+                proofSrc = window.location.origin + '/' + proofSrc.replace(/^(\.\/|\/)+/, '');
             } else if (proofSrc.startsWith('/')) {
                 proofSrc = window.location.origin + proofSrc;
             }
@@ -2395,7 +2396,7 @@ async function viewPaymentDetails(verificationId) {
 // Approve payment (robust fetch + error handling)
 async function approvePayment(verificationId) {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/payment_verification.php?action=approve', {
+        const response = await fetch('/backend/api/payment_verification.php?action=approve', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -2436,7 +2437,7 @@ async function approvePayment(verificationId) {
 // Reject payment (with reason) — robust fetch + error handling
 async function rejectPayment(verificationId, reason) {
     try {
-        const response = await fetch('/RADS-TOOLING/backend/api/payment_verification.php?action=reject', {
+        const response = await fetch('/backend/api/payment_verification.php?action=reject', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -2527,7 +2528,7 @@ document.addEventListener('click', async function (e) {
     if (!confirm('Are you sure you want to delete this feedback?')) return;
 
     try {
-        const resp = await fetch('/RADS-TOOLING/backend/api/feedback/delete.php', {
+        const resp = await fetch('/backend/api/feedback/delete.php', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {

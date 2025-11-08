@@ -6,7 +6,7 @@
   if (window.__RT_CHAT_WIDGET_LOADED__) return;
   window.__RT_CHAT_WIDGET_LOADED__ = true;
 
-  const API_BASE = '/RADS-TOOLING/backend/api/chat.php';
+  const API_BASE = '/backend/api/chat.php';
 
   let threadCode = null;
   let currentUserId = null;

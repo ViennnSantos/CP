@@ -4,8 +4,8 @@ const CM = {
     currentPage: 'home_public',
     currentContent: {},
     quillEditors: {},
-    apiBaseUrl: '/RADS-TOOLING/backend/api/content_mgmt.php',
-    previewUrl: '/RADS-TOOLING/backend/api/cms_preview.php',
+    apiBaseUrl: '/backend/api/content_mgmt.php',
+    previewUrl: '/backend/api/cms_preview.php',
 
     normalizePageKey(page) {
         // Any aliases you might use in tabs/dropdowns map to DB keys
@@ -248,8 +248,7 @@ const CM = {
 
             <!-- Hero Media -->
             <label>Hero Media (image or .glb)</label>
-              <input type="text" id="hero-image" class="form-input"
-                placeholder="/RADS-TOOLING/assets/images/cabinet-hero.jpg">
+              <input type="text" id="hero-image" class="form-input">
                 <button type="button" class="btn-upload"
                 onclick="document.getElementById('publicHeroUpload').click()">
             <span class="material-symbols-rounded">upload</span> Upload Hero
@@ -320,7 +319,7 @@ const CM = {
             <div id="quill-intro" class="quill-container"></div>
             
             <label>Hero Image</label>
-            <input type="text" id="customer-hero-image" class="form-input" placeholder="/RADS-TOOLING/assets/images/cabinet-hero.jpg">
+            <input type="text" id="customer-hero-image" class="form-input" placeholder="/assets/images/cabinet-hero.jpg">
             <button type="button" class="btn-upload" onclick="document.getElementById('customerHeroUpload').click()">
                 <span class="material-symbols-rounded">upload</span> Upload Hero Image
             </button>
@@ -1138,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     CM.Payment = {
     currentQRData: {},
-    apiUrl: '/RADS-TOOLING/backend/api/content_mgmt.php',
+    apiUrl: '/backend/api/content_mgmt.php',
 
     init() {
         console.log('Payment QR Management initialized');
@@ -1231,8 +1230,8 @@ displayQRCodes() {
             return result;
         }
         
-        // Otherwise, prepend /RADS-TOOLING/
-        const result = '/RADS-TOOLING/' + trimmed;
+        // Otherwise, prepend /
+        const result = '/' + trimmed;
         console.log('✅ Built final path:', result);
         return result;
     };
@@ -1455,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('🔄 Loading payment QR codes...');
 
         try {
-            const response = await fetch('/RADS-TOOLING/backend/api/content_mgmt.php?action=get_payment_qr', {
+            const response = await fetch('/backend/api/content_mgmt.php?action=get_payment_qr', {
                 method: 'GET',
                 credentials: 'same-origin',
                 headers: {
@@ -1499,8 +1498,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (qrData && qrData.image_path) {
-            // Build full URL with /RADS-TOOLING/ prefix
-            const imageUrl = `/RADS-TOOLING/${qrData.image_path}`;
+            // Build full URL with / prefix
+            const imageUrl = `/${qrData.image_path}`;
             
             console.log(`✅ ${method.toUpperCase()} QR found:`, imageUrl);
             
@@ -1581,7 +1580,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('action', 'update_payment_qr');
 
         try {
-            const response = await fetch('/RADS-TOOLING/backend/api/content_mgmt.php', {
+            const response = await fetch('/backend/api/content_mgmt.php', {
                 method: 'POST',
                 credentials: 'same-origin',
                 body: formData

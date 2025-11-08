@@ -2,7 +2,7 @@
  * RADS-TOOLING Admin Chat System
  */
 (function () {
-  const API_BASE = '/RADS-TOOLING/backend/api/chat.php';
+  const API_BASE = '/backend/api/chat.php';
 
   let selectedCode = null;
   let lastId = 0;
