@@ -1,4 +1,4 @@
-// /RADS-TOOLING/assets/JS/cart.js
+// /assets/JS/cart.js
 
 (function() {
   'use strict';
@@ -8,23 +8,95 @@
   let selectedMode = null;
 
   // Initialize
-  document.addEventListener('DOMContentLoaded', function() {
-    loadCart();
+  document.addEventListener('DOMContentLoaded', async function() {
+    await loadCart();
     renderCart();
     setupEventListeners();
     updateAllCartCounts();
   });
 
-  // Load cart from localStorage
-  function loadCart() {
+  // Load cart from localStorage and database (merged)
+  async function loadCart() {
+    // First load from localStorage
     const stored = localStorage.getItem('cart');
-    cart = stored ? JSON.parse(stored) : [];
+    let localCart = stored ? JSON.parse(stored) : [];
+
+    // Try to load from database if user is logged in
+    try {
+      const response = await fetch('/backend/api/cart.php', {
+        method: 'GET',
+        credentials: 'same-origin'
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.cart) {
+          // Merge database cart with local cart
+          const dbCart = result.cart;
+          cart = mergeCart(localCart, dbCart);
+          // Save merged cart back to localStorage and database
+          localStorage.setItem('cart', JSON.stringify(cart));
+          await syncCartToDatabase();
+          return;
+        }
+      }
+    } catch (err) {
+      // User not logged in or API error - use local cart only
+      console.log('Using localStorage cart only:', err.message);
+
+    }
+    // Fallback to localStorage cart
+    cart = localCart;
   }
 
-  // Save cart to localStorage
+  // Merge two carts (prioritize higher quantity)
+  function mergeCart(cart1, cart2) {
+    const merged = [...cart1];
+
+    cart2.forEach(item2 => {
+      const existingIndex = merged.findIndex(item => item.id === item2.id);
+      if (existingIndex !== -1) {
+        // Keep the higher quantity
+        if (item2.quantity > merged[existingIndex].quantity) {
+          merged[existingIndex] = item2;
+        }
+      } else {
+        // Add new item
+        merged.push(item2);
+      }
+    });
+
+    return merged;
+  }
+
+  // Sync cart to database (for logged-in users)
+  async function syncCartToDatabase() {
+    try {
+      await fetch('/backend/api/cart.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ cart })
+      });
+    } catch (err) {
+      // Silently fail - cart is still saved to localStorage
+      console.log('Cart database sync failed:', err.message);
+    }
+  }
+
+  // Save cart to localStorage and database
+
   function saveCart() {
+
     localStorage.setItem('cart', JSON.stringify(cart));
+
     updateAllCartCounts();
+
+    // Async sync to database (don't wait for it)
+
+    syncCartToDatabase();
   }
 
   // Add item to cart (called from product pages)
@@ -114,7 +186,7 @@
           <span class="material-symbols-rounded">shopping_cart</span>
           <h2>Your cart is empty</h2>
           <p>Add some amazing cabinets to get started!</p>
-          <button class="checkout-btn" onclick="location.href='/RADS-TOOLING/customer/products.php'">
+          <button class="checkout-btn" onclick="location.href='/customer/products.php'">
             Browse Products
           </button>
         </div>
@@ -140,7 +212,7 @@
         <div class="cart-items">
           ${filteredCart.map(item => `
             <div class="cart-item" data-product-id="${item.id}">
-              <img src="${item.image}" alt="${escapeHtml(item.name)}" class="cart-item-image" onerror="this.src='/RADS-TOOLING/assets/images/placeholder.jpg'">
+              <img src="${item.image}" alt="${escapeHtml(item.name)}" class="cart-item-image" onerror="this.src='/assets/images/placeholder.jpg'">
               
               <div class="cart-item-details">
                 <h3 class="cart-item-name">${escapeHtml(item.name)}</h3>
@@ -191,7 +263,7 @@
             Proceed to Checkout
           </button>
 
-          <button class="continue-shopping" onclick="location.href='/RADS-TOOLING/customer/products.php'">
+          <button class="continue-shopping" onclick="location.href='/customer/products.php'">
             Continue Shopping
           </button>
         </div>
@@ -261,22 +333,23 @@
     }
 
     if (okBtn) {
-      okBtn.addEventListener('click', () => {
+      okBtn.addEventListener('click', async () => {
         if (!selectedMode) return;
-        
-        // Get first item from cart (or create multi-item order)
-        const firstItem = cart[0];
-        if (!firstItem) {
+        if (cart.length === 0) {
           showNotification('Cart is empty', 'error');
           return;
         }
 
-        // Redirect to checkout with mode
-        if (selectedMode === 'delivery') {
-          window.location.href = `/RADS-TOOLING/customer/checkout_delivery.php?pid=${firstItem.id}`;
-        } else {
-          window.location.href = `/RADS-TOOLING/customer/checkout_pickup.php?pid=${firstItem.id}`;
-        }
+        // Save cart to session storage for checkout
+        sessionStorage.setItem('checkoutCart', JSON.stringify(cart));
+        sessionStorage.setItem('checkoutMode', selectedMode);
+        // Also save to database if logged in
+        await syncCartToDatabase();
+        // Redirect to cart checkout page
+        const redirectUrl = selectedMode === 'delivery' 
+          ? '/customer/checkout_delivery.php'
+          : '/customer/checkout_pickup.php';
+        window.location.href = redirectUrl;
       });
     }
   }

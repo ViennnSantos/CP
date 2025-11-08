@@ -499,6 +499,9 @@
     provInput?.addEventListener('input', () => { if (pVal) pVal.value = (provInput.value || '').trim(); });
     cityInput?.addEventListener('input', () => { if (cVal) cVal.value = (cityInput.value || '').trim(); });
     brgyInput?.addEventListener('input', () => { if (bVal) bVal.value = (brgyInput.value || '').trim(); });
+    provSel?.addEventListener('change', () => { if (pVal) pVal.value = (provSel.value || '').trim(); });
+    citySel?.addEventListener('change', () => { if (cVal) cVal.value = (citySel.value || '').trim(); });
+    brgySel?.addEventListener('change', () => { if (bVal) bVal.value = (brgySel.value || '').trim(); });
 
     async function getJSON(url) {
       try {
@@ -773,7 +776,8 @@
             vat: orderData.vat || 0,
             total: orderData.total || 0,
             mode: orderData.mode || 'pickup',
-            info: orderData.info || {}
+            info: orderData.info || {},
+            terms_agreed: $('#termsAgreed')?.value === '1' ? 1 : 0
           };
 
           console.log('📤 Sending order_create payload:', JSON.stringify(payload, null, 2));
@@ -828,7 +832,19 @@
           }
 
           console.log('✅ Order created:', ORDER_ID, '(' + ORDER_CODE + ')');
-
+        if (result.clear_cart) {
+        try {
+        localStorage.removeItem('cart');
+        sessionStorage.removeItem('checkoutCart');
+        sessionStorage.removeItem('checkoutMode');
+        console.log('✅ Cart cleared from localStorage after order');
+        
+        // Notify cart counter
+        window.dispatchEvent(new Event('cartUpdated'));
+    } catch (e) {
+        console.warn('⚠️ Failed to clear cart from localStorage:', e);
+    }
+}
         } catch (err) {
           console.error('❌ Order create fetch error:', err);
           showModalAlert('Network Error', 'Could not connect to server. Check your connection.', 'error');
@@ -1157,6 +1173,52 @@
   });
 
   // ===== Initialize Everything =====
+  function setupTermsModal() {
+    const termsModal = $('#termsModal');
+    const termsCheckbox = $('#termsCheckbox');
+    const termsConfirm = $('#termsConfirm');
+    const termsCancel = $('#termsCancel');
+    const termsAgreedInput = $('#termsAgreed');
+
+    if (!termsModal) return;
+
+    if (termsCheckbox && termsConfirm) {
+      termsCheckbox.addEventListener('change', () => {
+        termsConfirm.disabled = !termsCheckbox.checked;
+      });
+    }
+	  
+    if (termsConfirm && termsAgreedInput) {
+      termsConfirm.addEventListener('click', () => {
+        termsAgreedInput.value = '1';
+        termsModal.hidden = true;
+        console.log('✅ Terms & Conditions accepted');
+        // Automatically retry payment flow
+        setTimeout(() => {
+          const btnPayNow = $('#btnPayNow');
+          if (btnPayNow) btnPayNow.click();
+        }, 100);
+      });
+    }
+
+    if (termsCancel) {
+      termsCancel.addEventListener('click', () => {
+        termsModal.hidden = true;
+        if (termsCheckbox) termsCheckbox.checked = false;
+        if (termsConfirm) termsConfirm.disabled = true;
+        console.log('❌ Terms & Conditions cancelled');
+      });
+    }
+
+    // Close modal on backdrop click
+    termsModal.querySelector('.rt-modal__backdrop')?.addEventListener('click', () => {
+      termsModal.hidden = true;
+      if (termsCheckbox) termsCheckbox.checked = false;
+      if (termsConfirm) termsConfirm.disabled = true;
+    });
+  }
+
+  // ===== Initialize Everything =====
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Checkout.js loading...');
 
@@ -1165,7 +1227,7 @@
     // Load PSGC data first (needed for autofill to work properly)
     await loadPSGC();
     console.log('✅ PSGC data loaded');
-
+	  
     // Then load saved addresses and autofill (needs PSGC dropdowns ready)
     await loadSavedAddresses();
     console.log('✅ Saved addresses loaded and autofilled');
@@ -1175,9 +1237,10 @@
     wireClear();
     wirePayment();
     setupNumericInputs();
+    setupTermsModal();
 
     console.log('✅ Checkout.js COMPLETE FIXED VERSION loaded!');
-    console.log('✅ Features: NCR support, delivery/pickup auto-fill, active states, better errors, proper payload');
+    console.log('✅ Features: NCR support, delivery/pickup auto-fill, active states, better errors, proper payload, T&C modal');
   });
 
 })();

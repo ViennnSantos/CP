@@ -12,7 +12,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 
 // ✅ IMPROVED: Better session check with detailed error
-if (!isset($_SESSION['customer']) || empty($_SESSION['customer'])) {
+if (!isset($_SESSION['user']) || empty($_SESSION['user']) || ($_SESSION['user']['aud'] ?? '') !== 'customer') {
     error_log('Order create failed: No customer session');
     http_response_code(401);
     echo json_encode([
@@ -23,7 +23,7 @@ if (!isset($_SESSION['customer']) || empty($_SESSION['customer'])) {
     exit;
 }
 
-$uid = (int)$_SESSION['customer']['id'];
+$uid = (int)$_SESSION['user']['id'];
 
 // Read and parse request body
 $raw = file_get_contents('php://input');
@@ -39,6 +39,7 @@ $subtotal = (float)($body['subtotal'] ?? 0);
 $vat = (float)($body['vat'] ?? 0);
 $total = (float)($body['total'] ?? 0);
 $mode = ($body['mode'] ?? 'pickup') === 'delivery' ? 'delivery' : 'pickup';
+$terms_agreed = !empty($body['terms_agreed']) ? 1 : 0;
 
 // ✅ FIXED: Extract info from nested structure
 $rawInfo = (array)($body['info'] ?? []);
@@ -121,10 +122,10 @@ try {
     // STEP 2: CREATE ORDER
     // ==========================================
     $stmt = $pdo->prepare("INSERT INTO orders
-        (order_code, customer_id, mode, status, payment_status, subtotal, vat, total_amount, order_date)
+        (order_code, customer_id, mode, status, payment_status, subtotal, vat, total_amount, terms_agreed, order_date)
         VALUES (
             CONCAT('RT', DATE_FORMAT(NOW(),'%y%m%d'), LPAD(FLOOR(RAND()*9999), 4, '0')),
-            :cid, :mode, 'Pending', 'Pending', :sub, :vat, :tot, NOW()
+            :cid, :mode, 'Pending', 'Pending', :sub, :vat, :tot, :terms, NOW()
         )");
 
     $stmt->execute([
@@ -132,7 +133,8 @@ try {
     ':mode' => $mode,
     ':sub'  => $subtotal,
     ':vat'  => $vat,
-    ':tot'  => $total
+    ':tot'  => $total,
+    ':terms' => $terms_agreed
 ]);
 
 $err = $stmt->errorInfo();
@@ -189,16 +191,27 @@ if (!$order_id) {
         ':po' => $info['postal'] ?? ''
     ]);
 
-    $pdo->commit();
+    $cart_cleared = false;
+try {
+    $clearCartStmt = $pdo->prepare("DELETE FROM customer_carts WHERE customer_id = :cid");
+    $clearCartStmt->execute([':cid' => $uid]);
+    $cart_cleared = true;
+    error_log('Cart cleared for customer ' . $uid . ' after order creation');
+} catch (Exception $e) {
+    error_log('Warning: Failed to clear cart for customer ' . $uid . ': ' . $e->getMessage());
+}
 
-    error_log('Order created successfully: #' . $order_id . ' (' . $order_code . ')');
+$pdo->commit();
 
-    echo json_encode([
-        'success'    => true,
-        'message'    => 'Order created successfully!',
-        'order_id'   => $order_id,
-        'order_code' => $order_code
-    ]);
+error_log('Order created successfully: #' . $order_id . ' (' . $order_code . ')');
+
+echo json_encode([
+    'success'      => true,
+    'message'      => 'Order created successfully!',
+    'order_id'     => $order_id,
+    'order_code'   => $order_code,
+    'clear_cart'   => $cart_cleared  // ✅ Tell frontend to clear localStorage
+]);
 } catch (Throwable $e) {
     $pdo->rollBack();
     error_log('Order creation error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
