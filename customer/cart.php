@@ -846,6 +846,73 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
             let selectedItems = new Set();
             let itemToRemove = null;
 
+            // Load cart from localStorage and database (merged)
+            async function loadCartFromDatabase() {
+                // First load from localStorage
+                const stored = localStorage.getItem('cart');
+                let localCart = stored ? JSON.parse(stored) : [];
+
+                // Try to load from database if user is logged in
+                try {
+                    const response = await fetch('/backend/api/cart.php', {
+                        method: 'GET',
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.cart && result.cart.length > 0) {
+                            // Merge database cart with local cart
+                            const dbCart = result.cart;
+                            const mergedCart = mergeCart(localCart, dbCart);
+                            // Save merged cart back to localStorage and database
+                            localStorage.setItem('cart', JSON.stringify(mergedCart));
+                            await syncCartToDatabase(mergedCart);
+                            console.log('✅ Cart loaded and merged from database');
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.log('Using localStorage cart only:', err.message);
+                }
+            }
+
+            // Merge two carts (prioritize higher quantity)
+            function mergeCart(cart1, cart2) {
+                const merged = [...cart1];
+
+                cart2.forEach(item2 => {
+                    const existingIndex = merged.findIndex(item => item.id === item2.id);
+                    if (existingIndex !== -1) {
+                        // Keep the higher quantity
+                        if (item2.quantity > merged[existingIndex].quantity) {
+                            merged[existingIndex] = item2;
+                        }
+                    } else {
+                        // Add new item
+                        merged.push(item2);
+                    }
+                });
+
+                return merged;
+            }
+
+            // Sync cart to database (for logged-in users)
+            async function syncCartToDatabase(cart) {
+                try {
+                    await fetch('/backend/api/cart.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'same-origin',
+                        body: JSON.stringify({ cart })
+                    });
+                } catch (err) {
+                    console.log('Cart database sync failed:', err.message);
+                }
+            }
+
             // Render Cart
             window.renderCart = function() {
                 const container = document.getElementById('cartContent');
@@ -1080,6 +1147,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
 
                 item.quantity = newQty;
                 localStorage.setItem('cart', JSON.stringify(cart));
+                syncCartToDatabase(cart); // Sync to database
                 window.renderCart();
             };
 
@@ -1095,6 +1163,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
                     let cart = JSON.parse(localStorage.getItem('cart') || '[]');
                     cart = cart.filter(i => i.id !== itemToRemove);
                     localStorage.setItem('cart', JSON.stringify(cart));
+                    syncCartToDatabase(cart); // Sync to database
                     selectedItems.delete(itemToRemove);
                     closeModal('removeItemModal');
                     window.renderCart();
@@ -1145,8 +1214,11 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
                 window.location.href = url;
             });
 
-            // Initialize
-            window.renderCart();
+            // Initialize - Load cart from database then render
+            (async function() {
+                await loadCartFromDatabase();
+                window.renderCart();
+            })();
 
         })();
     </script>

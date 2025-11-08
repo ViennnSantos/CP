@@ -398,12 +398,13 @@ if ($img) {
                         credentials: 'same-origin'
                     });
 
-                    localStorage.removeItem('cart');
+                    // Cart persists through logout - will reload from database on next login
+                    sessionStorage.clear();
                     window.location.href = '/index.php';
 
                 } catch (error) {
                     console.error('Logout error:', error);
-                    localStorage.removeItem('cart');
+                    sessionStorage.clear();
                     window.location.href = '/index.php';
                 }
             }
