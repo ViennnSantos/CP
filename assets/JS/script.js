@@ -807,25 +807,51 @@ async function viewAdminOrderDetails(orderId) {
             existingModal.remove();
         }
 
+        const taxPercentage = parseFloat(order.tax_percentage || 0);
+        const remainingBalance = parseFloat(order.remaining_balance || 0);
+        const paymentStatusText = order.payment_status_text || 'Pending';
+        const deliveryAddress = order.delivery_address || 'N/A';
+
         const modalHtml = `
             <div class="modal" id="adminOrderDetailsModal" style="display: flex;">
                 <div class="modal-content" style="max-width: 900px;">
                     <button class="modal-close" onclick="closeAdminOrderModal()">×</button>
                     <h2>Order Details - ${escapeHtml(order.order_code)}</h2>
-                    
+
                     <div style="display: grid; gap: 1.5rem;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <h3 style="color: var(--brand); margin-bottom: 0.5rem;">Order Information</h3>
+                                <p><strong>Order Code:</strong> ${escapeHtml(order.order_code)}</p>
+                                <p><strong>Order Date:</strong> ${formatDate(order.order_date)}</p>
+                                <p><strong>Order Status:</strong> <span class="badge badge-${order.status.toLowerCase()}">${escapeHtml(order.status)}</span></p>
+                                <p><strong>Delivery Mode:</strong> ${escapeHtml(order.mode)}</p>
+                            </div>
+
                             <div>
                                 <h3 style="color: var(--brand); margin-bottom: 0.5rem;">Customer Information</h3>
                                 <p><strong>Name:</strong> ${escapeHtml(order.customer_name)}</p>
                                 <p><strong>Email:</strong> ${escapeHtml(order.customer_email)}</p>
                                 <p><strong>Phone:</strong> ${escapeHtml(order.customer_phone || 'N/A')}</p>
                             </div>
-                            
-                            <div>
-                                <h3 style="color: var(--brand); margin-bottom: 0.5rem;">Order Information</h3>
-                                <p><strong>Order Date:</strong> ${formatDate(order.order_date)}</p>
-                                <p><strong>Delivery Mode:</strong> ${escapeHtml(order.mode)}</p>
+                        </div>
+
+                        <div>
+                            <h3 style="color: var(--brand); margin-bottom: 0.5rem;">Delivery Address</h3>
+                            <p style="white-space: pre-line;">${escapeHtml(deliveryAddress)}</p>
+                        </div>
+
+                        <div>
+                            <h3 style="color: var(--brand); margin-bottom: 0.5rem;">Payment Information</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <p><strong>Payment Method:</strong> ${escapeHtml((order.payment_method || 'N/A').toUpperCase())}</p>
+                                    <p><strong>Payment Status:</strong> <span class="badge badge-${paymentStatusText === 'Fully Paid' ? 'completed' : 'pending'}">${paymentStatusText}</span></p>
+                                </div>
+                                <div>
+                                    <p><strong>Amount Paid:</strong> ₱${parseFloat(order.amount_paid || 0).toLocaleString()}</p>
+                                    <p><strong>Remaining Balance:</strong> <span style="color: ${remainingBalance > 0 ? 'var(--danger-color)' : 'var(--success-color)'}; font-weight: 600;">₱${remainingBalance.toLocaleString()}</span></p>
+                                </div>
                             </div>
                         </div>
 
@@ -834,47 +860,59 @@ async function viewAdminOrderDetails(orderId) {
                             <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
                                     <tr style="border-bottom: 2px solid #e3e3e3;">
-                                        <th style="text-align: left; padding: 0.5rem;">Item</th>
-                                        <th style="text-align: center; padding: 0.5rem;">Qty</th>
-                                        <th style="text-align: right; padding: 0.5rem;">Price</th>
-                                        <th style="text-align: right; padding: 0.5rem;">Total</th>
+                                        <th style="text-align: left; padding: 0.5rem;">ITEM</th>
+                                        <th style="text-align: center; padding: 0.5rem;">QUANTITY</th>
+                                        <th style="text-align: right; padding: 0.5rem;">PRICE</th>
+                                        <th style="text-align: right; padding: 0.5rem;">TAX (%)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     ${items.map(item => `
                                         <tr style="border-bottom: 1px solid #e3e3e3;">
                                             <td style="padding: 0.5rem;">${escapeHtml(item.name)}</td>
-                                            <td style="text-align: center; padding: 0.5rem;">${item.qty}</td>
+                                            <td style="text-align: center; padding: 0.5rem;">${item.qty || item.quantity}</td>
                                             <td style="text-align: right; padding: 0.5rem;">₱${parseFloat(item.unit_price).toLocaleString()}</td>
-                                            <td style="text-align: right; padding: 0.5rem;">₱${parseFloat(item.line_total).toLocaleString()}</td>
+                                            <td style="text-align: right; padding: 0.5rem;">${taxPercentage.toFixed(0)}%</td>
                                         </tr>
                                     `).join('')}
-                                </tbody>
-                                <tfoot>
                                     <tr style="border-top: 2px solid var(--brand);">
-                                        <td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">Total:</td>
+                                        <td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
                                         <td style="text-align: right; padding: 0.5rem; font-weight: 700; font-size: 1.2rem; color: var(--brand);">₱${parseFloat(order.total_amount).toLocaleString()}</td>
                                     </tr>
-                                </tfoot>
+                                </tbody>
                             </table>
                         </div>
-
-                        ${order.payment_method ? `
-                            <div>
-                                <h3 style="color: var(--brand); margin-bottom: 0.5rem;">Payment Information</h3>
-                                <p><strong>Method:</strong> ${escapeHtml(order.payment_method)}</p>
-                                <p><strong>Deposit Rate:</strong> ${order.deposit_rate}%</p>
-                                <p><strong>Amount Paid:</strong> ₱${parseFloat(order.amount_paid || 0).toLocaleString()}</p>
-                                <p><strong>Verification Status:</strong> <span class="badge badge-${order.payment_verification_status === 'APPROVED' ? 'completed' : 'pending'}">${escapeHtml(order.payment_verification_status || 'PENDING')}</span></p>
-                            </div>
-                        ` : ''}
                     </div>
 
+                    ${(['Owner', 'Admin'].includes(currentUserRole)) ? `
+                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e3e3e3;">
+                            <h3 style="color: var(--brand); margin-bottom: 1rem;">Update Status</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Order Status</label>
+                                    <select id="admin-order-status-${order.id}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''} ${remainingBalance > 0 ? 'disabled' : ''}>Completed</option>
+                                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    </select>
+                                    ${remainingBalance > 0 ? '<p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--danger-color);"><strong>Note:</strong> Cannot set to Completed while balance > ₱0.00</p>' : ''}
+                                    <button onclick="handleAdminOrderStatusUpdate(${order.id})" class="btn-primary" style="margin-top: 0.75rem; width: 100%;">Update Order Status</button>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Status</label>
+                                    <select id="admin-payment-status-${order.id}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                                        <option value="Pending" ${paymentStatusText === 'Pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="With Balance" ${paymentStatusText === 'With Balance' ? 'selected' : ''}>With Balance</option>
+                                        <option value="Fully Paid" ${paymentStatusText === 'Fully Paid' ? 'selected' : ''}>Fully Paid</option>
+                                    </select>
+                                    <button onclick="handleAdminPaymentStatusUpdate(${order.id})" class="btn-primary" style="margin-top: 0.75rem; width: 100%;">Update Payment Status</button>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
                     <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
                         <button onclick="closeAdminOrderModal()" class="btn-secondary">Close</button>
-                        ${(['Owner', 'Admin'].includes(currentUserRole)) ? `
-                            <button onclick="updateOrderStatus(${order.id}, '${escapeHtml(order.status)}')" class="btn-primary">Update Status</button>
-                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -893,6 +931,84 @@ function closeAdminOrderModal() {
     if (modal) {
         modal.style.display = 'none';
         modal.remove();
+    }
+}
+
+async function handleAdminOrderStatusUpdate(orderId) {
+    const selectEl = document.getElementById(`admin-order-status-${orderId}`);
+    if (!selectEl) return;
+
+    const newStatus = selectEl.value;
+    if (!newStatus) {
+        showNotification('Please select a status', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/backend/api/admin_orders.php?action=update_status', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                order_id: orderId,
+                status: newStatus
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Order status updated successfully!', 'success');
+            closeAdminOrderModal();
+            loadOrders(); // Reload orders table
+        } else {
+            showNotification(result.message || 'Failed to update order status', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showNotification('Failed to update order status: ' + error.message, 'error');
+    }
+}
+
+async function handleAdminPaymentStatusUpdate(orderId) {
+    const selectEl = document.getElementById(`admin-payment-status-${orderId}`);
+    if (!selectEl) return;
+
+    const newPaymentStatus = selectEl.value;
+    if (!newPaymentStatus) {
+        showNotification('Please select a payment status', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/backend/api/admin_orders.php?action=update_payment', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                id: orderId,
+                payment_status: newPaymentStatus
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Payment status updated successfully!', 'success');
+            closeAdminOrderModal();
+            loadOrders(); // Reload orders table
+        } else {
+            showNotification(result.message || 'Failed to update payment status', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating payment status:', error);
+        showNotification('Failed to update payment status: ' + error.message, 'error');
     }
 }
 
@@ -2094,36 +2210,42 @@ document.addEventListener('click', function (e) {
 // ============================================================================
 
 function initializePaymentVerfication() {
-    const orderNavItem = document.querySelector('[data-section="orders"]');
-    if (orderNavItem) {
-        orderNavItem.addEventListener('click', function () {
-            setTimeout(() => loadOrders(), 100);
+    const paymentNavItem = document.querySelector('[data-section="payment"]');
+    if (paymentNavItem) {
+        paymentNavItem.addEventListener('click', function () {
+            setTimeout(() => loadPaymentVerifications(), 100);
         });
     }
 
+    // Note: order-search ID is reused in payment section - consider renaming in HTML
     const orderSearch = document.getElementById('order-search');
     if (orderSearch) {
         let searchTimeout;
         orderSearch.addEventListener('input', function () {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                loadOrders(this.value.trim());
-            }, 300);
+            // Check if we're in payment section before loading
+            const activeSection = document.querySelector('.nav-item.active');
+            if (activeSection && activeSection.dataset.section === 'payment') {
+                searchTimeout = setTimeout(() => {
+                    loadPaymentVerifications();
+                }, 300);
+            }
         });
     }
 
-    const statusFilter = document.getElementById('statusFilter');
     const paymentFilter = document.getElementById('paymentFilter');
-
-    [statusFilter, paymentFilter].forEach(filter => {
-        if (filter) {
-            filter.addEventListener('change', () => loadOrders());
-        }
-    });
+    if (paymentFilter) {
+        paymentFilter.addEventListener('change', () => {
+            const activeSection = document.querySelector('.nav-item.active');
+            if (activeSection && activeSection.dataset.section === 'payment') {
+                loadPaymentVerifications();
+            }
+        });
+    }
 
     const currentSection = document.querySelector('.nav-item.active');
-    if (currentSection && currentSection.dataset.section === 'orders') {
-        loadOrders();
+    if (currentSection && currentSection.dataset.section === 'payment') {
+        loadPaymentVerifications();
     }
 }
 
@@ -2340,6 +2462,15 @@ async function viewPaymentDetails(verificationId) {
           <p><strong>Deposit Rate:</strong> ${pct(payment.deposit_rate)}</p>
           <p><strong>Amount Due:</strong> ${money(payment.amount_due ?? (payment.total_amount - (payment.amount_paid || 0)))}</p>
           <p><strong>Status:</strong> <span class="badge badge-${(payment.status || 'PENDING').toLowerCase()}">${escapeHtml(payment.status || 'PENDING')}</span></p>
+          <p style="grid-column: 1 / -1;">
+            <strong>Terms & Conditions:</strong>
+            <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
+              ${payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed ?
+                '<span class="material-symbols-rounded" style="color: var(--success-color); font-size: 1.2rem;">check_circle</span> <span style="color: var(--success-color);">Agreed</span>' :
+                '<span class="material-symbols-rounded" style="color: var(--danger-color); font-size: 1.2rem;">cancel</span> <span style="color: var(--danger-color);">Not Agreed</span>'
+              }
+            </span>
+          </p>
         </div>
       </div>
 
