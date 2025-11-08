@@ -18,7 +18,6 @@ $db = new Database();
 $conn = $db->getConnection();
 $customer_id = (int) $_SESSION['user']['id'];
 
-
 // GET - Fetch saved cart
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {

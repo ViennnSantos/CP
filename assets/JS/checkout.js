@@ -503,6 +503,11 @@
     citySel?.addEventListener('change', () => { if (cVal) cVal.value = (citySel.value || '').trim(); });
     brgySel?.addEventListener('change', () => { if (bVal) bVal.value = (brgySel.value || '').trim(); });
 
+    // ✅ FIX: Sync dropdown selections to hidden fields
+    provSel?.addEventListener('change', () => { if (pVal) pVal.value = (provSel.value || '').trim(); });
+    citySel?.addEventListener('change', () => { if (cVal) cVal.value = (citySel.value || '').trim(); });
+    brgySel?.addEventListener('change', () => { if (bVal) bVal.value = (brgySel.value || '').trim(); });
+
     async function getJSON(url) {
       try {
         const r = await fetch(url, { cache: 'no-store' });
@@ -758,6 +763,16 @@
 
       if (!method || !dep) {
         showModalAlert('Selection Required', 'Please select both payment method and deposit amount.', 'warning');
+        return;
+      }
+
+      // ✅ Check if terms were agreed to
+      const termsAgreed = $('#termsAgreed')?.value === '1';
+      if (!termsAgreed) {
+        showModalAlert('Terms Required', 'Please accept the Terms & Conditions before proceeding.', 'warning');
+        // Show terms modal
+        const termsModal = $('#termsModal');
+        if (termsModal) termsModal.hidden = false;
         return;
       }
 
@@ -1171,6 +1186,52 @@
       }
     }
   });
+
+  // ===== Terms & Conditions Modal Management =====
+  function setupTermsModal() {
+    const termsModal = $('#termsModal');
+    const termsCheckbox = $('#termsCheckbox');
+    const termsConfirm = $('#termsConfirm');
+    const termsCancel = $('#termsCancel');
+    const termsAgreedInput = $('#termsAgreed');
+
+    if (!termsModal) return;
+
+    if (termsCheckbox && termsConfirm) {
+      termsCheckbox.addEventListener('change', () => {
+        termsConfirm.disabled = !termsCheckbox.checked;
+      });
+    }
+
+    if (termsConfirm && termsAgreedInput) {
+      termsConfirm.addEventListener('click', () => {
+        termsAgreedInput.value = '1';
+        termsModal.hidden = true;
+        console.log('✅ Terms & Conditions accepted');
+        // Automatically retry payment flow
+        setTimeout(() => {
+          const btnPayNow = $('#btnPayNow');
+          if (btnPayNow) btnPayNow.click();
+        }, 100);
+      });
+    }
+
+    if (termsCancel) {
+      termsCancel.addEventListener('click', () => {
+        termsModal.hidden = true;
+        if (termsCheckbox) termsCheckbox.checked = false;
+        if (termsConfirm) termsConfirm.disabled = true;
+        console.log('❌ Terms & Conditions cancelled');
+      });
+    }
+
+    // Close modal on backdrop click
+    termsModal.querySelector('.rt-modal__backdrop')?.addEventListener('click', () => {
+      termsModal.hidden = true;
+      if (termsCheckbox) termsCheckbox.checked = false;
+      if (termsConfirm) termsConfirm.disabled = true;
+    });
+  }
 
   // ===== Initialize Everything =====
   function setupTermsModal() {
