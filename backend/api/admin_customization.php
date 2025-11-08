@@ -351,18 +351,41 @@ function deleteTexture(PDO $conn): void
     }
 
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = (int)($input['id'] ?? $_GET['id'] ?? 0);
+    $id = (int)($input['texture_id'] ?? $input['id'] ?? $_GET['id'] ?? 0);
 
     if (!$id) {
         sendJSON(false, 'Texture ID required', null, 400);
     }
 
     try {
+        $conn->beginTransaction();
+
+        // Check if texture is assigned to any products
+        $checkStmt = $conn->prepare('SELECT COUNT(*) as count FROM product_textures WHERE texture_id = ?');
+        $checkStmt->execute([$id]);
+        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result && $result['count'] > 0) {
+            // Unassign from products first
+            $unassignStmt = $conn->prepare('DELETE FROM product_textures WHERE texture_id = ?');
+            $unassignStmt->execute([$id]);
+        }
+
+        // Delete from texture_allowed_parts if exists
+        $partsStmt = $conn->prepare('DELETE FROM texture_allowed_parts WHERE texture_id = ?');
+        $partsStmt->execute([$id]);
+
+        // Delete the texture
         $stmt = $conn->prepare('DELETE FROM textures WHERE id = ?');
         $stmt->execute([$id]);
 
+        $conn->commit();
+
         sendJSON(true, 'Texture deleted successfully');
     } catch (Throwable $e) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         error_log("Delete texture error: " . $e->getMessage());
         sendJSON(false, 'Failed to delete texture', null, 500);
     }
@@ -549,26 +572,40 @@ function deleteColor(PDO $conn): void
     }
 
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = (int)($input['id'] ?? $_GET['id'] ?? 0);
+    $id = (int)($input['color_id'] ?? $input['id'] ?? $_GET['id'] ?? 0);
 
     if (!$id) {
         sendJSON(false, 'Color ID required', null, 400);
     }
 
     try {
-        // check assignments
-        $s = $conn->prepare('SELECT COUNT(*) AS c FROM product_colors WHERE color_id = ?');
-        $s->execute([$id]);
-        $c = (int)($s->fetch(PDO::FETCH_ASSOC)['c'] ?? 0);
-        if ($c > 0) {
-            sendJSON(false, 'Cannot delete color: it is assigned to one or more products. Unassign first.', null, 400);
+        $conn->beginTransaction();
+
+        // Check if color is assigned to any products
+        $checkStmt = $conn->prepare('SELECT COUNT(*) as count FROM product_colors WHERE color_id = ?');
+        $checkStmt->execute([$id]);
+        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result && $result['count'] > 0) {
+            // Unassign from products first
+            $unassignStmt = $conn->prepare('DELETE FROM product_colors WHERE color_id = ?');
+            $unassignStmt->execute([$id]);
         }
 
+        // Delete from color_allowed_parts if exists
+        $partsStmt = $conn->prepare('DELETE FROM color_allowed_parts WHERE color_id = ?');
+        $partsStmt->execute([$id]);
+
+        // Delete the color
         $stmt = $conn->prepare('DELETE FROM colors WHERE id = ?');
         $stmt->execute([$id]);
 
+        $conn->commit();
         sendJSON(true, 'Color deleted successfully');
     } catch (Throwable $e) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         error_log("Delete color error: " . $e->getMessage());
         sendJSON(false, 'Failed to delete color', null, 500);
     }
@@ -691,18 +728,36 @@ function deleteHandle(PDO $conn): void
     }
 
     $input = json_decode(file_get_contents('php://input'), true);
-    $id = (int)($input['id'] ?? $_GET['id'] ?? 0);
+    $id = (int)($input['handle_id'] ?? $input['id'] ?? $_GET['id'] ?? 0);
 
     if (!$id) {
         sendJSON(false, 'Handle ID required', null, 400);
     }
 
     try {
+        $conn->beginTransaction();
+
+        // Check if handle is assigned to any products
+        $checkStmt = $conn->prepare('SELECT COUNT(*) as count FROM product_handles WHERE handle_id = ?');
+        $checkStmt->execute([$id]);
+        $result = $checkStmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result && $result['count'] > 0) {
+            // Unassign from products first
+            $unassignStmt = $conn->prepare('DELETE FROM product_handles WHERE handle_id = ?');
+            $unassignStmt->execute([$id]);
+        }
+
+        // Delete the handle
         $stmt = $conn->prepare('DELETE FROM handle_types WHERE id = ?');
         $stmt->execute([$id]);
 
+        $conn->commit();
         sendJSON(true, 'Handle deleted successfully');
     } catch (Throwable $e) {
+        if ($conn->inTransaction()) {
+            $conn->rollBack();
+        }
         error_log("Delete handle error: " . $e->getMessage());
         sendJSON(false, 'Failed to delete handle', null, 500);
     }

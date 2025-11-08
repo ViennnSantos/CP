@@ -9,7 +9,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 // Accept ?pid= or ?id=
 $pid = (int)($_GET['pid'] ?? ($_GET['id'] ?? 0));
 if ($pid <= 0) {
-    header('Location:  /customer/products.php');
+    header('Location: /customer/products.php');
     exit;
 }
 
@@ -59,7 +59,7 @@ $avatarHtml   = $img
     <link rel="stylesheet" href="/assets/CSS/chat-widget.css">
     <link rel="stylesheet" href="/assets/CSS/customize.css">
     <link rel="stylesheet" href="/assets/CSS/checkout_modal.css">
-
+    <link rel="stylesheet" href="/assets/CSS/responsive.css">
     <!-- === Add-to-Cart / Buy-Now minimal CSS from product_detail.php === -->
     <style>
         /* Modal shell */
@@ -356,8 +356,12 @@ $avatarHtml   = $img
                     </section>
 
                     <div class="cz-actions">
-                        <button id="toCart" class="btn main">ADD TO CART</button>
-                        <a class="btn ghost js-buynow" data-pid="<?= (int)$pid ?>" href="#">BUY NOW</a>
+                        <button id="toCart" class="btn-detail secondary" type="button">
+                            <span class="material-symbols-rounded">shopping_cart</span> Add to Cart
+                        </button>
+                        <button class="btn-detail primary js-buynow" data-pid="<?= (int)$pid ?>" type="button">
+                            <span class="material-symbols-rounded">local_mall</span> Buy Now
+                        </button>
                     </div>
                 </aside>
             </div>
@@ -606,8 +610,8 @@ $avatarHtml   = $img
                     method: 'POST',
                     credentials: 'same-origin'
                 }).finally(function() {
-                    sessionStorage.clear();
-                    window.location.href = '/index.php';
+                    localStorage.removeItem('cart');
+                    window.location.href = '/public/index.php';
                 });
             };
 
@@ -615,7 +619,7 @@ $avatarHtml   = $img
     </script>
 
     <script>
-        /* === Buy Now: open modal & redirect (ported) === */
+        /* === Buy Now: open modal & redirect with customization data === */
         (function() {
             const modal = document.getElementById('buyChoiceModal');
             const closeBtn = document.getElementById('closeChoiceModal');
@@ -634,6 +638,12 @@ $avatarHtml   = $img
 
                 const pid = b.dataset.pid || window.PID || '';
                 const qty = '1'; // customization page default = 1
+
+                // Store customization data
+                if (typeof window.getCustomizationData === 'function') {
+                    const customData = window.getCustomizationData();
+                    sessionStorage.setItem('customizationData', JSON.stringify(customData));
+                }
 
                 modal.dataset.pid = String(pid);
                 modal.dataset.qty = String(qty);
@@ -680,9 +690,8 @@ $avatarHtml   = $img
                 if (!pid || !mode) return;
 
                 const url = (mode === 'delivery') ?
-                    `/customer/checkout_delivery.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}` :
-                    `/customer/checkout_pickup.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}`;
-
+                    `/customer/checkout_delivery.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}&custom=1` :
+                    `/customer/checkout_pickup.php?pid=${encodeURIComponent(pid)}&qty=${encodeURIComponent(qty)}&custom=1`;
                 modal.hidden = true;
                 window.location.href = url;
             });
@@ -700,9 +709,9 @@ $avatarHtml   = $img
     </script>
 
     <script>
-        /* === Add to Cart: portable version (ported) === */
+        /* === Add to Cart for Customization Page === */
         (function() {
-            // Helper (same as product_detail’s showToast)
+            // Helper (same as product_detail's showToast)
             function showToast(message, type) {
                 const toast = document.createElement('div');
                 toast.textContent = message;
@@ -721,33 +730,35 @@ $avatarHtml   = $img
                 document.querySelectorAll('#cartCount, #navCartCount, .cart-badge').forEach(el => el.textContent = count);
             }
 
-            // Portable handler: expects a button/link with data-action="add-to-cart"
-            // and data attributes: data-pid, data-name, data-type, data-price, data-image
-            document.addEventListener('click', function(e) {
-                const addBtn = e.target.closest && e.target.closest('[data-action="add-to-cart"]');
-                if (!addBtn) return;
+            // Add to Cart button (customization-specific)
+            document.getElementById('toCart')?.addEventListener('click', function(e) {
 
                 e.preventDefault();
-                e.stopPropagation();
+                // Get customization data from customize.js
+                if (typeof window.getCustomizationData !== 'function') {
+                    showToast('Error: Customization data not available', 'error');
+                    return;
+                }
 
+                const customData = window.getCustomizationData();
                 const product = {
-                    id: parseInt(addBtn.dataset.pid || (window.PID || '0')),
-                    name: addBtn.dataset.name || 'Custom Cabinet',
-                    type: addBtn.dataset.type || '',
-                    price: parseFloat(addBtn.dataset.price || '0'),
-                    image: addBtn.dataset.image || '',
-                    quantity: parseInt(addBtn.dataset.qty || '1')
+                    id: window.PID || 0,
+                    name: customData.productName || 'Custom Cabinet',
+                    type: 'custom',
+                    price: customData.computedTotal,
+                    priceWithVAT: customData.computedTotalWithVAT,
+                    basePrice: customData.basePrice,
+                    customization: customData.selectedOptions,
+                    addonsTotal: customData.addonsTotal,
+                    image: '', // Set if you have product image
+                    quantity: 1,
+                    isCustomized: true
                 };
 
                 let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const idx = cart.findIndex(i => i.id === product.id);
-                if (idx !== -1) {
-                    cart[idx].quantity = (cart[idx].quantity || 0) + product.quantity;
-                    showToast(product.name + ' quantity updated!', 'success');
-                } else {
-                    cart.push(product);
-                    showToast(product.name + ' added to cart!', 'success');
-                }
+                // For customized items, always add as new (don't merge)
+                cart.push(product);
+                showToast(product.name + ' added to cart!', 'success');
                 localStorage.setItem('cart', JSON.stringify(cart));
                 updateCartCount();
             });

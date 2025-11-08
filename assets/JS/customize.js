@@ -29,12 +29,23 @@
     const TEX_DIR = '/uploads/textures/';
     const HANDLE_DIR = '/uploads/handles/';
 
+    function normalizePartName(part) {
+        const map = {
+            'interior': 'inside',  // DB/3D name → chosen key
+            'inside': 'inside',    // already normalized
+            'door': 'door',
+            'body': 'body'
+        };
+        return map[part] || part;
+    }
+
     const UNIT_TO_CM = { cm: 1, mm: 0.1, inch: 2.54, ft: 30.48, meter: 100 };
 
     const MATERIAL_MAP = {
         body: 'Material.009',
         door: 'Material_Door',
-        interior: 'Material_Interior'
+        interior: 'Material_Interior',  // keep for 3D lookups
+        inside: 'Material_Interior'     // alias for consistency
     };
 
     // --- precision helpers ---
@@ -57,13 +68,13 @@
     // ======= State =======
     let productData = null;
     let baseSize = { w: 80, h: 180, d: 45 }; // cm
-    let activePart = 'body';
+    let activePart = 'door'; // Track active part for tab persistence
     let chosen = {
         size: { w: 80, h: 180, d: 45 }, // cm
-        door: { textureId: null, colorId: null },
-        body: { textureId: null, colorId: null },
-        inside: { textureId: null, colorId: null },
-        handle: { id: null }
+        door: { textureId: null, colorId: null, texturePrice: 0, colorPrice: 0 },
+        body: { textureId: null, colorId: null, texturePrice: 0, colorPrice: 0 },
+        inside: { textureId: null, colorId: null, texturePrice: 0, colorPrice: 0 },
+        handle: { id: null, price: 0 }
     };
 
     // ======= Steps UI =======
@@ -114,7 +125,8 @@
         const MESH_PREFIXES = {
             body: 'Material.009',
             door: 'Material_Door',
-            interior: 'Material_Interior',
+            inside: 'Material_Interior',
+            interior: 'Material_Interior'
         };
 
         /**
@@ -189,34 +201,6 @@
             return res;
         }
 
-        /**
-         * Helper: get material objects for part (array). Prefer dynamicMaterialsByPart; fallback to MATERIAL_MAP single name.
-         */
-        function getMaterialsForPart(mv, part) {
-            const dyn = window.dynamicMaterialsByPart || {};
-            const names = (dyn && dyn[part] && dyn[part].length) ? dyn[part] : [];
-            const mats = mv?.model?.materials || [];
-
-            // return actual material objects (not just names)
-            const found = [];
-            if (names.length) {
-                names.forEach(n => {
-                    const m = mats.find(x => x.name === n);
-                    if (m) found.push(m);
-                });
-            }
-
-            // fallback: if nothing found via mesh -> try original MATERIAL_MAP lookup (single material name)
-            if (!found.length) {
-                const fallbackName = MATERIAL_MAP[part];
-                if (fallbackName) {
-                    const m = mats.find(x => x.name === fallbackName);
-                    if (m) found.push(m);
-                }
-            }
-
-            return found; // may be empty array
-        }
         // build dynamic material map based on mesh prefixes (runs now and again on mv.load)
         buildDynamicMaterialsByPart(mv);
         mv?.addEventListener?.('load', () => buildDynamicMaterialsByPart(getMV()), { once: false });
@@ -264,6 +248,7 @@
             loadColorsForPart(part);
         }
 
+        rebuildHandleOptions();
         syncStepUI();
         updateUnitLabels();
         buildSizeGuide();
@@ -388,6 +373,16 @@
         const texList = document.getElementById('textures');
         if (!texList) return;
 
+        // ✅ Normalize partName FIRST
+        const normalizedPart = normalizePartName(partName);
+
+        // ✅ Safety check
+        if (!normalizedPart || !chosen[normalizedPart]) {
+            console.error('Invalid part for displayTextures:', partName, '→', normalizedPart);
+            texList.innerHTML = '<div style="padding:10px;color:#e11">Error: Invalid part</div>';
+            return;
+        }
+
         texList.innerHTML = '';
 
         if (textures.length === 0) {
@@ -397,29 +392,70 @@
 
         textures.forEach(tex => {
             const div = document.createElement('div');
-            div.className = 'cz-swatch texture-option';
+            div.className = 'cz-item';
             div.dataset.textureId = tex.id;
 
-            // Check if this texture is currently selected
-            if (chosen[partName]?.mode === 'texture' && chosen[partName]?.id == tex.id) {
-                div.classList.add('active');
-            }
+            // ✅ Use normalizedPart
+            const isActive = chosen[normalizedPart]?.textureId == tex.id;
+            if (isActive) div.classList.add('is-active');
+
+            const price = parseFloat(tex.base_price || 0);
 
             div.innerHTML = `
-            <img src="${tex.image_url}" 
-                 alt="${tex.texture_name}"
-                 title="${tex.texture_name} - ₱${tex.base_price || 0}"
-                 style="width: 60px; height: 60px; object-fit: cover; cursor: pointer; border-radius: 4px; border: 2px solid transparent;">
-            <span style="display: block; font-size: 10px; text-align: center; margin-top: 4px;">${tex.texture_name}</span>
+            <div class="cz-swatch cz-swatch-texture">
+                <img src="${tex.image_url}"
+                     alt="${tex.texture_name}"
+                     style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div class="cz-item-name">${tex.texture_name}</div>
+            ${price > 0 ? `<div class="cz-price-badge">+ ₱${fmt(price)}</div>` : ''}
         `;
 
             div.onclick = () => {
-                // Remove active from others
-                texList.querySelectorAll('.texture-option').forEach(opt => opt.classList.remove('active'));
-                div.classList.add('active');
+                const wasActive = div.classList.contains('is-active');
 
-                // Apply texture
-                applyTextureToPartEnhanced(partName, tex);
+                // Remove active from all textures
+                texList.querySelectorAll('.cz-item').forEach(opt => opt.classList.remove('is-active'));
+
+                if (wasActive) {
+                    // ✅ DESELECT - clear texture
+                    console.log(`🗑️ Deselecting texture for ${normalizedPart}`);
+
+                    chosen[normalizedPart].textureId = null;
+                    chosen[normalizedPart].texturePrice = 0;
+
+                    // Clear texture from 3D model
+                    const mv = getMV();
+                    if (mv) {
+                        try {
+                            const materials = getMaterialsForPart(mv, normalizedPart);
+                            materials.forEach(mat => {
+                                if (mat && mat.pbrMetallicRoughness && mat.pbrMetallicRoughness.baseColorTexture) {
+                                    mat.pbrMetallicRoughness.baseColorTexture.setTexture(null);
+                                    // Reset to default gray
+                                    mat.pbrMetallicRoughness.setBaseColorFactor([0.8, 0.8, 0.8, 1]);
+                                }
+                            });
+                            console.log(`✅ Texture cleared from ${normalizedPart}`);
+                        } catch (err) {
+                            console.error('Error clearing texture:', err);
+                        }
+                    }
+
+                    refreshPrice();
+
+                } else {
+                    // ✅ SELECT - apply texture
+                    console.log(`✨ Selecting texture for ${normalizedPart}`, tex);
+
+                    div.classList.add('is-active');
+                    chosen[normalizedPart].textureId = tex.id;
+                    chosen[normalizedPart].texturePrice = price;
+
+                    // Apply to 3D model
+                    applyTextureToPartEnhanced(normalizedPart, tex);
+                    // Note: refreshPrice() is called inside applyTextureToPartEnhanced
+                }
             };
 
             texList.appendChild(div);
@@ -428,73 +464,55 @@
 
     async function applyTextureToPartEnhanced(partName, texture) {
         const mv = getMV();
-        if (!mv || !mv.model) return;
+        if (!mv || !mv.model) {
+            console.error('Model viewer not ready');
+            return;
+        }
 
         try {
-            // Get the correct material based on part
-            const materialName = MATERIAL_MAP[partName];
-            const material = getMaterial(mv, materialName);
+            // Normalize part name
+            const normalizedPart = normalizePartName(partName);
 
-            if (!material) {
-                console.error(`Material not found for part: ${partName} (${materialName})`);
+            console.log(`🎨 Applying texture to: ${partName} (normalized: ${normalizedPart})`);
 
-                // Fallback: try by index if Door1/Door2
-                if (partName === 'door') {
-                    // Apply to both doors if they exist
-                    const door1 = getMaterial(mv, 'Door1');
-                    const door2 = getMaterial(mv, 'Door2');
+            // Get materials for this part
+            const materials = getMaterialsForPart(mv, normalizedPart);
 
-                    const tex = await mv.createTexture(texture.image_url);
-
-                    if (door1) {
-                        door1.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-                        door1.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
-                    }
-                    if (door2) {
-                        door2.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-                        door2.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
-                    }
-                }
-
-                // ADD THIS: Try THREE.js direct access as last resort
-                console.log('⚠️ Trying THREE.js direct access...');
-                const threeMat = getThreeMaterial(mv, materialName);
-                if (threeMat) {
-                    const loader = new THREE.TextureLoader();
-                    loader.load(texture.image_url, (tex) => {
-                        threeMat.map = tex;
-                        threeMat.color.setRGB(1, 1, 1);
-                        threeMat.needsUpdate = true;
-                        console.log(`✅ Applied via THREE.js to "${materialName}"`);
-
-                        chosen[partName] = {
-                            mode: 'texture',
-                            id: texture.id,
-                            price: parseFloat(texture.base_price) || 0
-                        };
-                        refreshPrice();
-                    });
-                }
-
+            if (!materials || materials.length === 0) {
+                console.warn(`⚠️ No materials found for part: ${normalizedPart}`);
                 return;
             }
 
-            // Create and apply texture (original code)
+            // Create texture
             const tex = await mv.createTexture(texture.image_url);
-            material.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
-            material.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
 
-            // Store selection
-            chosen[partName] = {
-                mode: 'texture',
-                id: texture.id,
-                price: parseFloat(texture.base_price) || 0
-            };
+            console.log(`✅ Texture created for ${materials.length} material(s)`);
 
+            // Apply to all materials for this part
+            materials.forEach((mat, idx) => {
+                if (mat && mat.pbrMetallicRoughness) {
+                    // Apply texture
+                    if (mat.pbrMetallicRoughness.baseColorTexture) {
+                        mat.pbrMetallicRoughness.baseColorTexture.setTexture(tex);
+                    }
+                    // Reset color to white (show full texture)
+                    mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
+
+                    console.log(`  ✓ Applied to material[${idx}]: ${mat.name}`);
+                }
+            });
+
+            // Update chosen state
+            chosen[normalizedPart].textureId = texture.id;
+            chosen[normalizedPart].texturePrice = parseFloat(texture.base_price || 0);
+
+            console.log(`💰 Price updated: ₱${chosen[normalizedPart].texturePrice}`);
+
+            // Refresh price display
             refreshPrice();
 
         } catch (error) {
-            console.error('Error applying texture:', error);
+            console.error('❌ Error applying texture:', error);
         }
     }
 
@@ -524,46 +542,67 @@
         const colList = document.getElementById('colors');
         if (!colList) return;
 
+        // ✅ Normalize partName FIRST
+        const normalizedPart = normalizePartName(partName);
+
+        // ✅ Safety check
+        if (!normalizedPart || !chosen[normalizedPart]) {
+            console.error('Invalid part for displayColors:', partName, '→', normalizedPart);
+            colList.innerHTML = '<div style="padding:10px;color:#e11">Error: Invalid part</div>';
+            return;
+        }
+
         colList.innerHTML = '';
+
+        if (!colors || colors.length === 0) {
+            colList.innerHTML = '<div style="padding:10px;color:#999">No colors available</div>';
+            return;
+        }
 
         colors.forEach(color => {
             const div = document.createElement('div');
             div.className = 'cz-item';
 
-            const isActive = chosen[partName]?.mode === 'color' && chosen[partName]?.id == color.id;
+            // ✅ Use normalizedPart
+            const isActive = chosen[normalizedPart]?.colorId == color.id;
             if (isActive) div.classList.add('is-active');
+
+            const price = parseFloat(color.base_price || 0);
 
             div.innerHTML = `
             <div class="cz-swatch" style="background-color: ${color.hex_value || '#ccc'}; width: 96px; height: 96px;"></div>
             <div class="cz-item-name">${color.color_name}</div>
-            ${color.base_price > 0 ? `<div class="cz-price-badge">+ ₱${color.base_price}</div>` : ''}
+            ${price > 0 ? `<div class="cz-price-badge">+ ₱${fmt(price)}</div>` : ''}
         `;
 
             div.onclick = () => {
-                const wasActive = div.classList.contains('is-active');
+                // ✅ Safety check
+                if (!chosen[normalizedPart]) {
+                    console.error('chosen[normalizedPart] is undefined:', normalizedPart);
+                    return;
+                }
 
-                // Remove active from all
+                const wasActive = div.classList.contains('is-active');
                 colList.querySelectorAll('.cz-item').forEach(opt => opt.classList.remove('is-active'));
 
                 if (wasActive) {
-                    // DESELECT - reset to original texture/color
-                    console.log(`🔄 Deselected color for ${partName}`);
+                    // DESELECT
+                    chosen[normalizedPart].colorId = null;
+                    chosen[normalizedPart].colorPrice = 0;
 
-                    // Reset material to white (shows original texture)
                     const mv = getMV();
-                    const mat = getMaterial(mv, MATERIAL_MAP[partName]);
+                    const mat = getMaterial(mv, MATERIAL_MAP[normalizedPart] || MATERIAL_MAP['inside']);
                     if (mat) {
                         mat.pbrMetallicRoughness.setBaseColorFactor([1, 1, 1, 1]);
                     }
-
-                    // Clear chosen state
-                    chosen[partName] = { mode: null, id: null };
-                    refreshPrice();
                 } else {
-                    // SELECT - apply color
+                    // SELECT
                     div.classList.add('is-active');
-                    applyColorToPart(partName, color.hex_value, color.id);
+                    chosen[normalizedPart].colorId = color.id;
+                    chosen[normalizedPart].colorPrice = price;
+                    applyColorToPart(normalizedPart, color.hex_value, color.id);
                 }
+                refreshPrice();
             };
 
             colList.appendChild(div);
@@ -597,6 +636,47 @@
     function getMaterial(mv, name) {
         const mats = mv?.model?.materials || [];
         return mats.find(m => m.name === name) || null;
+    }
+
+    // ADD this function AFTER getMaterial() function
+    function getMaterialsForPart(mv, part) {
+        // Normalize the part name
+        const normalizedPart = normalizePartName(part);
+
+        const dyn = window.dynamicMaterialsByPart || {};
+        const names = (dyn && dyn[normalizedPart] && dyn[normalizedPart].length)
+            ? dyn[normalizedPart]
+            : [];
+
+        const mats = mv?.model?.materials || [];
+
+        const found = [];
+
+        // Try dynamic materials first
+        if (names.length) {
+            names.forEach(n => {
+                const m = mats.find(x => x.name === n);
+                if (m) found.push(m);
+            });
+        }
+
+        // Fallback to MATERIAL_MAP
+        if (!found.length) {
+            let fallbackName = MATERIAL_MAP[normalizedPart];
+
+            // Extra fallback for inside→interior
+            if (!fallbackName && normalizedPart === 'inside') {
+                fallbackName = MATERIAL_MAP['interior'] || 'Material_Interior';
+            }
+
+            if (fallbackName) {
+                const m = mats.find(x => x.name === fallbackName);
+                if (m) found.push(m);
+            }
+        }
+
+        console.log(`getMaterialsForPart(${part}) → [${found.map(m => m.name).join(', ')}]`);
+        return found;
     }
 
     function getThreeMaterial(mv, materialName) {
@@ -787,11 +867,23 @@
         const tabs = document.querySelector(sel);
         if (!tabs) return;
 
-        // Load textures for initial active tab
+        // Restore active part tab on load
+        const savedPart = activePart || 'door';
+        const btnToActivate = tabs.querySelector(`button[data-part="${savedPart}"]`);
+        if (btnToActivate) {
+            tabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btnToActivate.classList.add('active');
+        }
+
+        // Load content for initial active tab
         const activeBtn = tabs.querySelector('button.active');
-        if (activeBtn && sel.includes('textures')) {
+        if (activeBtn) {
             const initialPart = activeBtn.getAttribute('data-part');
-            loadTexturesForPart(initialPart);
+            if (sel.includes('textures')) {
+                loadTexturesForPart(initialPart);
+            } else if (sel.includes('colors')) {
+                loadColorsForPart(initialPart);
+            }
         }
 
         tabs.addEventListener('click', (e) => {
@@ -804,7 +896,8 @@
             const partName = btn.getAttribute('data-part');
             setActivePart(partName);
 
-            // Load textures for this part if in texture section
+            // Load content for this part
+
             if (sel.includes('textures')) {
                 loadTexturesForPart(partName);
             }
@@ -817,7 +910,11 @@
             highlightPart(partName);
         });
     }
-    function setActivePart(k) { activePart = k; highlightPart(k); }
+
+    function setActivePart(k) {
+        activePart = k;
+        highlightPart(k);
+    }
 
     // ======= Apply Texture / Color =======
     async function applyTextureToPart(partKey, url, id) {
@@ -836,18 +933,23 @@
         const mv = getMV();
         if (!mv) return;
 
-        const mat = getMaterial(mv, MATERIAL_MAP[partKey]);
-        if (!mat) return;
+        // ✅ Normalize first
+        const normalizedPart = normalizePartName(partKey);
 
-        // DON'T remove texture - comment out this line:
-        // mat.pbrMetallicRoughness.baseColorTexture.setTexture(null);
+        // ✅ Try to get material (with fallback to 'inside' for interior)
+        let materialName = MATERIAL_MAP[normalizedPart];
+        if (!materialName && normalizedPart === 'inside') {
+            materialName = MATERIAL_MAP['interior'] || 'Material_Interior';
+        }
 
-        // Just set color factor (tints the texture)
+        const mat = getMaterial(mv, materialName);
+        if (!mat) {
+            console.warn(`Material not found for part: ${normalizedPart} (${materialName})`);
+            return;
+        }
+
         const [r, g, b, a] = hexToRGBA01(hex);
         mat.pbrMetallicRoughness.setBaseColorFactor([r, g, b, a]);
-
-        setChosen(partKey, { mode: 'color', id });
-        refreshPrice();
     }
 
     function setChosen(partKey, data) {
@@ -1043,68 +1145,54 @@
         if (allowHandles && Array.isArray(allowHandles.handles) && allowHandles.handles.length) {
             handlesToRender = allowHandles.handles.slice();
         } else {
-            // fallback: fetch handles list and only include those assigned to product (if product assignment exists)
-            try {
-                if (!PID) throw new Error('PID missing');
-                const resp = await fetch(`/backend/api/admin_customization.php?action=list_handles`, { credentials: 'same-origin' });
-                if (resp.ok) {
-                    const js = await resp.json();
-                    if (js?.success && Array.isArray(js.data)) {
-                        // map to expected shape { id, name, preview/file, assigned?, allowed_parts? }
-                        handlesToRender = js.data.map(h => ({
-                            id: Number(h.id),
-                            name: h.handle_name || h.name || '',
-                            preview: h.handle_image || h.file || '',
-                            allowed_parts: h.allowed_parts || h.allowed || null,
-                            assigned: h.assigned || 0
-                        }));
-                        // if you want only product-assigned handles, try to detect assigned via productData or backend later
-                        // If admin assigns handles via product_handles table you'll want admin_customization.php?action=list_handles&product_id=PID to return assigned.
-                    }
-                } else {
-                    console.warn('list_handles returned', resp.status);
-                }
-            } catch (err) {
-                console.warn('Could not fetch handles fallback:', err);
-            }
+            // No handles assigned to this product - show message
+            handleList.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">No handles available for this product</div>';
+            console.warn('No handles assigned to this product');
+            return;
         }
 
-        // If handles include allowed_parts, filter by part (handles usually only apply to doors)
-        const activePart = getActiveTabPart('#sec-handles .part-tabs') || 'door';
-        const filtered = handlesToRender.filter(h => {
-            if (!h) return false;
-            if (Array.isArray(h.allowed_parts) && h.allowed_parts.length) {
-                const norms = h.allowed_parts.map(x => String(x || '').toLowerCase());
-                return norms.includes(activePart) || norms.includes('door');
-            }
-            return true;
-        });
+        handlesToRender.forEach(h => {
+            const div = document.createElement('div');
+            div.className = 'cz-item';
+            div.dataset.handleId = h.id;
+            const isActive = chosen.handle.id == h.id;
+            if (isActive) div.classList.add('is-active');
 
-        (filtered || []).forEach(h => {
-            const btn = document.createElement('button');
-            btn.className = 'cz-item';
+            const price = parseFloat(h.price || 0);
             const src = HANDLE_DIR + (h.preview || '');
-            btn.innerHTML = `
-            <div class="cz-swatch"><img src="${src}" alt="${h.name || 'Handle'}" onerror="this.style.opacity=.25"></div>
-            <div class="cz-item-name">${h.name || 'Handle'}</div>
-            ${priceBadge(getSurcharge('handles', h.id))}
-        `;
-            btn.addEventListener('click', () => {
-                if (btn.classList.contains('is-active')) {
-                    // Deselect - remove handle and reduce price
-                    btn.classList.remove('is-active');
+
+            div.innerHTML = `
+                <div class="cz-swatch">
+                    <img src="${src}" alt="${h.name || 'Handle'}" onerror="this.style.opacity=.25"
+                    style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div class="cz-item-name">${h.name || 'Handle'}</div>
+                ${price > 0 ? `<div class="cz-price-badge">+ ₱${fmt(price)}</div>` : ''}
+            `;
+
+            div.onclick = () => {
+                const wasActive = div.classList.contains('is-active');
+
+                // Remove active from all handles
+                handleList.querySelectorAll('.cz-item').forEach(opt => opt.classList.remove('is-active'));
+
+                if (wasActive) {
+                    // Deselect
                     chosen.handle.id = null;
+                    chosen.handle.price = 0;
                 } else {
-                    // Select - apply handle
+                    // Select
+                    div.classList.add('is-active');
                     chosen.handle.id = h.id;
-                    selectExclusive(handleList, btn);
+                    chosen.handle.price = price;
                 }
                 refreshPrice();
-            });
-            handleList.appendChild(btn);
+            };
+
+            handleList.appendChild(div);
         });
 
-        if ((filtered || []).length === 0) {
+        if (handlesToRender.length === 0) {
             const p = document.createElement('div');
             p.className = 'cz-empty';
             p.textContent = 'No handles available';
@@ -1129,16 +1217,19 @@
         return `<div class="cz-price-badge">+ ₱${fmt(abs)}</div>`;
     }
 
-    // ======= Pricing =======
+    // ======= Pricing (Cumulative) =======    
     function refreshPrice() {
         const p = computePrice();
-        if (priceBox) priceBox.textContent = '₱ ' + fmt(p);
+        console.log(`🔄 refreshPrice() → ₱${p}`);
+        if (priceBox) {
+            priceBox.textContent = '₱ ' + fmt(p);
+        }
     }
 
     function computePrice() {
         let total = Number(productData?.pricing?.base_price || 0);
 
-        // Baseline is ADMIN MIN
+        // Size surcharges
         const wCfg = dimCfg('width'), hCfg = dimCfg('height'), dCfg = dimCfg('depth');
         const baseW = wCfg.min * (UNIT_TO_CM[wCfg.unit] || 1);
         const baseH = hCfg.min * (UNIT_TO_CM[hCfg.unit] || 1);
@@ -1148,27 +1239,29 @@
         total += dimSurcharge(chosen.size.h, baseH, hCfg);
         total += dimSurcharge(chosen.size.d, baseD, dCfg);
 
-        // FIXED: Add ALL active options per part (texture AND color if both exist)
+        // ✅ CRITICAL: Add texture + color prices per part
         ['door', 'body', 'inside'].forEach(part => {
             const partData = chosen[part];
 
-            // Add texture price if texture is set
-            if (partData.textureId) {
-                total += getSurcharge('textures', partData.textureId);
-            }
+            const texPrice = Number(partData.texturePrice || 0);
+            const colPrice = Number(partData.colorPrice || 0);
 
-            // Add color price if color is set
-            if (partData.colorId) {
-                total += getSurcharge('colors', partData.colorId);
-            }
+            console.log(`  ${part}: texture=₱${texPrice}, color=₱${colPrice}`);
+
+            total += texPrice;
+            total += colPrice;
         });
 
         // Handle price
-        if (chosen.handle.id) {
-            total += getSurcharge('handles', chosen.handle.id);
-        }
+        total += Number(chosen.handle.price || 0);
 
-        return Math.max(0, Math.round(total));
+        console.log(`💵 Total computed: ₱${total}`);
+        return Math.max(0, parseFloat(total.toFixed(2)));
+    }
+
+    function getComputedTotalWithVAT() {
+        const total = computePrice();
+        return parseFloat((total * 1.12).toFixed(2));
     }
 
     // Prefer block pricing if provided; else per-unit
@@ -1328,5 +1421,53 @@
         const tabs = document.querySelector(selector);
         return tabs?.querySelector('button.active')?.getAttribute('data-part') || 'door';
     }
+
+    // ======= Export Customization Data for Cart/Checkout =======
+    window.getCustomizationData = function () {
+        const basePrice = Number(productData?.pricing?.base_price || 0);
+        const computedTotal = computePrice();
+        const computedTotalWithVAT = getComputedTotalWithVAT();
+
+        // Calculate addons total (everything except base and size)
+        let addonsTotal = 0;
+        ['door', 'body', 'inside'].forEach(part => {
+            addonsTotal += Number(chosen[part].texturePrice || 0);
+            addonsTotal += Number(chosen[part].colorPrice || 0);
+        });
+        addonsTotal += Number(chosen.handle.price || 0);
+
+        return {
+            productName: productData?.title || 'Custom Cabinet',
+            basePrice: parseFloat(basePrice.toFixed(2)),
+            computedTotal: computedTotal,
+            computedTotalWithVAT: computedTotalWithVAT,
+            addonsTotal: parseFloat(addonsTotal.toFixed(2)),
+            selectedOptions: {
+                size: chosen.size,
+                door: {
+                    textureId: chosen.door.textureId,
+                    colorId: chosen.door.colorId,
+                    texturePrice: chosen.door.texturePrice,
+                    colorPrice: chosen.door.colorPrice
+                },
+                body: {
+                    textureId: chosen.body.textureId,
+                    colorId: chosen.body.colorId,
+                    texturePrice: chosen.body.texturePrice,
+                    colorPrice: chosen.body.colorPrice
+                },
+                inside: {
+                    textureId: chosen.inside.textureId,
+                    colorId: chosen.inside.colorId,
+                    texturePrice: chosen.inside.texturePrice,
+                    colorPrice: chosen.inside.colorPrice
+                },
+                handle: {
+                    id: chosen.handle.id,
+                    price: chosen.handle.price
+                }
+            }
+        };
+    };
 
 })();

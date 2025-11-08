@@ -1318,6 +1318,16 @@
     wireClear();
     wirePayment();
     setupNumericInputs();
+
+
+    // ✅ FIX 3: "View My Orders" button navigation
+    const btnGoOrders = $('#btnGoOrders');
+    if (btnGoOrders) {
+      btnGoOrders.addEventListener('click', () => {
+        console.log('🔄 Navigating to My Orders page...');
+        window.location.href = '/customer/orders.php';
+      });
+    }
 	  
     console.log('✅ Checkout.js loaded with T&C-first flow!');
     console.log('✅ Features: T&C before QR, improved validation, NCR support, auto-fill');

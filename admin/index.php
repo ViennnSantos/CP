@@ -165,9 +165,9 @@ if (!$isLoggedIn) {
             box-shadow: 0 8px 32px rgba(0, 0, 0, .12);
             width: 100%;
             max-height: 90vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             position: relative;
             z-index: 1;
         }
@@ -176,12 +176,18 @@ if (!$isLoggedIn) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px;
+            padding: 16px 20px;
             border-bottom: 1px solid #eaeaea;
             background: #fff;
-            position: sticky;
-            top: 0;
+            flex-shrink: 0;
             z-index: 10;
+        }
+
+        .modal-body-scrollable {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex: 1;
+            padding: 20px;
         }
 
         .modal-close,
@@ -1081,7 +1087,7 @@ if (!$isLoggedIn) {
                 <div class="modal-header">
                     <h2>Manage Customization Options</h2><button class="close-modal" onclick="closeModal('manageCustomizationModal')">×</button>
                 </div>
-                <div style="padding:16px">
+                <div class="modal-body-scrollable">
                     <input type="hidden" id="customProductId">
                     <div style="background:#e8f4f8;padding:15px;border-radius:8px;margin-bottom:20px">
                         <h3 style="margin:0;color:#2c5f8d">Product: <span id="customProductName"></span></h3>
@@ -1203,21 +1209,23 @@ if (!$isLoggedIn) {
                         <div style="margin-top:15px"><button type="button" class="btn-secondary" onclick="openAddHandleModal()"><span class="material-symbols-rounded">add</span> Add New Handle</button></div>
                     </div>
 
-                    <div class="modal-actions" style="margin-top:12px">
-                        <button type="button" class="btn-secondary" onclick="closeModal('manageCustomizationModal')">Cancel</button>
-                        <button type="button" class="btn-primary" onclick="saveCustomizationOptions()">Save Changes</button>
-                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeModal('manageCustomizationModal')">Cancel</button>
+                    <button type="button" class="btn-primary" onclick="saveCustomizationOptions()">Save Changes</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Add Texture / Color / Handle Modals (merged versions) -->
-        <div id="addTextureModal" class="modal">
-            <div class="modal-content" style="max-width:600px">
-                <div class="modal-header">
-                    <h2>Add New Texture</h2><button class="close-modal" onclick="closeModal('addTextureModal')">×</button>
-                </div>
-                <form id="addTextureForm" onsubmit="handleAddTexture(event)" style="padding:16px">
+    <!-- Add Texture / Color / Handle Modals (merged versions) -->
+    <div id="addTextureModal" class="modal">
+        <div class="modal-content" style="max-width:600px">
+            <div class="modal-header">
+                <h2>Add New Texture</h2><button class="close-modal" onclick="closeModal('addTextureModal')">×</button>
+            </div>
+            <div class="modal-body-scrollable">
+                <form id="addTextureForm" onsubmit="handleAddTexture(event)">
                     <div class="form-group"><label for="textureName">Texture Name *</label><input type="text" id="textureName" required placeholder="e.g., Oak Wood, Marble White"></div>
                     <div class="form-group"><label for="textureCode">Texture Code *</label><input type="text" id="textureCode" required placeholder="e.g., WOOD_OAK, MARBLE_WHITE"><small style="color:#666">Use uppercase with underscores</small></div>
                     <div class="form-group"><label for="textureDescription">Description</label><textarea id="textureDescription" rows="3"></textarea></div>
@@ -1252,18 +1260,23 @@ if (!$isLoggedIn) {
                             <small style="color:#666;display:block;margin-top:6px;">Uncheck this to temporarily hide the texture from customers.</small>
                         </div>
                     </div>
-                    <div class="modal-actions"><button type="button" class="btn-secondary" onclick="closeModal('addTextureModal')">Cancel</button><button type="submit" class="btn-primary">Add Texture</button></div>
                 </form>
             </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('addTextureModal')">Cancel</button>
+                <button type="submit" form="addTextureForm" class="btn-primary">Add Texture</button>
+            </div>
         </div>
+    </div>
 
-        <div id="addColorModal" class="modal">
-            <div class="modal-content" style="max-width:600px">
-                <div class="modal-header">
-                    <h2>Add New Color</h2>
-                    <button class="close-modal" onclick="closeModal('addColorModal')">×</button>
-                </div>
-                <form id="addColorForm" onsubmit="handleAddColor(event)" style="padding:16px">
+    <div id="addColorModal" class="modal">
+        <div class="modal-content" style="max-width:600px">
+            <div class="modal-header">
+                <h2>Add New Color</h2>
+                <button class="close-modal" onclick="closeModal('addColorModal')">×</button>
+            </div>
+            <div class="modal-body-scrollable">
+                <form id="addColorForm" onsubmit="handleAddColor(event)">
                     <div class="form-group">
                         <label for="colorName">Color Name *</label>
                         <input type="text" id="colorName" required placeholder="e.g., Matte Black, Glossy White">
@@ -1318,32 +1331,44 @@ if (!$isLoggedIn) {
                             <small style="color:#666;display:block;margin-top:6px;">Uncheck this to temporarily hide the color from customers.</small>
                         </div>
                     </div>
-                    <div class="modal-actions">
-                        <button type="button" class="btn-secondary" onclick="closeModal('addColorModal')">Cancel</button>
-                        <button type="submit" class="btn-primary">Add Color</button>
-                    </div>
                 </form>
             </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('addColorModal')">Cancel</button>
+                <button type="submit" form="addColorForm" class="btn-primary">Add Color</button>
+            </div>
         </div>
+    </div>
 
-        <div id="addHandleModal" class="modal">
-            <div class="modal-content" style="max-width:600px">
-                <div class="modal-header">
-                    <h2>Add New Handle Type</h2><button class="close-modal" onclick="closeModal('addHandleModal')">×</button>
-                </div>
-                <form id="addHandleForm" onsubmit="handleAddHandle(event)" style="padding:16px">
+    <div id="addHandleModal" class="modal">
+        <div class="modal-content" style="max-width:600px">
+            <div class="modal-header">
+                <h2>Add New Handle Type</h2><button class="close-modal" onclick="closeModal('addHandleModal')">×</button>
+            </div>
+            <div class="modal-body-scrollable">
+                <form id="addHandleForm" onsubmit="handleAddHandle(event)">
                     <div class="form-group"><label for="handleName">Handle Name *</label><input type="text" id="handleName" required placeholder="e.g., Modern Silver, Classic Brass"></div>
                     <div class="form-group"><label for="handleCode">Handle Code *</label><input type="text" id="handleCode" required placeholder="e.g., MODERN_SILVER, CLASSIC_BRASS"><small style="color:#666">Use uppercase with underscores</small></div>
                     <div class="form-group"><label for="handleDescription">Description</label><textarea id="handleDescription" rows="3"></textarea></div>
                     <div class="form-group"><label for="handleBasePrice">Base Price (₱)</label><input type="number" id="handleBasePrice" step="0.01" value="0"></div>
                     <div class="form-group"><label for="handleImage">Handle Image *</label><input type="file" id="handleImage" accept="image/*" required onchange="handleHandleImagePreview(event)"><img id="handleImagePreview" style="max-width:200px;margin-top:10px;display:none;border-radius:8px"></div>
-                    <div class="form-group"><label><input type="checkbox" id="handleIsActive" checked> Active (Available for selection)</label></div>
-                    <div class="modal-actions"><button type="button" class="btn-secondary" onclick="closeModal('addHandleModal')">Cancel</button><button type="submit" class="btn-primary">Add Handle</button></div>
+                    <div class="form-group" style="display:flex;align-items:flex-start;gap:12px;margin-top:14px;">
+                        <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
+                            <input type="checkbox" id="handleIsActive" checked style="transform:scale(1.05);margin:4px 0 0 0;">
+                        </div>
+                        <div style="flex:1;">
+                            <label for="handleIsActive" style="font-size:14px;color:#333;display:block;margin-top:2px;">Active (Available for selection)</label>
+                            <small style="color:#666;display:block;margin-top:6px;">Uncheck this to temporarily hide the handle from customers.</small>
+                        </div>
+                    </div>
                 </form>
             </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" onclick="closeModal('addHandleModal')">Cancel</button>
+                <button type="submit" form="addHandleForm" class="btn-primary">Add Handle</button>
+            </div>
         </div>
-
-    </div> <!-- end main-content -->
+    </div>
 
     <!-- SCRIPTS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -13,6 +13,9 @@ const MAX_GLB_MB = 80;                 // front-end cap for .glb
 // ===== Image / Model upload state =====
 let uploadedProductImages = [];
 
+// ===== Size config persistence =====
+let savedSizeConfig = null;
+
 // cache for primary images to avoid repeated calls
 const productPrimaryImageCache = new Map(); // productId -> filename (string) or null
 
@@ -207,7 +210,7 @@ async function fetchPrimaryImageForProduct(productId) {
     let primary = imgs.find(i => Number(i.is_primary) === 1);
     if (!primary) {
       // fallback to smallest display_order or first
-      primary = imgs.slice().sort((a,b) => (Number(a.display_order||0) - Number(b.display_order||0)))[0];
+      primary = imgs.slice().sort((a, b) => (Number(a.display_order || 0) - Number(b.display_order || 0)))[0];
     }
     const filename = primary ? String(primary.image_path || primary.path || primary.file || primary.filename || '').split('/').pop() : null;
     productPrimaryImageCache.set(productId, filename);
@@ -369,11 +372,11 @@ function openAddProductFresh() {
   if (titleEl) titleEl.textContent = 'Add New Product';
 
   // FIX: Multiple fallback selectors to find the submit button
-  const submitBtn = document.getElementById('addProductSubmitBtn') || 
-                    document.querySelector('#addProductModal button[type="submit"]') ||
-                    document.querySelector('#addProductModal .btn-primary') ||
-                    document.querySelector('button[onclick*="handleAddProduct"]');
-                    
+  const submitBtn = document.getElementById('addProductSubmitBtn') ||
+    document.querySelector('#addProductModal button[type="submit"]') ||
+    document.querySelector('#addProductModal .btn-primary') ||
+    document.querySelector('button[onclick*="handleAddProduct"]');
+
   if (submitBtn) {
     submitBtn.textContent = 'Add Product';
     submitBtn.innerText = 'Add Product'; // backup property
@@ -404,8 +407,8 @@ function openAddProductFresh() {
 
   // FIX: Force re-check button text after modal opens (in case of CSS/JS interference)
   setTimeout(() => {
-    const btn = document.getElementById('addProductSubmitBtn') || 
-                document.querySelector('#addProductModal button[type="submit"]');
+    const btn = document.getElementById('addProductSubmitBtn') ||
+      document.querySelector('#addProductModal button[type="submit"]');
     if (btn && btn.textContent !== 'Add Product') {
       btn.textContent = 'Add Product';
       btn.innerText = 'Add Product';
@@ -441,19 +444,19 @@ async function handleEditProduct(id) {
 
     // Submit button -> Update Product
     // Submit button -> Update Product
-// FIX: Multiple fallback selectors para sure na makuha natin yung button
-const submitBtn = document.getElementById('addProductSubmitBtn') || 
-                  document.querySelector('#addProductModal button[type="submit"]') ||
-                  document.querySelector('#addProductModal .btn-primary') ||
-                  document.querySelector('#addProductForm button[type="submit"]');
-                  
-if (submitBtn) {
-  submitBtn.textContent = 'Update Product';
-  submitBtn.innerText = 'Update Product'; // backup property
-  submitBtn.dataset.mode = 'edit';
-  submitBtn.classList.remove('btn-add');
-  submitBtn.classList.add('btn-update');
-}
+    // FIX: Multiple fallback selectors para sure na makuha natin yung button
+    const submitBtn = document.getElementById('addProductSubmitBtn') ||
+      document.querySelector('#addProductModal button[type="submit"]') ||
+      document.querySelector('#addProductModal .btn-primary') ||
+      document.querySelector('#addProductForm button[type="submit"]');
+
+    if (submitBtn) {
+      submitBtn.textContent = 'Update Product';
+      submitBtn.innerText = 'Update Product'; // backup property
+      submitBtn.dataset.mode = 'edit';
+      submitBtn.classList.remove('btn-add');
+      submitBtn.classList.add('btn-update');
+    }
 
     // Set form dataset to edit mode and attach editing id
     const form = document.getElementById('addProductForm');
@@ -493,16 +496,16 @@ if (submitBtn) {
     // Open modal AFTER all dataset flags are set
     openModal('addProductModal');
 
-// 🔥 FIX: Force button text update after modal opens (in case of CSS/JS interference)
-setTimeout(() => {
-  const btn = document.getElementById('addProductSubmitBtn') || 
-              document.querySelector('#addProductModal button[type="submit"]') ||
-              document.querySelector('#addProductModal .btn-primary');
-  if (btn && btn.textContent !== 'Update Product') {
-    btn.textContent = 'Update Product';
-    btn.innerText = 'Update Product';
-  }
-}, 100);
+    // 🔥 FIX: Force button text update after modal opens (in case of CSS/JS interference)
+    setTimeout(() => {
+      const btn = document.getElementById('addProductSubmitBtn') ||
+        document.querySelector('#addProductModal button[type="submit"]') ||
+        document.querySelector('#addProductModal .btn-primary');
+      if (btn && btn.textContent !== 'Update Product') {
+        btn.textContent = 'Update Product';
+        btn.innerText = 'Update Product';
+      }
+    }, 100);
 
     // Optional: small sanity log
     // console.log('OPEN EDIT: form.dataset =', form?.dataset);
@@ -709,8 +712,6 @@ async function uploadImagesToProductImagesTable(productId, imageFilenames = [], 
     fd.append('display_order', startDisplayOrder + i);
     fd.append('is_primary', (startDisplayOrder === 0 && i === 0 && existingImages.length === 0) ? '1' : '0');
 
-    console.log(`🔍 DEBUG: Inserting image - product_id=${productId}, filename=${filename}, order=${startDisplayOrder + i}`);
-
     try {
       const res = await fetch(`/backend/api/product_images.php?action=insert_direct`, {
         method: 'POST',
@@ -719,10 +720,9 @@ async function uploadImagesToProductImagesTable(productId, imageFilenames = [], 
       });
       // server should return JSON: { success: true/false, message: ..., data: ...}
       const json = await res.json().catch(() => null);
-      console.log(`🔍 DEBUG: Insert response for ${filename}:`, json);
       if (res.ok && json && json.success) {
         successCount++;
-        console.log(`✅ Inserted ${filename} (order ${startDisplayOrder + i}) with product_id=${json.data?.product_id}`);
+        console.log(`✅ Inserted ${filename} (order ${startDisplayOrder + i})`);
       } else {
         errorCount++;
         console.warn(`❌ Failed to insert ${filename}:`, json?.message || 'Unknown error from insert API');
@@ -925,13 +925,11 @@ async function loadExistingProductImages(productId) {
     // 🔥 FIX: Clear global array FIRST to prevent mixing with other products
     uploadedProductImages = [];
     window.uploadedProductImages = [];
-    console.log(`🔍 DEBUG: Loading existing images for product_id=${productId}`);
-    
+
     const response = await fetch(`/backend/api/product_images.php?action=list&product_id=${productId}`, {
       credentials: 'same-origin'
     });
     const result = await response.json();
-    console.log(`🔍 DEBUG: API response for product_id=${productId}:`, result);
 
     if (!result.success) {
       console.warn('No existing images or error:', result.message);
@@ -949,11 +947,7 @@ async function loadExistingProductImages(productId) {
     }
 
     console.log('🖼️ Loaded existing images for product', productId, ':', images.length, 'images');
-    console.log('🔍 DEBUG: Image details:', images.map(img => ({
-      image_id: img.image_id,
-      product_id: img.product_id,
-      filename: String(img.image_path || '').split('/').pop()
-    })));
+
     if (images.length === 0) {
       console.log('No existing images found for this product');
       return;
@@ -986,7 +980,7 @@ async function loadExistingProductImages(productId) {
       // ensure path is normalized and points to uploads (fallback to placeholder)
       imgEl.src = imgPath ? `/${normalizeSrc(imgPath)}` : '/uploads/products/placeholder.jpg';
       imgEl.style.cssText = 'width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 2px solid #ddd;';
-      imgEl.onerror = function() {
+      imgEl.onerror = function () {
         this.onerror = null;
         this.src = '/uploads/products/placeholder.jpg';
       };
@@ -1004,7 +998,7 @@ async function loadExistingProductImages(productId) {
       removeBtn.className = 'remove-image-btn';
       removeBtn.type = 'button';
       removeBtn.style.cssText = 'position: absolute; top: 2px; right: 2px; background: #f44336; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 16px; line-height: 1; padding: 0; z-index: 1;';
-      removeBtn.onclick = async function(event) {
+      removeBtn.onclick = async function (event) {
         event.preventDefault();
         event.stopPropagation();
         // if we have an image id, call the backend delete endpoint
@@ -1176,6 +1170,9 @@ function populateSizeConfig(sizes) {
   const sizeMap = {};
   sizes.forEach(s => { sizeMap[s.dimension_type] = s; });
 
+  // Save current size config for potential revert (deep copy)
+  savedSizeConfig = JSON.parse(JSON.stringify(sizeMap));
+
   ['width', 'height', 'depth'].forEach(dim => {
     const s = sizeMap[dim];
     if (!s) return;
@@ -1196,11 +1193,47 @@ function populateSizeConfig(sizes) {
   });
 }
 
+// Revert size config to last saved state (called when modal is closed without saving)
+function revertSizeConfig() {
+  if (!savedSizeConfig) return;
+
+  ['width', 'height', 'depth'].forEach(dim => {
+    const s = savedSizeConfig[dim];
+    if (!s) return;
+
+    setField(`${dim}MinCustom`, s.min_value);
+    setField(`${dim}MaxCustom`, s.max_value);
+    setField(`${dim}DefaultCustom`, s.default_value);
+    setField(`${dim}StepCustom`, s.step_value);
+    setField(`${dim}Unit`, s.measurement_unit);
+
+    const mode = s.pricing_mode || 'percm';
+    const radios = document.getElementsByName(`${dim}PricingMode`);
+    radios.forEach(r => { r.checked = (r.value === mode); });
+
+    setField(`${dim}PPU`, s.price_per_unit);
+    setField(`${dim}BlockCM`, s.price_block_cm);
+    setField(`${dim}PerBlock`, s.price_per_block);
+  });
+}
+
+// Custom close function for customization modal (reverts unsaved changes)
+window.closeCustomizationModal = function () {
+  revertSizeConfig();
+  closeModal('manageCustomizationModal');
+};
+
 // ===== Textures, Colors, Handles lists =====
 async function populateTexturesList(productTextures) {
   const container = document.getElementById('texturesListContainer');
   if (!container) return;
   container.innerHTML = '';
+
+  // Show empty state if no textures exist
+  if (!allTextures || allTextures.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No customization options added yet.</div>';
+    return;
+  }
 
   let existingParts = {};
   try {
@@ -1237,34 +1270,24 @@ async function populateTexturesList(productTextures) {
 
     container.innerHTML += `
       <div style="border:1px solid #e5e7eb; border-radius:8px; margin:8px 0; padding:12px; background: ${checked ? '#f0f9ff' : 'white'}; transition: all 0.2s;">
-        <label style="display:flex; align-items:center; gap:12px; cursor:pointer;" onmouseover="this.parentElement.style.backgroundColor='#f9fafb'" onmouseout="this.parentElement.style.backgroundColor='${checked ? '#f0f9ff' : 'white'}'">
-          <input type="checkbox" value="${texture.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; flex-shrink:0;" onchange="toggleTexturePartOptions(this)">
-          <img src="${imageUrl}"
-               alt="${textureName}"
-               style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #d1d5db; flex-shrink:0;"
-               onerror="this.src='${placeholderSVG}'">
-          <div style="flex:1; min-width:0;">
-            <div style="font-weight:600; color:#111827; font-size:14px;">${textureName}</div>
-            ${texturePrice > 0 ? `<div style="color:#6b7280; font-size:13px; margin-top:2px;">₱${parseFloat(texturePrice).toFixed(2)}</div>` : ''}
-          </div>
-        </label>
-
-        <div class="texture-parts" data-texture-id="${texture.id}" style="margin-top:12px; padding-left:6px; ${checked ? 'display:block' : 'display:none'};">
-          <div style="font-size:12px; color:#6b7280; margin-bottom:6px; font-weight:500;">Apply to Parts:</div>
-          <div style="display:flex; gap:16px; flex-wrap:wrap;">
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-              <input type="checkbox" class="texture-part-checkbox" data-part="body" ${bodyChecked} style="width:14px; height:14px;">
-              <span style="color:#374151;">Body/Frame</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-              <input type="checkbox" class="texture-part-checkbox" data-part="door" ${doorChecked} style="width:14px; height:14px;">
-              <span style="color:#374151;">Door</span>
-            </label>
-            <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
-              <input type="checkbox" class="texture-part-checkbox" data-part="interior" ${interiorChecked} style="width:14px; height:14px;">
-              <span style="color:#374151;">Interior</span>
-            </label>
-          </div>
+       <div style="display:flex; align-items:center; gap:12px;">
+          <label style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onmouseover="this.parentElement.parentElement.style.backgroundColor='#f9fafb'" onmouseout="this.parentElement.parentElement.style.backgroundColor='${checked ? '#f0f9ff' : 'white'}'">
+            <input type="checkbox" value="${texture.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; flex-shrink:0;">
+            <img src="${imageUrl}"
+                 alt="${textureName}"
+                 style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #d1d5db; flex-shrink:0;"
+                 onerror="this.src='${placeholderSVG}'">
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:600; color:#111827; font-size:14px;">${textureName}</div>
+              ${texturePrice > 0 ? `<div style="color:#6b7280; font-size:13px; margin-top:2px;">₱${parseFloat(texturePrice).toFixed(2)}</div>` : ''}
+            </div>
+          </label>
+          <button type="button" onclick="deleteTexture(${texture.id}, '${textureName.replace(/'/g, "\\'")}')"
+                  style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap;"
+                  onmouseover="this.style.backgroundColor='#dc2626'"
+                  onmouseout="this.style.backgroundColor='#ef4444'">
+            Delete
+          </button>
         </div>
       </div>`;
   });
@@ -1287,6 +1310,12 @@ function populateColorsList(productColors) {
   if (!container) return;
   container.innerHTML = '';
 
+  // Show empty state if no colors exist
+  if (!allColors || allColors.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No customization options added yet.</div>';
+    return;
+  }
+
   const selectedIds = productColors.map(c => +c.color_id);
   allColors.forEach(color => {
     const checked = selectedIds.includes(+color.id);
@@ -1295,14 +1324,24 @@ function populateColorsList(productColors) {
     const hexCode = color.hex_code || color.hex || color.color || '#cccccc';
 
     container.innerHTML += `
-      <label style="display:flex; align-items:center; gap:12px; margin:8px 0; padding:12px; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-        <input type="checkbox" value="${color.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; flex-shrink:0;">
-        <div style="width:50px; height:50px; background:${hexCode}; border:2px solid #d1d5db; border-radius:6px; flex-shrink:0;"></div>
-        <div style="flex:1; min-width:0;">
-          <div style="font-weight:600; color:#111827; font-size:14px;">${colorName}</div>
-          ${colorPrice > 0 ? `<div style="color:#6b7280; font-size:13px; margin-top:2px;">₱${parseFloat(colorPrice).toFixed(2)}</div>` : ''}
+       <div style="border:1px solid #e5e7eb; border-radius:8px; margin:8px 0; padding:12px; background: ${checked ? '#f0f9ff' : 'white'}; transition: all 0.2s;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <label style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onmouseover="this.parentElement.parentElement.style.backgroundColor='#f9fafb'" onmouseout="this.parentElement.parentElement.style.backgroundColor='${checked ? '#f0f9ff' : 'white'}'">
+            <input type="checkbox" value="${color.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; flex-shrink:0;">
+            <div style="width:50px; height:50px; background:${hexCode}; border:2px solid #d1d5db; border-radius:6px; flex-shrink:0;"></div>
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:600; color:#111827; font-size:14px;">${colorName}</div>
+              ${colorPrice > 0 ? `<div style="color:#6b7280; font-size:13px; margin-top:2px;">₱${parseFloat(colorPrice).toFixed(2)}</div>` : ''}
+            </div>
+          </label>
+          <button type="button" onclick="deleteColor(${color.id}, '${colorName.replace(/'/g, "\\'")}')"
+                  style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap;"
+                  onmouseover="this.style.backgroundColor='#dc2626'"
+                  onmouseout="this.style.backgroundColor='#ef4444'">
+            Delete
+          </button>
         </div>
-      </label>`;
+      </div>`;
   });
 }
 
@@ -1310,6 +1349,12 @@ function populateHandlesList(productHandles) {
   const container = document.getElementById('handlesListContainer');
   if (!container) return;
   container.innerHTML = '';
+
+  // Show empty state if no handles exist
+  if (!allHandles || allHandles.length === 0) {
+    container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No customization options added yet.</div>';
+    return;
+  }
 
   const placeholderSVG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"%3E%3Crect fill="%23e5e7eb" width="40" height="40"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="12" fill="%239ca3af"%3ENo Img%3C/text%3E%3C/svg%3E';
 
@@ -1326,18 +1371,212 @@ function populateHandlesList(productHandles) {
       : placeholderSVG;
 
     container.innerHTML += `
-      <label style="display:flex; align-items:center; gap:12px; margin:8px 0; padding:12px; border:1px solid #e5e7eb; border-radius:8px; cursor:pointer; transition: all 0.2s;" onmouseover="this.style.backgroundColor='#f9fafb'" onmouseout="this.style.backgroundColor='transparent'">
-        <input type="checkbox" value="${handle.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; flex-shrink:0;">
-        <img src="${imageUrl}"
-             alt="${handleName}"
-             style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #d1d5db; flex-shrink:0;"
-             onerror="this.src='${placeholderSVG}'">
-        <div style="flex:1; min-width:0;">
-          <div style="font-weight:600; color:#111827; font-size:14px;">${handleName}</div>
-          ${handlePrice > 0 ? `<div style="color:#6b7280; font-size:13px; margin-top:2px;">₱${parseFloat(handlePrice).toFixed(2)}</div>` : ''}
+    <div style="border:1px solid #e5e7eb; border-radius:8px; margin:8px 0; padding:12px; background: ${checked ? '#f0f9ff' : 'white'}; transition: all 0.2s;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <label style="display:flex; align-items:center; gap:12px; cursor:pointer; flex:1;" onmouseover="this.parentElement.parentElement.style.backgroundColor='#f9fafb'" onmouseout="this.parentElement.parentElement.style.backgroundColor='${checked ? '#f0f9ff' : 'white'}'">
+            <input type="checkbox" value="${handle.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer; flex-shrink:0;">
+            <img src="${imageUrl}"
+                 alt="${handleName}"
+                 style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid #d1d5db; flex-shrink:0;"
+                 onerror="this.src='${placeholderSVG}'">
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:600; color:#111827; font-size:14px;">${handleName}</div>
+              ${handlePrice > 0 ? `<div style="color:#6b7280; font-size:13px; margin-top:2px;">₱${parseFloat(handlePrice).toFixed(2)}</div>` : ''}
+            </div>
+          </label>
+          <button type="button" onclick="deleteHandle(${handle.id}, '${handleName.replace(/'/g, "\\'")}')"
+                  style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; white-space:nowrap;"
+                  onmouseover="this.style.backgroundColor='#dc2626'"
+                  onmouseout="this.style.backgroundColor='#ef4444'">
+            Delete
+          </button>
         </div>
-      </label>`;
+      </div>`;
   });
+}
+
+// ===== Delete functions for texture/color/handle =====
+async function deleteTexture(textureId, textureName) {
+  // Use universal confirmation modal
+  const confirmed = await showConfirmation(`Are you sure you want to delete the texture "${textureName}"?\n\nThis will permanently remove it from the system and unassign it from all products.`);
+  if (!confirmed) return;
+
+  // Find and disable the delete button to prevent multiple clicks
+  const deleteBtn = event?.target;
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.style.opacity = '0.5';
+    deleteBtn.style.cursor = 'not-allowed';
+  }
+
+  try {
+    const response = await fetchJSON('/backend/api/admin_customization.php?action=delete_texture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texture_id: textureId })
+    });
+
+    if (response.success) {
+      // Update in-memory array
+      allTextures = allTextures.filter(t => +t.id !== +textureId);
+
+      // Remove from DOM immediately without page refresh
+      const container = document.getElementById('texturesListContainer');
+      if (container) {
+        const itemToRemove = Array.from(container.children).find(child => {
+          const checkbox = child.querySelector('input[type="checkbox"]');
+          return checkbox && +checkbox.value === +textureId;
+        });
+        if (itemToRemove) itemToRemove.remove();
+      }
+
+      // Check if container is now empty and add empty state
+      if (container && container.children.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No customization options added yet.</div>';
+      }
+      // Show success notification using universal modal
+      showNotification('success', 'Texture deleted successfully!');
+    } else {
+      // Re-enable button on failure
+      if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.style.opacity = '1';
+        deleteBtn.style.cursor = 'pointer';
+      }
+      showNotification('error', response.message || 'Failed to delete. Please try again.');
+    }
+  } catch (error) {
+    console.error('Delete texture error:', error);
+    // Re-enable button on error
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.style.opacity = '1';
+      deleteBtn.style.cursor = 'pointer';
+    }
+    showNotification('error', 'Failed to delete. Please try again.');
+  }
+}
+
+async function deleteColor(colorId, colorName) {
+  // Use universal confirmation modal
+  const confirmed = await showConfirmation(`Are you sure you want to delete the color "${colorName}"?\n\nThis will permanently remove it from the system and unassign it from all products.`);
+  if (!confirmed) return;
+
+  // Find and disable the delete button to prevent multiple clicks
+  const deleteBtn = event?.target;
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.style.opacity = '0.5';
+    deleteBtn.style.cursor = 'not-allowed';
+  }
+
+  try {
+    const response = await fetchJSON('/backend/api/admin_customization.php?action=delete_color', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ color_id: colorId })
+    });
+
+    if (response.success) {
+      // Update in-memory array
+      allColors = allColors.filter(c => +c.id !== +colorId);
+
+      // Remove from DOM immediately without page refresh
+      const container = document.getElementById('colorsListContainer');
+      if (container) {
+        const itemToRemove = Array.from(container.children).find(child => {
+          const checkbox = child.querySelector('input[type="checkbox"]');
+          return checkbox && +checkbox.value === +colorId;
+        });
+        if (itemToRemove) itemToRemove.remove();
+      }
+      // Check if container is now empty and add empty state
+      if (container && container.children.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No customization options added yet.</div>';
+      }
+
+      // Show success notification using universal modal
+      showNotification('success', 'Color deleted successfully!');
+    } else {
+      // Re-enable button on failure
+      if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.style.opacity = '1';
+        deleteBtn.style.cursor = 'pointer';
+      }
+      showNotification('error', response.message || 'Failed to delete. Please try again.');
+    }
+  } catch (error) {
+    console.error('Delete color error:', error);
+    // Re-enable button on error
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.style.opacity = '1';
+      deleteBtn.style.cursor = 'pointer';
+    }
+    showNotification('error', 'Failed to delete. Please try again.');
+  }
+}
+
+async function deleteHandle(handleId, handleName) {
+  // Use universal confirmation modal
+  const confirmed = await showConfirmation(`Are you sure you want to delete the handle "${handleName}"?\n\nThis will permanently remove it from the system and unassign it from all products.`);
+  if (!confirmed) return;
+
+  // Find and disable the delete button to prevent multiple clicks
+  const deleteBtn = event?.target;
+  if (deleteBtn) {
+    deleteBtn.disabled = true;
+    deleteBtn.style.opacity = '0.5';
+    deleteBtn.style.cursor = 'not-allowed';
+  }
+
+  try {
+    const response = await fetchJSON('/backend/api/admin_customization.php?action=delete_handle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle_id: handleId })
+    });
+
+    if (response.success) {
+      // Update in-memory array
+      allHandles = allHandles.filter(h => +h.id !== +handleId);
+
+      // Remove from DOM immediately without page refresh
+      const container = document.getElementById('handlesListContainer');
+      if (container) {
+        const itemToRemove = Array.from(container.children).find(child => {
+          const checkbox = child.querySelector('input[type="checkbox"]');
+          return checkbox && +checkbox.value === +handleId;
+        });
+        if (itemToRemove) itemToRemove.remove();
+      }
+
+      // Check if container is now empty and add empty state
+      if (container && container.children.length === 0) {
+        container.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No customization options added yet.</div>';
+      }
+      // Show success notification using universal modal
+      showNotification('success', 'Handle deleted successfully!');
+    } else {
+      // Re-enable button on failure
+      if (deleteBtn) {
+        deleteBtn.disabled = false;
+        deleteBtn.style.opacity = '1';
+        deleteBtn.style.cursor = 'pointer';
+      }
+      showNotification('error', response.message || 'Failed to delete. Please try again.');
+    }
+  } catch (error) {
+    console.error('Delete handle error:', error);
+    // Re-enable button on error
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.style.opacity = '1';
+      deleteBtn.style.cursor = 'pointer';
+    }
+    showNotification('error', 'Failed to delete. Please try again.');
+  }
 }
 
 // ===== Size config collector & save customization =====
@@ -1441,6 +1680,9 @@ async function saveCustomizationOptions() {
       body: JSON.stringify({ product_id, handle_ids })
     });
 
+    // Update saved size config after successful save
+    savedSizeConfig = JSON.parse(JSON.stringify(size_config));
+    
     showNotification('success', 'Customization options saved successfully');
     closeModal('manageCustomizationModal');
     loadProducts();
@@ -1591,7 +1833,7 @@ function resetAddProductForm(closeAfter) {
   // 🔥 FIX: Clear BOTH global and window level arrays
   uploadedProductImages = [];
   window.uploadedProductImages = [];
-  
+
   // 🔥 FIX: Clear current product reference
   window.currentProduct = null;
 
