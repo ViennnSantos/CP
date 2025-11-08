@@ -1311,7 +1311,7 @@
     // Load PSGC data first (needed for autofill to work properly)
     await loadPSGC();
     console.log('✅ PSGC data loaded');
-	  
+
     // Then load saved addresses and autofill (needs PSGC dropdowns ready)
     await loadSavedAddresses();
     console.log('✅ Saved addresses loaded and autofilled');
@@ -1321,7 +1321,16 @@
     wireClear();
     wirePayment();
     setupNumericInputs();
-	  
+
+    // ✅ FIX 3: "View My Orders" button navigation
+    const btnGoOrders = $('#btnGoOrders');
+    if (btnGoOrders) {
+      btnGoOrders.addEventListener('click', () => {
+        console.log('🔄 Navigating to My Orders page...');
+        window.location.href = '/customer/orders.php';
+      });
+    }
+
     console.log('✅ Checkout.js loaded with T&C-first flow!');
     console.log('✅ Features: T&C before QR, improved validation, NCR support, auto-fill');
   });
