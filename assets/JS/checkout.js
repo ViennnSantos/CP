@@ -306,6 +306,8 @@
               console.log('🔄 Setting barangay:', addr.barangay);
               barangaySelect.value = addr.barangay;
               barangaySelect.disabled = isReadOnly;
+              // ✅ FIX: Trigger change event to sync to hidden input
+              barangaySelect.dispatchEvent(new Event('change'));
             }
           }
         }
