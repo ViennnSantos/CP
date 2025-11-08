@@ -1,42 +1,41 @@
 <?php
+/**
+ * Customer Profile Page
+ * Manage profile, addresses, and password
+ *
+ * Security: Authentication required, CSRF protected
+ */
+
 session_start();
+
+// ===== SECURITY: Require Customer Authentication =====
 if (empty($_SESSION['user']) || ($_SESSION['user']['aud'] ?? '') !== 'customer') {
     header('Location: /customer/login.php');
     exit;
 }
+
+// ===== SECURITY: Generate CSRF Token =====
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
-$CSRF = $_SESSION['csrf_token'];
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>My Account - RADS Tooling</title>
-    <link rel="stylesheet" href="/assets/css/profile.css">
-    <link rel="stylesheet" href="/assets/css/product-enhanced.css">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/assets/CSS/profile.css">
 </head>
-
 <body>
-<!-- Back Button -->
-    <div class="back-button-container">
-        <button class="back-button" onclick="goBack()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Back
-        </button>
-    </div>
-
     <!-- Main Container -->
     <div class="profile-wrapper">
         <div class="profile-layout">
@@ -114,11 +113,9 @@ $CSRF = $_SESSION['csrf_token'];
                                         <div class="phone-group">
                                             <span class="phone-prefix">+63</span>
                                             <input type="tel" id="phoneLocal" inputmode="numeric" maxlength="10" placeholder="9123456789">
-                                            <!-- keep hidden for compatibility -->
                                             <input type="hidden" id="phone" name="phone">
                                         </div>
                                     </div>
-
 
                                     <div class="form-actions">
                                         <button type="submit" class="btn btn-primary" id="save-btn">
@@ -150,33 +147,31 @@ $CSRF = $_SESSION['csrf_token'];
                 <!-- Address Tab Content -->
                 <div id="address-tab" class="tab-content">
                     <div class="content-header">
-                        <h2>My Addresses</h2>
-                        <p>Manage your delivery addresses</p>
-                        <button class="btn btn-primary" onclick="showAddressForm()">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            Add New Address
+                        <div>
+                            <h2>My Address</h2>
+                            <p>Manage your delivery addresses</p>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="showAddressForm()">
+                            + Add New Address
                         </button>
                     </div>
+
                     <div class="content-body">
-                        <!-- Address List -->
-                        <div id="address-list-container">
-                            <div id="address-list-loading" class="loading-state" style="display: none;">
-                               <div class="spinner"></div>
-                                <p>Loading addresses...</p>
-                            </div>
-                            <div id="address-list"></div>
-                            <div id="no-addresses" style="display: none; text-align: center; padding: 40px; color: #999;">
-                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 16px;">
-                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                                    <circle cx="12" cy="10" r="3"></circle>
-                                </svg>
-                                <p>No saved addresses yet</p>
-                                <button class="btn btn-outline" onclick="showAddressForm()" style="margin-top: 16px;">Add Your First Address</button>
-                            </div>
+                        <div id="address-list-loading" style="display: none; text-align: center; padding: 40px;">
+                            <div class="spinner" style="margin: 0 auto;"></div>
+                            <p style="margin-top: 16px; color: #6b7280;">Loading addresses...</p>
                         </div>
+
+                        <div id="no-addresses" style="display: none; text-align: center; padding: 60px 20px;">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5" style="margin: 0 auto 16px;">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            <h3 style="font-size: 18px; color: #6b7280; margin: 0 0 8px 0;">No addresses yet</h3>
+                            <p style="color: #9ca3af; margin: 0;">Add your first delivery address to get started</p>
+                        </div>
+
+                        <div id="address-list"></div>
                     </div>
                 </div>
 
@@ -220,7 +215,7 @@ $CSRF = $_SESSION['csrf_token'];
                         <!-- Forgot password shortcut -->
                         <div>
                             <p><strong>Forgot your password?</strong></p>
-                            <a href="#" class="btn btn-outline" id="btnOpenPwReq">Request Password Reset (via email)</a>
+                            <button type="button" class="btn btn-outline" id="btnOpenPwReq">Request Password Reset (via email)</button>
                         </div>
                     </div>
                 </div>
@@ -228,979 +223,24 @@ $CSRF = $_SESSION['csrf_token'];
         </div>
     </div>
 
-    <!-- Profile Tab (existing content) -->
-    <div id="profileTab" class="tab-content active">
-        <!-- Your existing profile form content -->
-    </div>
-
-    <style>
-        .profile-tabs {
-            display: flex;
-            gap: 0.5rem;
-            border-bottom: 2px solid #e3e3e3;
-        }
-
-        .tab-btn {
-            padding: 0.75rem 1.5rem;
-            background: none;
-            border: none;
-            border-bottom: 3px solid transparent;
-            cursor: pointer;
-            font-weight: 500;
-            color: #666;
-            transition: all 0.2s;
-        }
-
-        .tab-btn.active {
-            color: #2f5b88;
-            border-bottom-color: #2f5b88;
-        }
-
-        .tab-btn:hover {
-            color: #2f5b88;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .orders-filter {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .filter-btn {
-            padding: 0.5rem 1rem;
-            background: #f5f7fa;
-            border: 1px solid #e3e3e3;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .filter-btn.active {
-            background: #2f5b88;
-            color: white;
-            border-color: #2f5b88;
-        }
-
-        .filter-btn:hover {
-            background: #e3edfb;
-        }
-
-        .order-card {
-            background: white;
-            border: 1px solid #e3e3e3;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            transition: box-shadow 0.2s;
-        }
-
-        .order-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e3e3e3;
-        }
-
-        .order-code {
-            font-weight: 600;
-            color: #2f5b88;
-            font-size: 1.1rem;
-        }
-
-        .order-date {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .order-body {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 1rem;
-        }
-
-        .order-items {
-            color: #333;
-        }
-
-        .order-summary {
-            text-align: right;
-        }
-
-        .order-total {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2f5b88;
-            margin: 0.5rem 0;
-        }
-
-        .order-footer {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e3e3e3;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-processing {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .status-completed {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .payment-status {
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
-        }
-
-        .payment-verified {
-            color: #28a745;
-        }
-
-        .payment-pending {
-            color: #ffc107;
-        }
-
-        .payment-rejected {
-            color: #dc3545;
-        }
-
-        .btn-view-order {
-            padding: 0.5rem 1rem;
-            background: #2f5b88;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: background 0.2s;
-        }
-
-        .btn-view-order:hover {
-            background: #17416d;
-        }
-
-        .order-timeline {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: #f7fafc;
-            border-radius: 8px;
-        }
-
-        .timeline-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 0.75rem;
-            position: relative;
-        }
-
-        .timeline-item:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            left: 8px;
-            top: 24px;
-            width: 2px;
-            height: calc(100% + 0.75rem);
-            background: #e3e3e3;
-        }
-
-        .timeline-icon {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: #2f5b88;
-            flex-shrink: 0;
-            z-index: 1;
-        }
-
-        .timeline-icon.inactive {
-            background: #e3e3e3;
-        }
-
-        .timeline-text {
-            font-size: 0.9rem;
-        }
-
-        .timeline-text strong {
-            color: #2f5b88;
-        }
-        
-         /* Back Button Styles */
-        .back-button-container {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-        }
-
-        .back-button {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 16px;
-            background: white;
-            border: 1px solid #e3e3e3;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            font-weight: 500;
-            color: #333;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .back-button:hover { 
-            background: #f8f9fa;
-            border-color: #2f5b88;
-            color: #2f5b88;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .back-button svg {
-            flex-shrink: 0;
-        }
-
-        @media (max-width: 768px) {
-            .back-button-container {
-                top: 10px;
-                left: 10px;
-            }
-
-            .back-button {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-            }
-        }
-
-        /* Modal Back Button */
-        .modal-back-btn:hover {
-            background: #f8f9fa !important;
-            border-color: #2f5b88 !important;
-            color: #2f5b88 !important;
-        }
-
-        /* Address Card Styles */
-        .address-card {
-            background: white;
-            border: 1px solid #e6e6e6;
-            border-radius: 8px;
-            padding: 18px;
-            margin-bottom: 22px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-            transition: all 0.2s ease;
-        }
-
-        .address-card:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .address-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 14px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #e6e6e6;
-        }
-
-        .address-header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .address-header-left strong {
-            color: #333;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .address-actions {
-            display: flex;
-            gap: 6px;
-        }
-
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            padding: 0;
-            background: white;
-            border: 1px solid #e6e6e6;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-icon svg {
-            width: 16px;
-            height: 16px;
-            stroke: #666;
-            transition: stroke 0.2s;
-        }
-
-        .btn-icon:hover {
-            background: #f8f9fa;
-            border-color: #2f5b88;
-        }
-
-        .btn-icon:hover svg {
-            stroke: #2f5b88;
-        }
-
-        .btn-icon.btn-delete:hover {
-            background: #fff5f5;
-            border-color: #dc3545;
-        }
-
-        .btn-icon.btn-delete:hover svg {
-            stroke: #dc3545;
-        }
-
-        .address-card-body {
-            line-height: 1.6;
-        }
-
-        .address-card-body p {
-            margin: 6px 0;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .address-card-body .address-text {
-            color: #666;
-            font-size: 13px;
-            margin-top: 10px;
-            line-height: 1.5;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .badge-primary {
-            background: #3b82f6;
-            color: white;
-        }
-
-        /* Address List Container */
-        #address-list {
-            display: grid;
-            gap: 16px;
-            max-width: 980px;
-        }
-
-        /* Modal Styles */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            padding: 20px;
-        }
-
-        .modal.hidden {
-            display: none;
-        }
-
-        .modal-card {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            max-width: 500px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        .modal-card h3 {
-            margin: 0 0 1rem 0;
-            color: #2f5b88;
-        }
-
-        .modal-card .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .modal-card label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .modal-card input,
-        .modal-card select,
-        .modal-card textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #e3e3e3;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
-        }
-
-        .modal-card input:focus,
-        .modal-card select:focus,
-        .modal-card textarea:focus {
-            outline: none;
-            border-color: #2f5b88;
-        }
-
-        .modal-card .phone-group {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .modal-card .phone-prefix {
-            padding: 0.75rem 1rem;
-            background: #f5f5f5;
-            border: 1px solid #e3e3e3;
-            border-radius: 6px;
-            font-weight: 500;
-            color: #666;
-        }
-
-        .modal-card .phone-group input {
-            flex: 1;
-        }
-
-        .modal-card .row {
-            display: flex;
-            gap: 1rem;
-            justify-content: flex-end;
-        }
-
-        .modal-card .msg {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 6px;
-            font-size: 0.9rem;
-        }
-
-        .modal-card .msg.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .modal-card .msg.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            max-width: 980px;
-        }
-
-        .content-header h2 {
-            font-size: 22px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .content-header p {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .content-header button {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
-        }
-
-        @media (max-width: 768px) {
-            .content-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .content-header button {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .address-card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .address-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-    </style>
-
-    <script>
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tabName = this.dataset.tab;
-
-                // Update active tab button
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-
-                // Update active content
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.style.display = 'none';
-                    content.classList.remove('active');
-                });
-
-                const targetTab = document.getElementById(tabName + 'Tab');
-                if (targetTab) {
-                    targetTab.style.display = 'block';
-                    targetTab.classList.add('active');
-                }
-
-                // Load orders when orders tab is clicked
-                if (tabName === 'orders') {
-                    loadCustomerOrders();
-                }
-            });
-        });
-    </script>
-    <script>
-        const API_BASE = '/backend/api';
-        const CSRF_TOKEN = <?php echo json_encode($CSRF); ?>;
-
-        let customerData = null;
-
-        // Tab switching
-        document.querySelectorAll('[data-tab]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                const tabName = link.dataset.tab;
-                switchTab(tabName);
-            });
-        });
-
-        function switchTab(tabName) {
-            // Update active menu item
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-            // Update active content
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(`${tabName}-tab`).classList.add('active');
-        }
-
-        function showLoading() {
-            document.getElementById('loading').style.display = 'flex';
-        }
-
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-        }
-
-        function showMessage(message, type = 'success') {
-            const container = document.getElementById('message-container');
-            const icon = type === 'success' ?
-                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>' :
-                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
-
-            container.innerHTML = `
-                <div class="alert alert-${type}">
-                    ${icon}
-                    ${message}
-                </div>
-            `;
-
-            setTimeout(() => {
-                container.innerHTML = '';
-            }, 5000);
-
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        async function loadProfile() {
-            showLoading();
-            try {
-                const res = await fetch(`${API_BASE}/customer_profile.php`, {
-                    credentials: 'include',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                const text = await res.text();
-                let result;
-                try {
-                    result = JSON.parse(text);
-                } catch {
-                    console.error('Non-JSON response from customer_profile.php:', text.slice(0, 200));
-                    throw new Error('Failed to load profile');
-                }
-
-                if (!res.ok || !result.success) {
-                    if (result && result.redirect) {
-                        window.location.href = result.redirect;
-                        return;
-                    }
-                    throw new Error(result?.message || `HTTP ${res.status}`);
-                }
-
-                customerData = result.data.customer;
-                renderProfile(customerData);
-            } catch (error) {
-                console.error('Load profile error:', error);
-                showMessage(error.message || 'Failed to load profile data', 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        function renderProfile(customer) {
-            const fullName = customer.full_name || customer.username || 'Customer';
-            const initials = (fullName.split(' ').map(s => s[0]).join('').slice(0, 2) || 'U').toUpperCase();
-            const profileImage = customer.profile_image ? `/${customer.profile_image}` : null;
-
-            // nav username (kung wala yung element, tahimik lang)
-            const navUser = document.getElementById('nav-username');
-            if (navUser) navUser.textContent = fullName;
-
-            // sidebar
-            const sidebarAvatar = document.getElementById('sidebar-avatar');
-            if (sidebarAvatar) {
-                sidebarAvatar.innerHTML = profileImage ?
-                    `<img src="${profileImage}?v=${Date.now()}" alt="Profile">` :
-                    `<div class="avatar-placeholder">${initials}</div>`;
-            }
-            const sidebarName = document.getElementById('sidebar-name');
-            if (sidebarName) sidebarName.textContent = fullName;
-
-            // form fields
-            const setVal = (id, v) => {
-                const el = document.getElementById(id);
-                if (el) el.value = v ?? '';
-            };
-            setVal('username', customer.username);
-            setVal('full_name', fullName);
-            setVal('email', customer.email);
-            setVal('address', customer.address);
-
-            // Prefill phoneLocal (10 digits after +63)
-            const phoneLocalEl = document.getElementById('phoneLocal');
-            if (phoneLocalEl) {
-                const digits = String(customer.phone || '')
-                    .replace(/\D/g, '') // keep digits
-                    .replace(/^63/, ''); // drop country code
-                phoneLocalEl.value = digits.slice(0, 10);
-            }
-
-            // avatar preview
-            const avatarPreview = document.getElementById('avatar-preview');
-            if (avatarPreview) {
-                avatarPreview.innerHTML = profileImage ?
-                    `<img src="${profileImage}?v=${Date.now()}" alt="Profile">` :
-                    `<div class="avatar-placeholder-large">${initials}</div>`;
-            }
-        }
-
-        async function updateProfile(event) {
-            event.preventDefault();
-
-            const saveBtn = document.getElementById('save-btn');
-            const btnText = saveBtn.querySelector('.btn-text');
-            const btnSpinner = saveBtn.querySelector('.btn-spinner');
-
-            saveBtn.disabled = true;
-            btnText.style.display = 'none';
-            btnSpinner.style.display = 'inline-block';
-
-            const local = (document.getElementById('phoneLocal')?.value || '')
-                .replace(/\D/g, '').slice(0, 10);
-            const composedPhone = local ? `+63${local}` : ''; // allow blank if gusto mo
-
-            // sync hidden (optional)
-            const hiddenPhone = document.getElementById('phone');
-            if (hiddenPhone) hiddenPhone.value = composedPhone;
-
-            const formData = {
-                csrf_token: CSRF_TOKEN,
-                full_name: document.getElementById('full_name').value.trim(),
-                phone: composedPhone, // << ito na ipapasa
-                address: document.getElementById('address').value.trim()
-            };
-
-            if (!local || local.length !== 10) {
-                showMessage('Enter 10 digits after +63 (e.g., 9123456789)', 'error');
-                saveBtn.disabled = false;
-                btnText.style.display = 'inline';
-                btnSpinner.style.display = 'none';
-                return;
-            }
-
-            try {
-                const res = await fetch(`${API_BASE}/customer_profile.php`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify(formData)
-                });
-
-                const text = await res.text();
-                let result;
-                try {
-                    result = JSON.parse(text);
-                } catch {
-                    console.error('Non-JSON response:', text.slice(0, 200));
-                    throw new Error('Failed to update profile');
-                }
-
-                if (!res.ok || !result.success) {
-                    if (result && result.redirect) {
-                        window.location.href = result.redirect;
-                        return;
-                    }
-                    throw new Error(result?.message || `HTTP ${res.status}`);
-                }
-
-                // sync local state
-                customerData.full_name = result.data.full_name;
-                customerData.phone = result.data.phone ?? customerData.phone;
-                customerData.address = result.data.address ?? customerData.address;
-
-                // refresh UI (sidebar, preview, fields)
-                renderProfile(customerData);
-
-                // optional: update nav username kung meron
-                const navUser = document.getElementById('nav-username');
-                if (navUser) navUser.textContent = customerData.full_name;
-
-                showMessage(result.message || 'Saved!', 'success');
-
-            } catch (err) {
-                console.error('Update profile error:', err);
-                showMessage(err.message || 'Failed to update profile', 'error');
-            } finally {
-                saveBtn.disabled = false;
-                btnText.style.display = 'inline';
-                btnSpinner.style.display = 'none';
-            }
-        }
-
-        async function updateAddress(event) {
-            event.preventDefault();
-
-            const formData = {
-                csrf_token: CSRF_TOKEN,
-                full_name: customerData.full_name,
-                phone: customerData.phone || '',
-                address: document.getElementById('address').value.trim()
-            };
-
-            const response = await fetch(`${API_BASE}/customer_profile.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json().catch(() => ({
-                success: false
-            }));
-
-            if (!result.success) {
-                throw new Error(result.message || 'Failed to update address');
-            }
-
-            // sync local + refresh UI
-            customerData.address = formData.address;
-            renderProfile(customerData);
-            showMessage('Address updated successfully', 'success');
-        }
-
-
-        async function uploadProfileImage(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-            if (!allowedTypes.includes(file.type)) {
-                showMessage('Only JPG, JPEG, and PNG files are allowed', 'error');
-                return;
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                showMessage('File size must be less than 5MB', 'error');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('profile_image', file); // <-- backend dapat $_FILES['profile_image']
-            formData.append('csrf_token', CSRF_TOKEN);
-
-            try {
-                const res = await fetch(`${API_BASE}/upload_profile_image.php`, {
-                    method: 'POST',
-                    body: formData, // wag lagyan ng Content-Type
-                    credentials: 'include'
-                });
-
-                const text = await res.text();
-                let result;
-                try {
-                    result = JSON.parse(text);
-                } catch {
-                    console.error('Non-JSON upload response:', text.slice(0, 200));
-                    throw new Error('Failed to upload image');
-                }
-
-                if (!res.ok || !result.success) {
-                    throw new Error(result?.message || `HTTP ${res.status}`);
-                }
-
-                // success: sync local + refresh UI
-                // depende sa response mo: result.data.profile_image or result.path
-                const newPath = (result.data && result.data.profile_image) ? result.data.profile_image : result.path;
-                customerData.profile_image = newPath;
-                renderProfile(customerData); // may ?v=Date.now() sa render para cache-bust
-                showMessage(result.message || 'Profile image updated', 'success');
-
-            } catch (err) {
-                console.error('Upload image error:', err);
-                showMessage(err.message || 'Failed to upload image', 'error');
-            } finally {
-                event.target.value = ''; // reset input
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', loadProfile);
-    </script>
-
-    <!-- MODAL: Step 1 - request code -->
-    <div id="pwReqModal" class="modal hidden">
-        <div class="modal-card">
-            <h3>Send reset code</h3>
-            <p class="muted">We will email you a 6-digit code to verify it’s you.</p>
-            <form id="pwReqForm">
-                <label>Email</label>
-                <input type="email" id="pwReqEmail" required>
-                <div class="row">
-                    <button type="button" class="btn btn-outline" id="pwReqCancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Send Code</button>
-                </div>
-                <div id="pwReqMsg" class="msg"></div>
-            </form>
-        </div>
-    </div>
-
-    <!-- MODAL: Step 2 - verify code + new password -->
-    <div id="pwCodeModal" class="modal hidden">
-        <div class="modal-card">
-            <h3>Verify code</h3>
-            <p class="muted">Enter the 6-digit code from your email, then set a new password.</p>
-            <form id="pwCodeForm">
-                <label>6-digit code</label>
-                <input type="text" id="pwCodeInput" pattern="^[0-9]{6}$" maxlength="6" required>
-                <label>New password (min 8)</label>
-                <input type="password" id="pwNew1" minlength="8" required>
-                <label>Confirm new password</label>
-                <input type="password" id="pwNew2" minlength="8" required>
-                <div class="row">
-                    <button type="button" class="btn btn-outline" id="pwCodeCancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Change Password</button>
-                </div>
-                <div id="pwCodeMsg" class="msg"></div>
-            </form>
-        </div>
-    </div>
-
-<!-- MODAL: Add/Edit Address with PSGC -->
+    <!-- MODAL: Add/Edit Address with PSGC -->
     <div id="addressFormModal" class="modal hidden">
-        <div class="modal-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-card-header" style="display: flex; align-items: center; justify-content: space-between;">
-                <button type="button" class="modal-back-btn" id="addressModalBackBtn" aria-label="Back" style="display: flex; align-items: center; gap: 4px; padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 0.9rem; color: #666; transition: all 0.2s;">
+        <div class="modal-card">
+            <div class="modal-card-header">
+                <button type="button" class="modal-back-btn" id="addressModalBackBtn" aria-label="Back">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="19" y1="12" x2="5" y2="12"></line>
                         <polyline points="12 19 5 12 12 5"></polyline>
                     </svg>
                     Back
                 </button>
-                <h3 id="addressModalTitle" style="margin: 0; flex: 1; text-align: center;">Add New Address</h3>
+                <h3 id="addressModalTitle">Add New Address</h3>
                 <button type="button" class="modal-close-btn" id="addressModalCloseBtn" aria-label="Close">&times;</button>
             </div>
             <form id="addressManageForm">
                 <input type="hidden" id="addressEditId">
- 
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+
                 <div class="form-group">
                     <label>Address Nickname (Optional)</label>
                     <input type="text" id="addressNickname" placeholder="e.g., Home, Office">
@@ -1264,8 +304,8 @@ $CSRF = $_SESSION['csrf_token'];
                     <label for="addressIsDefault" style="margin: 0; font-weight: normal;">Set as default address</label>
                 </div>
 
-                <div class="row" style="margin-top: 20px;">
-                   <button type="button" class="btn btn-outline" id="addressFormCancel">Cancel</button>
+                <div class="row">
+                    <button type="button" class="btn btn-outline" id="addressFormCancel">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="addressFormSubmit">
                         <span class="btn-text">Save Address</span>
                         <span class="btn-spinner" style="display: none;">
@@ -1278,12 +318,303 @@ $CSRF = $_SESSION['csrf_token'];
         </div>
     </div>
 
- 
-    <script>
-        /***** CHANGE PASSWORD (LOGGED-IN) *****/
-        document.getElementById('pwChangeForm')?.addEventListener('submit', changePasswordLoggedIn);
+    <!-- MODAL: Step 1 - Request Reset Code -->
+    <div id="pwReqModal" class="modal hidden">
+        <div class="modal-card">
+            <h3>Send Reset Code</h3>
+            <p class="muted">We will email you a 6-digit code to verify it's you.</p>
+            <form id="pwReqForm">
+                <label>Email</label>
+                <input type="email" id="pwReqEmail" required>
+                <div class="row">
+                    <button type="button" class="btn btn-outline" id="pwReqCancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Send Code</button>
+                </div>
+                <div id="pwReqMsg" class="msg"></div>
+            </form>
+        </div>
+    </div>
 
-        async function changePasswordLoggedIn(e) {
+    <!-- MODAL: Step 2 - Verify Code + New Password -->
+    <div id="pwCodeModal" class="modal hidden">
+        <div class="modal-card">
+            <h3>Verify Code</h3>
+            <p class="muted">Enter the 6-digit code from your email, then set a new password.</p>
+            <form id="pwCodeForm">
+                <label>6-digit Code</label>
+                <input type="text" id="pwCodeInput" pattern="^[0-9]{6}$" maxlength="6" required>
+                <label>New Password (min 8)</label>
+                <input type="password" id="pwNew1" minlength="8" required>
+                <label>Confirm New Password</label>
+                <input type="password" id="pwNew2" minlength="8" required>
+                <div class="row">
+                    <button type="button" class="btn btn-outline" id="pwCodeCancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </div>
+                <div id="pwCodeMsg" class="msg"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const API_BASE = '/backend/api';
+        const CSRF_TOKEN = <?php echo json_encode($_SESSION['csrf_token']); ?>;
+
+        let customerData = null;
+
+        // ===== Tab Switching =====
+        document.querySelectorAll('[data-tab]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabName = link.dataset.tab;
+                switchTab(tabName);
+            });
+        });
+
+        function switchTab(tabName) {
+            // Update active menu item
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+
+            // Update active content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`)?.classList.add('active');
+        }
+
+        // ===== UI Helpers =====
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('message-container');
+            const icon = type === 'success' ?
+                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>' :
+                '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+
+            container.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${icon}
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => container.innerHTML = '', 5000);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ===== Load Profile =====
+        async function loadProfile() {
+            showLoading();
+            try {
+                const res = await fetch(`${API_BASE}/customer_profile.php`, {
+                    credentials: 'include',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const text = await res.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch {
+                    console.error('Non-JSON response:', text.slice(0, 200));
+                    throw new Error('Failed to load profile');
+                }
+
+                if (!res.ok || !result.success) {
+                    if (result?.redirect) {
+                        window.location.href = result.redirect;
+                        return;
+                    }
+                    throw new Error(result?.message || `HTTP ${res.status}`);
+                }
+
+                customerData = result.data.customer;
+                renderProfile(customerData);
+            } catch (error) {
+                console.error('Load profile error:', error);
+                showMessage(error.message || 'Failed to load profile data', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // ===== Render Profile =====
+        function renderProfile(customer) {
+            const fullName = customer.full_name || customer.username || 'Customer';
+            const initials = (fullName.split(' ').map(s => s[0]).join('').slice(0, 2) || 'U').toUpperCase();
+            const profileImage = customer.profile_image ? `/${customer.profile_image}` : null;
+
+            // Sidebar
+            const sidebarAvatar = document.getElementById('sidebar-avatar');
+            if (sidebarAvatar) {
+                sidebarAvatar.innerHTML = profileImage ?
+                    `<img src="${profileImage}?v=${Date.now()}" alt="Profile">` :
+                    `<div class="avatar-placeholder">${initials}</div>`;
+            }
+
+            const sidebarName = document.getElementById('sidebar-name');
+            if (sidebarName) sidebarName.textContent = fullName;
+
+            // Form fields
+            const setVal = (id, v) => {
+                const el = document.getElementById(id);
+                if (el) el.value = v ?? '';
+            };
+
+            setVal('username', customer.username);
+            setVal('full_name', fullName);
+            setVal('email', customer.email);
+
+            // Phone (10 digits after +63)
+            const phoneLocalEl = document.getElementById('phoneLocal');
+            if (phoneLocalEl) {
+                const digits = String(customer.phone || '').replace(/\D/g, '').replace(/^63/, '');
+                phoneLocalEl.value = digits.slice(0, 10);
+            }
+
+            // Avatar preview
+            const avatarPreview = document.getElementById('avatar-preview');
+            if (avatarPreview) {
+                avatarPreview.innerHTML = profileImage ?
+                    `<img src="${profileImage}?v=${Date.now()}" alt="Profile">` :
+                    `<div class="avatar-placeholder-large">${initials}</div>`;
+            }
+        }
+
+        // ===== Update Profile =====
+        async function updateProfile(event) {
+            event.preventDefault();
+
+            const saveBtn = document.getElementById('save-btn');
+            const btnText = saveBtn.querySelector('.btn-text');
+            const btnSpinner = saveBtn.querySelector('.btn-spinner');
+
+            saveBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnSpinner.style.display = 'inline-block';
+
+            const local = (document.getElementById('phoneLocal')?.value || '').replace(/\D/g, '').slice(0, 10);
+            const composedPhone = local ? `+63${local}` : '';
+
+            if (!local || local.length !== 10) {
+                showMessage('Enter 10 digits after +63 (e.g., 9123456789)', 'error');
+                saveBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnSpinner.style.display = 'none';
+                return;
+            }
+
+            const formData = {
+                csrf_token: CSRF_TOKEN,
+                full_name: document.getElementById('full_name').value.trim(),
+                phone: composedPhone,
+                address: ''
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/customer_profile.php`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                const text = await res.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch {
+                    console.error('Non-JSON response:', text.slice(0, 200));
+                    throw new Error('Failed to update profile');
+                }
+
+                if (!res.ok || !result.success) {
+                    if (result?.redirect) {
+                        window.location.href = result.redirect;
+                        return;
+                    }
+                    throw new Error(result?.message || `HTTP ${res.status}`);
+                }
+
+                customerData.full_name = result.data.full_name;
+                customerData.phone = result.data.phone ?? customerData.phone;
+
+                renderProfile(customerData);
+                showMessage(result.message || 'Profile updated successfully!', 'success');
+
+            } catch (err) {
+                console.error('Update profile error:', err);
+                showMessage(err.message || 'Failed to update profile', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnSpinner.style.display = 'none';
+            }
+        }
+
+        // ===== Upload Profile Image =====
+        async function uploadProfileImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            if (!allowedTypes.includes(file.type)) {
+                showMessage('Only JPG, JPEG, and PNG files are allowed', 'error');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showMessage('File size must be less than 5MB', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('profile_image', file);
+            formData.append('csrf_token', CSRF_TOKEN);
+
+            try {
+                const res = await fetch(`${API_BASE}/upload_profile_image.php`, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const text = await res.text();
+                let result;
+                try {
+                    result = JSON.parse(text);
+                } catch {
+                    console.error('Non-JSON upload response:', text.slice(0, 200));
+                    throw new Error('Failed to upload image');
+                }
+
+                if (!res.ok || !result.success) {
+                    throw new Error(result?.message || `HTTP ${res.status}`);
+                }
+
+                const newPath = (result.data?.profile_image) ? result.data.profile_image : result.path;
+                customerData.profile_image = newPath;
+                renderProfile(customerData);
+                showMessage(result.message || 'Profile image updated', 'success');
+
+            } catch (err) {
+                console.error('Upload image error:', err);
+                showMessage(err.message || 'Failed to upload image', 'error');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        // ===== Change Password (Logged-in) =====
+        document.getElementById('pwChangeForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
 
             const btn = document.getElementById('pwSaveBtn');
@@ -1328,9 +659,7 @@ $CSRF = $_SESSION['csrf_token'];
                     })
                 });
 
-                const out = await res.json().catch(() => ({
-                    success: false
-                }));
+                const out = await res.json().catch(() => ({ success: false }));
                 showMessage(out.message || (out.success ? 'Password updated' : 'Update failed'),
                     out.success ? 'success' : 'error');
 
@@ -1346,19 +675,15 @@ $CSRF = $_SESSION['csrf_token'];
                 t.style.display = 'inline';
                 s.style.display = 'none';
             }
-        }
+        });
 
-        /***** OTP MODALS (FORGOT PASSWORD FLOW) *****/
+        // ===== OTP Password Reset Modals =====
         const btnOpenPwReq = document.getElementById('btnOpenPwReq');
-
-        // Request modal elements
         const pwReqModal = document.getElementById('pwReqModal');
         const pwReqCancel = document.getElementById('pwReqCancel');
         const pwReqEmail = document.getElementById('pwReqEmail');
         const pwReqForm = document.getElementById('pwReqForm');
         const pwReqMsg = document.getElementById('pwReqMsg');
-
-        // Verify modal elements
         const pwCodeModal = document.getElementById('pwCodeModal');
         const pwCodeCancel = document.getElementById('pwCodeCancel');
         const pwCodeForm = document.getElementById('pwCodeForm');
@@ -1377,7 +702,7 @@ $CSRF = $_SESSION['csrf_token'];
         // Open request modal
         btnOpenPwReq?.addEventListener('click', (e) => {
             e.preventDefault();
-            if (typeof customerData !== 'undefined' && customerData?.email) {
+            if (customerData?.email) {
                 pwReqEmail.value = customerData.email;
             }
             pwReqMsg.textContent = '';
@@ -1418,15 +743,12 @@ $CSRF = $_SESSION['csrf_token'];
                     })
                 });
 
-                const out = await res.json().catch(() => ({
-                    success: false
-                }));
+                const out = await res.json().catch(() => ({ success: false }));
                 if (!out.success) throw new Error(out.message || 'Failed to send code');
 
                 pwReqMsg.textContent = 'Code sent! Please check your inbox (and spam).';
                 pwReqMsg.className = 'msg success';
 
-                // Open Step 2 after a short delay
                 setTimeout(() => {
                     closeModal(pwReqModal);
                     pwCodeMsg.textContent = '';
@@ -1445,7 +767,7 @@ $CSRF = $_SESSION['csrf_token'];
         pwCodeForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const email = pwCodeModal.dataset.email || (typeof customerData !== 'undefined' ? (customerData?.email || '') : '');
+            const email = pwCodeModal.dataset.email || customerData?.email || '';
             const code = document.getElementById('pwCodeInput').value.trim();
             const p1 = document.getElementById('pwNew1').value;
             const p2 = document.getElementById('pwNew2').value;
@@ -1481,9 +803,7 @@ $CSRF = $_SESSION['csrf_token'];
                     })
                 });
 
-                const out = await res.json().catch(() => ({
-                    success: false
-                }));
+                const out = await res.json().catch(() => ({ success: false }));
                 if (!out.success) throw new Error(out.message || 'Failed to change password');
 
                 pwCodeMsg.textContent = 'Password changed! You can now log in with your new password.';
@@ -1496,68 +816,28 @@ $CSRF = $_SESSION['csrf_token'];
             }
         });
 
-        /***** OPTIONAL: open password tab or modal via URL hash *****/
-        document.addEventListener('DOMContentLoaded', () => {
-            if (location.hash === '#password') {
-                switchTab?.('password');
-            } else if (location.hash === '#password-reset') {
-                switchTab?.('password');
-                btnOpenPwReq?.click();
-            }
-        });
-
+        // ===== Phone Input Validation =====
         document.getElementById('phoneLocal')?.addEventListener('input', e => {
             e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
         });
-    // Sync phone inputs in address form
-        document.getElementById('addressPhoneLocal')?.addEventListener('input', e => {
-            e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
-            document.getElementById('addressPhone').value = '+63' + e.target.value;
-        });
-    </script>
 
-    <script>
-        /***** BACK BUTTON FUNCTIONALITY *****/
-        function goBack() {
-            // Check if there's history
-            if (document.referrer && document.referrer.indexOf(window.location.host) !== -1) {
-                // Internal navigation - go back
-                window.history.back();
-            } else {
-                // External or no history - go to homepage
-                window.location.href = '/customer/index.php';
+        // ===== Initialize on Load =====
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+
+            // Handle hash navigation
+            if (location.hash === '#address') {
+                switchTab('address');
+            } else if (location.hash === '#password') {
+                switchTab('password');
+            } else if (location.hash === '#password-reset') {
+                switchTab('password');
+                setTimeout(() => btnOpenPwReq?.click(), 100);
             }
-        }
-    </script>
-
-    <script>
-        // Tab switching for sidebar menu
-        document.querySelectorAll('.menu-item[data-tab]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const tabName = this.dataset.tab;
-
-                // Update active menu item
-                document.querySelectorAll('.menu-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                this.classList.add('active');
-
-                // Update active content
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-
-                const targetTab = document.getElementById(`${tabName}-tab`);
-                if (targetTab) {
-                    targetTab.classList.add('active');
-                }
-            });
         });
-
     </script>
+
+    <!-- Address Management Script -->
     <script src="/assets/JS/address_management.js"></script>
-
 </body>
-
 </html>
