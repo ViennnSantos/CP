@@ -996,27 +996,31 @@ function uploadTextureImage(): void
         sendJSON(false, 'No image file provided', null, 400);
     }
 
-    $file = $_FILES['image'];
-    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    // Use central helper for consistent saving
+    $helperPath = __DIR__ . '/../helpers/upload.php';
+    if (!file_exists($helperPath)) {
+        sendJSON(false, 'Upload helper not found', null, 500);
+    }
+    require_once $helperPath;
 
-    if (!in_array($file['type'], $allowedTypes)) {
+    $file = $_FILES['image'];
+
+    // Accept images only
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
         sendJSON(false, 'Invalid file type. Only JPG, PNG, and WEBP allowed', null, 400);
     }
 
-    $uploadDir = __DIR__ . '/../../uploads/textures/';
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+    $res = processFileUpload($file, 'textures');
+    if (!$res['success']) {
+        sendJSON(false, $res['message'] ?? 'Failed to upload texture image', ['error' => $res['message'] ?? null], 400);
     }
 
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'texture_' . time() . '_' . uniqid() . '.' . $extension;
-    $uploadPath = $uploadDir . $filename;
-
-    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-        sendJSON(true, 'Texture image uploaded successfully', ['filename' => $filename]);
-    } else {
-        sendJSON(false, 'Failed to upload texture image', null, 500);
-    }
+    // return filename only for backward compatibility (frontend expects just filename, not full path)
+    sendJSON(true, 'Texture image uploaded successfully', [
+        'filename' => $res['file_name'],
+        'file_path' => $res['file_path'] // e.g. uploads/textures/name.jpg
+    ]);
 }
 
 function uploadHandleImage(): void
@@ -1025,27 +1029,31 @@ function uploadHandleImage(): void
         sendJSON(false, 'No image file provided', null, 400);
     }
 
-    $file = $_FILES['image'];
-    $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    // Use central helper for consistent saving
+    $helperPath = __DIR__ . '/../helpers/upload.php';
+    if (!file_exists($helperPath)) {
+        sendJSON(false, 'Upload helper not found', null, 500);
+    }
+    require_once $helperPath;
 
-    if (!in_array($file['type'], $allowedTypes)) {
+    $file = $_FILES['image'];
+
+    // Accept images only
+    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
         sendJSON(false, 'Invalid file type. Only JPG, PNG, and WEBP allowed', null, 400);
     }
 
-    $uploadDir = __DIR__ . '/../../uploads/handles/';
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+    $res = processFileUpload($file, 'handles');
+    if (!$res['success']) {
+        sendJSON(false, $res['message'] ?? 'Failed to upload handle image', ['error' => $res['message'] ?? null], 400);
     }
 
-    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = 'handle_' . time() . '_' . uniqid() . '.' . $extension;
-    $uploadPath = $uploadDir . $filename;
-
-    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
-        sendJSON(true, 'Handle image uploaded successfully', ['filename' => $filename]);
-    } else {
-        sendJSON(false, 'Failed to upload handle image', null, 500);
-    }
+    // return filename only for backward compatibility (frontend expects just filename, not full path)
+    sendJSON(true, 'Handle image uploaded successfully', [
+        'filename' => $res['file_name'],
+        'file_path' => $res['file_path'] // e.g. uploads/handles/name.jpg
+    ]);
 }
 function assignTexturesParts(PDO $conn): void
 {

@@ -58,7 +58,7 @@ function processFileUpload($file, $group = 'general')
     if ($groupClean === '') $groupClean = 'general';
 
     // Allow known groups only
-    $allowedGroups = ['products', 'cms', 'models', 'avatars', 'handles', 'general'];
+    $allowedGroups = ['products', 'cms', 'models', 'avatars', 'handles', 'textures', 'general'];
     if (!in_array($groupClean, $allowedGroups, true)) {
         $groupClean = 'general';
     }
