@@ -509,6 +509,13 @@ $CSRF = $_SESSION['csrf_token'];
             }
         }
 
+        /* Modal Back Button */
+        .modal-back-btn:hover {
+            background: #f8f9fa !important;
+            border-color: #2f5b88 !important;
+            color: #2f5b88 !important;
+        }
+
         /* Address Card Styles */
         .address-card {
             background: white;
@@ -1149,8 +1156,15 @@ $CSRF = $_SESSION['csrf_token'];
 <!-- MODAL: Add/Edit Address with PSGC -->
     <div id="addressFormModal" class="modal hidden">
         <div class="modal-card" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-card-header">
-                <h3 id="addressModalTitle">Add New Address</h3>
+            <div class="modal-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <button type="button" class="modal-back-btn" id="addressModalBackBtn" aria-label="Back" style="display: flex; align-items: center; gap: 4px; padding: 6px 12px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 0.9rem; color: #666; transition: all 0.2s;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Back
+                </button>
+                <h3 id="addressModalTitle" style="margin: 0; flex: 1; text-align: center;">Add New Address</h3>
                 <button type="button" class="modal-close-btn" id="addressModalCloseBtn" aria-label="Close">&times;</button>
             </div>
             <form id="addressManageForm">

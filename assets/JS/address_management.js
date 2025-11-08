@@ -45,7 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
 async function initializePSGC() {
     try {
         // Load provinces
-        const response = await fetch('/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces');
+        const response = await fetch('/backend/api/psgc.php?endpoint=provinces');
+
+        if (!response.ok) {
+            throw new Error(`Failed to load provinces: ${response.status}`);
+        }
+
         const provinces = await response.json();
 
         // Filter to NCR and Calabarzon only
@@ -96,6 +101,10 @@ function setupAddressModal() {
     const closeBtn = document.getElementById('addressModalCloseBtn');
     closeBtn?.addEventListener('click', () => closeModal(modal));
 
+    // Back button
+    const backBtn = document.getElementById('addressModalBackBtn');
+    backBtn?.addEventListener('click', () => closeModal(modal));
+
     // Close on Escape key (optional)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
@@ -143,8 +152,23 @@ function setupAddressModal() {
                 return;
             }
 
-            const response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
+            const response = await fetch(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
+
+            // Validate response
+            if (!response.ok) {
+                console.error('PSGC API error:', response.status, response.statusText);
+                citySelect.innerHTML = '<option value="">Failed to load cities (API error)</option>';
+                return;
+            }
+
             const cities = await response.json();
+
+            // Validate response data
+            if (!Array.isArray(cities) || cities.length === 0) {
+                console.warn('No cities found for province:', provinceCode);
+                citySelect.innerHTML = '<option value="">No cities found</option>';
+                return;
+            }
 
             // Cache the cities
             psgcCities[provinceCode] = cities;
@@ -184,13 +208,26 @@ function setupAddressModal() {
             }
 
             // Try cities endpoint first
-            let response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
-            let barangays = await response.json();
+            let response = await fetch(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
+            let barangays = [];
+
+            if (response.ok) {
+                barangays = await response.json();
+            }
 
             // If cities endpoint fails or returns empty, try municipalities endpoint
             if (!Array.isArray(barangays) || barangays.length === 0) {
-                response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
-                barangays = await response.json();
+                response = await fetch(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
+                if (response.ok) {
+                    barangays = await response.json();
+                }
+            }
+
+            // Validate we got data
+            if (!Array.isArray(barangays) || barangays.length === 0) {
+                console.warn('No barangays found for city:', cityCode);
+                barangaySelect.innerHTML = '<option value="">No barangays found</option>';
+                return;
             }
 
             // Cache the barangays
@@ -438,8 +475,21 @@ async function editAddress(addressId) {
                     loadBarangaysForEdit(addr);
                 }, 100);
             } else {
-                const citiesResponse = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
+                const citiesResponse = await fetch(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
+
+                if (!citiesResponse.ok) {
+                    console.error('Failed to load cities for edit:', citiesResponse.status);
+                    citySelect.innerHTML = '<option value="">Failed to load cities</option>';
+                    return;
+                }
+
                 const cities = await citiesResponse.json();
+
+                if (!Array.isArray(cities) || cities.length === 0) {
+                    citySelect.innerHTML = '<option value="">No cities found</option>';
+                    return;
+                }
+
                 psgcCities[provinceCode] = cities;
                 populateCitySelect(citySelect, cities);
 
@@ -475,13 +525,26 @@ async function loadBarangaysForEdit(addr) {
 
     try {
         // Try cities endpoint first
-        let response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
-        let barangays = await response.json();
+        let response = await fetch(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
+        let barangays = [];
+
+        if (response.ok) {
+            barangays = await response.json();
+        }
 
         // If cities endpoint fails or returns empty, try municipalities endpoint
         if (!Array.isArray(barangays) || barangays.length === 0) {
-            response = await fetch(`/RADS-TOOLING/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
-            barangays = await response.json();
+            response = await fetch(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
+            if (response.ok) {
+                barangays = await response.json();
+            }
+        }
+
+        // Validate we got data
+        if (!Array.isArray(barangays) || barangays.length === 0) {
+            console.warn('No barangays found for edit mode, city:', cityCode);
+            barangaySelect.innerHTML = '<option value="">No barangays found</option>';
+            return;
         }
 
         psgcBarangays[cityCode] = barangays;
