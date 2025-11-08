@@ -54,6 +54,9 @@ if ($mode === 'delivery' && isset($rawInfo['delivery'])) {
     $info = $rawInfo;
 }
 
+// ✅ DEBUG: Log extracted info for debugging
+error_log('Extracted info array: ' . json_encode($info));
+
 // ✅ IMPROVED: Validate required fields
 $errors = [];
 
@@ -80,7 +83,14 @@ if (empty($info['phone'])) {
 if ($mode === 'delivery') {
     if (empty($info['province'])) $errors[] = 'Province is required';
     if (empty($info['city'])) $errors[] = 'City is required';
-    if (empty($info['barangay'])) $errors[] = 'Barangay is required';
+
+    // ✅ FIX: More robust barangay validation with better error message
+    $barangay = isset($info['barangay']) ? trim((string)$info['barangay']) : '';
+    if ($barangay === '' || $barangay === '0') {
+        $errors[] = 'Barangay is required';
+        error_log('Barangay validation failed. Value: "' . var_export($info['barangay'] ?? 'NOT_SET', true) . '"');
+    }
+
     if (empty($info['street'])) $errors[] = 'Street address is required';
 }
 

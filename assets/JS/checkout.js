@@ -695,14 +695,39 @@
       const form = $('#deliveryForm') || $('#pickupForm');
       if (!form) return;
 
+      // ✅ FIX: Ensure barangay hidden field is synced before validation
+      const brgySel = $('#barangaySelect');
+      const brgyInput = $('#barangayInput');
+      const bVal = $('#barangayVal');
+
+      if (brgySel && bVal && !brgySel.disabled && brgySel.value) {
+        bVal.value = brgySel.value.trim();
+        console.log('✅ Synced barangaySelect to barangayVal:', bVal.value);
+      } else if (brgyInput && bVal && !brgyInput.disabled && !brgyInput.hidden && brgyInput.value) {
+        bVal.value = brgyInput.value.trim();
+        console.log('✅ Synced barangayInput to barangayVal:', bVal.value);
+      }
+
       const invalids = Array.from(form.querySelectorAll('input:required, select:required')).filter(el => !el.value);
       invalids.forEach(el => el.style.borderColor = '#ef4444');
 
       if (invalids.length) {
+        console.error('❌ Invalid fields:', invalids.map(el => el.name || el.id));
         openModal('#invalidModal');
         return;
       }
 
+      // ✅ Additional check for delivery mode barangay
+      if (form.id === 'deliveryForm') {
+        const barangayVal = $('#barangayVal');
+        if (barangayVal && !barangayVal.value.trim()) {
+          console.error('❌ Barangay is required for delivery');
+          showModalAlert('Missing Information', 'Please select or enter a barangay for delivery.', 'error');
+          return;
+        }
+      }
+
+      console.log('✅ Form validation passed, submitting...');
       form.submit();
     });
   }

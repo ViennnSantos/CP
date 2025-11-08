@@ -21,6 +21,15 @@ $barangay = $_POST['barangay'] ?? '';
 $postal   = $_POST['postal'] ?? '';
 $street   = $_POST['street'] ?? '';
 
+// ✅ DEBUG: Log received address data
+error_log('Checkout delivery review - Received address: ' . json_encode([
+    'province' => $province,
+    'city' => $city,
+    'barangay' => $barangay,
+    'postal' => $postal,
+    'street' => $street
+]));
+
 $product = null;
 if ($pid > 0) {
     $stmt = $pdo->prepare("SELECT * FROM products WHERE id = ? AND status = 'released'");
