@@ -441,11 +441,11 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
 
         <div class="form-group">
           <label>Barangay <span class="required">*</span></label>
-          <select id="barangaySelect" name="barangay" required disabled autocomplete="address-level3">
+          <select id="barangaySelect" required disabled autocomplete="address-level3">
             <option value="">Select city first</option>
           </select>
-          <input type="hidden" id="barangayVal" name="barangay">
-          <input type="text" id="barangayInput" name="barangay" placeholder="Enter barangay" hidden disabled autocomplete="address-level3">
+          <input type="hidden" id="barangayVal" name="barangay" required>
+          <input type="text" id="barangayInput" placeholder="Enter barangay" hidden disabled autocomplete="address-level3">
         </div>
 
         <div class="form-row">

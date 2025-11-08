@@ -39,6 +39,7 @@ $subtotal = (float)($body['subtotal'] ?? 0);
 $vat = (float)($body['vat'] ?? 0);
 $total = (float)($body['total'] ?? 0);
 $mode = ($body['mode'] ?? 'pickup') === 'delivery' ? 'delivery' : 'pickup';
+$terms_agreed = !empty($body['terms_agreed']) ? 1 : 0;
 
 // ✅ FIXED: Extract info from nested structure
 $rawInfo = (array)($body['info'] ?? []);
@@ -121,10 +122,10 @@ try {
     // STEP 2: CREATE ORDER
     // ==========================================
     $stmt = $pdo->prepare("INSERT INTO orders
-        (order_code, customer_id, mode, status, payment_status, subtotal, vat, total_amount, order_date)
+        (order_code, customer_id, mode, status, payment_status, subtotal, vat, total_amount, terms_agreed, order_date)
         VALUES (
             CONCAT('RT', DATE_FORMAT(NOW(),'%y%m%d'), LPAD(FLOOR(RAND()*9999), 4, '0')),
-            :cid, :mode, 'Pending', 'Pending', :sub, :vat, :tot, NOW()
+            :cid, :mode, 'Pending', 'Pending', :sub, :vat, :tot, :terms, NOW()
         )");
 
     $stmt->execute([
@@ -132,7 +133,8 @@ try {
     ':mode' => $mode,
     ':sub'  => $subtotal,
     ':vat'  => $vat,
-    ':tot'  => $total
+    ':tot'  => $total,
+    ':terms' => $terms_agreed
 ]);
 
 $err = $stmt->errorInfo();

@@ -87,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $full_name = trim($input['full_name'] ?? '');
+    $username  = trim($input['username'] ?? '');
     $phone     = trim($input['phone'] ?? '');   // can be "+63xxxxxxxxxx" or "09xxxxxxxxx" or "9123456789"
     $address   = trim($input['address'] ?? '');
 
@@ -99,6 +100,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (mb_strlen($full_name) < 3) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Full name must be at least 3 characters']);
+        exit;
+    }
+
+    // --- Username validation ---
+    if ($username === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username is required']);
+        exit;
+    }
+    if (mb_strlen($username) < 3) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username must be at least 3 characters']);
+        exit;
+    }
+    if (!preg_match('/^[a-zA-Z0-9_.-]+$/', $username)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Username can only contain letters, numbers, dots, underscores, and hyphens']);
+        exit;
+    }
+
+    // Check username uniqueness (exclude current user)
+    $stmt = $conn->prepare('SELECT 1 FROM customers WHERE username = ? AND id <> ? LIMIT 1');
+    $stmt->execute([$username, $customer_id]);
+    if ($stmt->fetchColumn()) {
+        http_response_code(409);
+        echo json_encode(['success' => false, 'message' => 'Username is already taken']);
         exit;
     }
 
@@ -129,20 +156,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         $stmt = $conn->prepare("
-            UPDATE customers 
-            SET full_name = ?, phone = ?, address = ?, updated_at = NOW()
+            UPDATE customers
+            SET username = ?, full_name = ?, phone = ?, address = ?, updated_at = NOW()
             WHERE id = ?
         ");
         // Note: if phone is empty string, we save NULL (allowed only if column permits NULL)
-        $stmt->execute([$full_name, $phoneToSave, $address, $customer_id]);
+        $stmt->execute([$username, $full_name, $phoneToSave, $address, $customer_id]);
 
-        // Update session display name
+        // Update session display name and username
         $_SESSION['user']['full_name'] = $full_name;
+        $_SESSION['user']['username'] = $username;
 
         echo json_encode([
             'success' => true,
             'message' => 'Profile updated successfully',
             'data' => [
+                'username'  => $username,
                 'full_name' => $full_name,
                 'phone'     => $phoneToSave,  // returns normalized "+63xxxxxxxxxx" or null
                 'address'   => $address
