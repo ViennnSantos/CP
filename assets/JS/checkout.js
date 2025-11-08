@@ -765,66 +765,7 @@
 
       PAYMENT_METHOD = method;
 
-      // ✅ NEW FLOW: Show T&C modal FIRST, before creating order
-      showStep('#termsModal');
-      console.log('📋 Showing Terms & Conditions before order creation');
-    });
-
-    // ✅ NEW: T&C acceptance triggers order creation + QR display
-    const termsCheckbox = $('#termsCheckbox');
-    const termsConfirm = $('#termsConfirm');
-    const termsCancel = $('#termsCancel');
-
-    if (termsCheckbox && termsConfirm) {
-      termsCheckbox.addEventListener('change', (e) => {
-        termsConfirm.disabled = !e.target.checked;
-        if (e.target.checked) {
-          termsConfirm.style.opacity = '1';
-          termsConfirm.style.cursor = 'pointer';
-          termsConfirm.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
-        } else {
-          termsConfirm.style.opacity = '0.5';
-          termsConfirm.style.cursor = 'not-allowed';
-          termsConfirm.style.background = '#9ca3af';
-        }
-      });
-    }
-
-    if (termsConfirm) {
-      termsConfirm.addEventListener('click', async () => {
-        const termsModal = $('#termsModal');
-        if (termsModal) termsModal.hidden = true;
-
-        // Record T&C acceptance
-        const termsAgreedInput = $('#termsAgreed');
-        if (termsAgreedInput) termsAgreedInput.value = '1';
-
-        console.log('✅ Terms & Conditions accepted — proceeding with order creation');
-
-        // Reset checkbox for next time
-        if (termsCheckbox) termsCheckbox.checked = false;
-        if (termsConfirm) termsConfirm.disabled = true;
-
-        // ✅ NOW create the order and show QR
-        await createOrderAndShowQR();
-      });
-    }
-
-    if (termsCancel) {
-      termsCancel.addEventListener('click', () => {
-        const termsModal = $('#termsModal');
-        if (termsModal) termsModal.hidden = true;
-        if (termsCheckbox) termsCheckbox.checked = false;
-        if (termsConfirm) termsConfirm.disabled = true;
-        console.log('❌ Terms & Conditions cancelled');
-      });
-    }
-
-    // ✅ Moved order creation logic into separate async function
-    async function createOrderAndShowQR() {
       const orderData = window.RT_ORDER || {};
-      const method = PAYMENT_METHOD;
-      const dep = parseInt($('#depositRate')?.value || '0', 10);
 
       if (!ORDER_ID) {
         try {
@@ -1005,7 +946,7 @@
       if (amtLabel) amtLabel.textContent = '₱' + AMOUNT_DUE.toLocaleString('en-PH', { minimumFractionDigits: 2 });
 
       showStep('#qrModal');
-    }
+    });
 
     $('#btnIpaid')?.addEventListener('click', () => {
       showStep('#verifyModal');
@@ -1082,26 +1023,63 @@
         return;
       }
 
-      // ✅ NEW FLOW: Submit payment directly (T&C already accepted earlier)
+      // ✅ CORRECT FLOW: Show T&C modal before submitting to admin verification
+      showStep('#termsModal');
+
+      // Store verification data to be used after T&C acceptance
+      window.VERIFICATION_DATA = {
+        account_name: name.value,
+        account_number: accountNum,
+        reference_number: refNum,
+        amount_paid: amt.value,
+        screenshot: shot.files[0] || null
+      };
+
+      console.log('✅ Verification data validated, showing T&C modal');
+    });
+
+    // ✅ T&C Modal Handlers
+    const termsCheckbox = $('#acceptTermsCheckbox');
+    const btnAcceptTerms = $('#btnAcceptTerms');
+
+    if (termsCheckbox && btnAcceptTerms) {
+      termsCheckbox.addEventListener('change', (e) => {
+        btnAcceptTerms.disabled = !e.target.checked;
+        if (e.target.checked) {
+          btnAcceptTerms.style.opacity = '1';
+          btnAcceptTerms.style.cursor = 'pointer';
+          btnAcceptTerms.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
+        } else {
+          btnAcceptTerms.style.opacity = '0.5';
+          btnAcceptTerms.style.cursor = 'not-allowed';
+          btnAcceptTerms.style.background = '#9ca3af';
+        }
+      });
+    }
+
+    btnAcceptTerms?.addEventListener('click', async () => {
+      const verData = window.VERIFICATION_DATA;
+      if (!verData) {
+        showModalAlert('Error', 'Verification data not found. Please try again.', 'error');
+        return;
+      }
+
       const form = new FormData();
       form.append('order_id', ORDER_ID);
       form.append('order_code', ORDER_CODE || '');
       form.append('amount_due', AMOUNT_DUE || 0);
-      form.append('account_name', name.value);
-      form.append('account_number', accountNum);
-      form.append('reference_number', refNum);
-      form.append('amount_paid', amt.value);
-      form.append('screenshot', shot.files[0] || null);
+      form.append('account_name', verData.account_name);
+      form.append('account_number', verData.account_number);
+      form.append('reference_number', verData.reference_number);
+      form.append('amount_paid', verData.amount_paid);
+      form.append('screenshot', verData.screenshot);
       form.append('terms_accepted', '1');
 
       try {
-        console.log('📤 Submitting payment verification...');
+        console.log('📤 Submitting payment verification with T&C acceptance...');
 
-        const btnVerify = $('#btnVerify');
-        if (btnVerify) {
-          btnVerify.disabled = true;
-          btnVerify.textContent = 'Submitting...';
-        }
+        btnAcceptTerms.disabled = true;
+        btnAcceptTerms.textContent = 'Submitting...';
 
         const r = await fetch('/backend/api/payment_submit.php', {
           method: 'POST',
@@ -1114,10 +1092,8 @@
 
         if (!result || !result.success) {
           showModalAlert('Verification Failed', result?.message || 'Payment verification failed.', 'error');
-          if (btnVerify) {
-            btnVerify.disabled = false;
-            btnVerify.textContent = 'Submit Verification';
-          }
+          btnAcceptTerms.disabled = false;
+          btnAcceptTerms.textContent = 'Accept & Submit Payment';
           return;
         }
 
@@ -1126,20 +1102,16 @@
 
         setTimeout(() => {
           showStep('#finalNotice');
-          if (btnVerify) {
-            btnVerify.disabled = false;
-            btnVerify.textContent = 'Submit Verification';
-          }
+          if (termsCheckbox) termsCheckbox.checked = false;
+          btnAcceptTerms.disabled = true;
+          btnAcceptTerms.textContent = 'Accept & Submit Payment';
         }, 2000);
 
       } catch (err) {
         console.error('❌ Payment submit error:', err);
         showModalAlert('Network Error', 'Could not submit payment verification.', 'error');
-        const btnVerify = $('#btnVerify');
-        if (btnVerify) {
-          btnVerify.disabled = false;
-          btnVerify.textContent = 'Submit Verification';
-        }
+        btnAcceptTerms.disabled = false;
+        btnAcceptTerms.textContent = 'Accept & Submit Payment';
       }
     });
 

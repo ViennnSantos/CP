@@ -310,6 +310,41 @@ try {
         $pdo->prepare("UPDATE payments SET status = 'PENDING' WHERE order_id = :oid")->execute([':oid' => $order_id]);
     }
 
+    // ✅ Update T&C acceptance timestamp and IP (if columns exist)
+    try {
+        $colCheck = $pdo->prepare("
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'orders'
+              AND column_name IN ('terms_agreed_at', 'terms_agreed_ip')
+        ");
+        $colCheck->execute();
+        $existingCols = $colCheck->fetchAll(PDO::FETCH_COLUMN);
+
+        $updates = [];
+        $updateParams = [':oid' => $order_id];
+
+        if (in_array('terms_agreed_at', $existingCols)) {
+            $updates[] = 'terms_agreed_at = NOW()';
+        }
+
+        if (in_array('terms_agreed_ip', $existingCols)) {
+            $updates[] = 'terms_agreed_ip = :ip';
+            $updateParams[':ip'] = $_SERVER['REMOTE_ADDR'] ?? null;
+        }
+
+        if (!empty($updates)) {
+            $updates[] = 'terms_agreed = 1';  // Ensure terms_agreed is set to 1
+            $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = :oid";
+            $pdo->prepare($sql)->execute($updateParams);
+            error_log("T&C acceptance recorded for order {$order_id} at " . date('Y-m-d H:i:s'));
+        }
+    } catch (Throwable $e) {
+        local_log("T&C timestamp update error: " . $e->getMessage());
+        // Non-fatal: continue even if T&C tracking fails
+    }
+
     // Notify admin -> optional: insert into notifications table if you have it
     try {
         $notStmt = $pdo->prepare("INSERT INTO admin_notifications (type, payload, created_at) VALUES (:type, :payload, NOW())");
