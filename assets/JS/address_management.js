@@ -1,12 +1,8 @@
 /**
  * Address Management JavaScript
  * Handles CRUD operations for customer addresses with PSGC support
- * Version: 2.0 - Fixed with timeout handling and extensive debugging
  */
 
-/**
- * Safe globals - avoid redeclaring API_BASE/CSRF_TOKEN if they already exist.
- */
 const __API_BASE = (typeof API_BASE !== 'undefined') ? API_BASE : '/backend/api';
 const __CSRF_TOKEN = (typeof CSRF_TOKEN !== 'undefined')
     ? CSRF_TOKEN
@@ -18,7 +14,7 @@ let psgcCities = {};
 let psgcBarangays = {};
 
 /**
- * Fetch with timeout
+ * Fetch with timeout to prevent 504 errors
  */
 async function fetchWithTimeout(url, options = {}, timeout = 15000) {
     const controller = new AbortController();
@@ -40,50 +36,32 @@ async function fetchWithTimeout(url, options = {}, timeout = 15000) {
     }
 }
 
-/**
- * Load addresses when address tab is viewed
- */
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Address management script initializing...');
-
-    // Load addresses when address tab is clicked
     const addressTabLink = document.querySelector('.menu-item[data-tab="address"]');
     if (addressTabLink) {
         addressTabLink.addEventListener('click', loadAddresses);
     }
 
-    // Setup modal handlers first (so elements exist)
     setupAddressModal();
-
-    // Initialize PSGC data (async)
     initializePSGC();
 
-    // Load addresses on initial page load if on address tab
     if (window.location.hash === '#address') {
         loadAddresses();
     }
 });
 
-/**
- * Initialize PSGC dropdowns
- */
 async function initializePSGC() {
     try {
-        console.log('🔄 Loading provinces from PSGC API...');
-        const response = await fetchWithTimeout('/backend/api/psgc.php?endpoint=provinces', {}, 15000);
-
-        console.log('📡 Province API response:', response.status, response.statusText);
+        const response = await fetchWithTimeout('/backend/api/psgc.php?endpoint=provinces');
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('❌ Province API failed:', response.status, errorText.substring(0, 300));
+            console.error('Province API failed:', response.status, errorText.substring(0, 300));
             throw new Error(`Failed to load provinces: ${response.status}`);
         }
 
         const provinces = await response.json();
-        console.log('✅ Provinces loaded:', provinces.length, 'total');
 
-        // Filter to NCR and Calabarzon only
         const allowedProvinces = [
             'Metropolitan Manila',
             'NCR, City of Manila, First District',
@@ -98,12 +76,8 @@ async function initializePSGC() {
             allowedProvinces.some(ap => p.name.includes(ap) || ap.includes(p.name))
         );
 
-        console.log('✅ Filtered provinces:', psgcProvinces.length, 'provinces (NCR + Calabarzon)');
-
-        // Populate province dropdown
         const provinceSelect = document.getElementById('addressProvince');
         if (provinceSelect) {
-            console.log('🔄 Populating province dropdown...');
             provinceSelect.innerHTML = '<option value="">Select Province</option>';
             psgcProvinces.forEach(prov => {
                 const option = document.createElement('option');
@@ -112,16 +86,10 @@ async function initializePSGC() {
                 option.textContent = prov.name;
                 provinceSelect.appendChild(option);
             });
-            console.log('✅ Province dropdown populated with', psgcProvinces.length, 'options');
-        } else {
-            console.error('❌ Province select element not found (#addressProvince)');
         }
 
     } catch (error) {
-        console.error('❌ Failed to load PSGC data:', error);
-        console.error('Error details:', error.message);
-
-        // Show user-friendly error
+        console.error('Failed to load PSGC data:', error);
         const provinceSelect = document.getElementById('addressProvince');
         if (provinceSelect) {
             provinceSelect.innerHTML = '<option value="">Failed to load provinces - please refresh</option>';
@@ -129,37 +97,27 @@ async function initializePSGC() {
     }
 }
 
-/**
- * Setup address modal handlers
- */
 function setupAddressModal() {
-    console.log('🔄 Setting up address modal handlers...');
     const modal = document.getElementById('addressFormModal');
     const form = document.getElementById('addressManageForm');
     const cancelBtn = document.getElementById('addressFormCancel');
 
-    // Cancel button
     cancelBtn?.addEventListener('click', () => closeModal(modal));
 
-    // X close button
     const closeBtn = document.getElementById('addressModalCloseBtn');
     closeBtn?.addEventListener('click', () => closeModal(modal));
 
-    // Back button
     const backBtn = document.getElementById('addressModalBackBtn');
     backBtn?.addEventListener('click', () => closeModal(modal));
 
-    // Close on Escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
             closeModal(modal);
         }
     });
 
-    // Form submit
     form?.addEventListener('submit', saveAddress);
 
-    // Phone input validation
     const phoneLocalInput = document.getElementById('addressPhoneLocal');
     if (phoneLocalInput) {
         phoneLocalInput.addEventListener('input', (e) => {
@@ -167,19 +125,14 @@ function setupAddressModal() {
         });
     }
 
-    // Province change - load cities
     const provinceSelect = document.getElementById('addressProvince');
     provinceSelect?.addEventListener('change', async (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         const provinceCode = selectedOption.dataset.code;
         const provinceName = selectedOption.value;
 
-        console.log('📍 Province selected:', provinceName, 'Code:', provinceCode);
-
-        // Update hidden field
         document.getElementById('addressProvinceCode').value = provinceCode || '';
 
-        // Clear city and barangay
         const citySelect = document.getElementById('addressCity');
         const barangaySelect = document.getElementById('addressBarangay');
         citySelect.innerHTML = '<option value="">Loading cities...</option>';
@@ -192,71 +145,49 @@ function setupAddressModal() {
             return;
         }
 
-        // Special handling for NCR
         if (provinceName.includes('Metropolitan Manila') || provinceName.includes('NCR')) {
-            console.log('🏙️ NCR detected - loading hardcoded cities');
             loadNCRCities(citySelect);
             return;
         }
 
-        // Load cities for selected province
         try {
-            // Check cache first
             if (psgcCities[provinceCode]) {
-                console.log('✅ Using cached cities for province:', provinceCode);
                 populateCitySelect(citySelect, psgcCities[provinceCode]);
                 return;
             }
 
-            console.log('🔄 Loading cities for province:', provinceCode, provinceName);
-            const url = `/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`;
-            console.log('📡 Fetching:', url);
+            const response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
 
-            const response = await fetchWithTimeout(url, {}, 15000);
-            console.log('📡 Cities API response:', response.status, response.statusText);
-
-            // Validate response
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('❌ Cities API failed:', response.status);
-                console.error('Response:', errorText.substring(0, 300));
+                console.error('Cities API failed:', response.status, errorText.substring(0, 300));
                 citySelect.innerHTML = '<option value="">Failed to load cities - please try again</option>';
                 return;
             }
 
             const cities = await response.json();
-            console.log('✅ Cities received:', Array.isArray(cities) ? cities.length : 'invalid', 'cities');
 
-            // Validate response data
             if (!Array.isArray(cities) || cities.length === 0) {
-                console.warn('⚠️ No cities found for province:', provinceCode);
+                console.warn('No cities found for province:', provinceCode);
                 citySelect.innerHTML = '<option value="">No cities found</option>';
                 return;
             }
 
-            // Cache the cities
             psgcCities[provinceCode] = cities;
-
             populateCitySelect(citySelect, cities);
         } catch (error) {
-            console.error('❌ Exception loading cities:', error);
-            console.error('Error details:', error.message);
+            console.error('Exception loading cities:', error);
             citySelect.innerHTML = '<option value="">Error loading cities - please try again</option>';
         }
     });
 
-    // City change - load barangays
     const citySelect = document.getElementById('addressCity');
     citySelect?.addEventListener('change', async (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         const cityCode = selectedOption.dataset.code;
 
-        console.log('🏘️ City selected:', selectedOption.value, 'Code:', cityCode);
-
-        // Update hidden field
         document.getElementById('addressCityCode').value = cityCode || '';
 
-        // Clear barangay
         const barangaySelect = document.getElementById('addressBarangay');
         barangaySelect.innerHTML = '<option value="">Loading barangays...</option>';
         document.getElementById('addressBarangayCode').value = '';
@@ -266,72 +197,48 @@ function setupAddressModal() {
             return;
         }
 
-        // Load barangays for selected city
         try {
-            // Check cache first
             if (psgcBarangays[cityCode]) {
-                console.log('✅ Using cached barangays for city:', cityCode);
                 populateBarangaySelect(barangaySelect, psgcBarangays[cityCode]);
                 return;
             }
 
-            console.log('🔄 Loading barangays for city:', cityCode);
-
-            // Try cities endpoint first
-            let response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`, {}, 15000);
+            let response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
             let barangays = [];
 
             if (response.ok) {
                 barangays = await response.json();
-                console.log('📡 Barangays from cities endpoint:', Array.isArray(barangays) ? barangays.length : 'invalid');
             }
 
-            // If cities endpoint fails or returns empty, try municipalities endpoint
             if (!Array.isArray(barangays) || barangays.length === 0) {
-                console.log('🔄 Trying municipalities endpoint...');
-                response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`, {}, 15000);
+                response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
                 if (response.ok) {
                     barangays = await response.json();
-                    console.log('📡 Barangays from municipalities endpoint:', Array.isArray(barangays) ? barangays.length : 'invalid');
                 }
             }
 
-            // Validate we got data
             if (!Array.isArray(barangays) || barangays.length === 0) {
-                console.warn('⚠️ No barangays found for city:', cityCode);
+                console.warn('No barangays found for city:', cityCode);
                 barangaySelect.innerHTML = '<option value="">No barangays found</option>';
                 return;
             }
 
-            // Cache the barangays
             psgcBarangays[cityCode] = barangays;
-
             populateBarangaySelect(barangaySelect, barangays);
         } catch (error) {
-            console.error('❌ Failed to load barangays:', error);
-            console.error('Error details:', error.message);
+            console.error('Failed to load barangays:', error);
             barangaySelect.innerHTML = '<option value="">Error loading barangays</option>';
         }
     });
 
-    // Barangay change - update hidden field
     const barangaySelect = document.getElementById('addressBarangay');
     barangaySelect?.addEventListener('change', (e) => {
         const selectedOption = e.target.options[e.target.selectedIndex];
         const barangayCode = selectedOption.dataset.code;
         document.getElementById('addressBarangayCode').value = barangayCode || '';
-        console.log('🏠 Barangay selected:', selectedOption.value, 'Code:', barangayCode);
     });
-
-    console.log('✅ Address modal handlers setup complete');
-    console.log('   - Province select:', provinceSelect ? 'FOUND' : 'NOT FOUND');
-    console.log('   - City select:', citySelect ? 'FOUND' : 'NOT FOUND');
-    console.log('   - Barangay select:', barangaySelect ? 'FOUND' : 'NOT FOUND');
 }
 
-/**
- * Load NCR cities (hardcoded list)
- */
 function loadNCRCities(citySelect) {
     const ncrCities = [
         { name: 'Caloocan', code: '137404000' },
@@ -356,9 +263,6 @@ function loadNCRCities(citySelect) {
     populateCitySelect(citySelect, ncrCities);
 }
 
-/**
- * Populate city select with options
- */
 function populateCitySelect(citySelect, cities) {
     citySelect.innerHTML = '<option value="">Select City/Municipality</option>';
     cities.forEach(city => {
@@ -370,9 +274,6 @@ function populateCitySelect(citySelect, cities) {
     });
 }
 
-/**
- * Populate barangay select with options
- */
 function populateBarangaySelect(barangaySelect, barangays) {
     barangaySelect.innerHTML = '<option value="">Select Barangay</option>';
     barangays.forEach(brgy => {
@@ -384,15 +285,11 @@ function populateBarangaySelect(barangaySelect, barangays) {
     });
 }
 
-/**
- * Load all addresses for customer
- */
 async function loadAddresses() {
     const listContainer = document.getElementById('address-list');
     const loadingEl = document.getElementById('address-list-loading');
     const noAddressesEl = document.getElementById('no-addresses');
 
-    // Show loading
     loadingEl.style.display = 'block';
     listContainer.innerHTML = '';
     noAddressesEl.style.display = 'none';
@@ -415,7 +312,6 @@ async function loadAddresses() {
             return;
         }
 
-        // Render addresses
         listContainer.innerHTML = data.addresses.map(addr => renderAddressCard(addr)).join('');
 
     } catch (error) {
@@ -425,9 +321,6 @@ async function loadAddresses() {
     }
 }
 
-/**
- * Render single address card
- */
 function renderAddressCard(addr) {
     const isDefault = addr.is_default == 1;
     const defaultBadge = isDefault ? '<span class="badge badge-primary">Default</span>' : '';
@@ -473,40 +366,28 @@ function renderAddressCard(addr) {
     `;
 }
 
-/**
- * Show address form modal (add new)
- */
 function showAddressForm() {
-    console.log('📝 Opening add address form...');
     const modal = document.getElementById('addressFormModal');
     const form = document.getElementById('addressManageForm');
     const title = document.getElementById('addressModalTitle');
 
-    // Reset form
     form.reset();
     document.getElementById('addressEditId').value = '';
     title.textContent = 'Add New Address';
 
-    // Clear hidden codes
     document.getElementById('addressProvinceCode').value = '';
     document.getElementById('addressCityCode').value = '';
     document.getElementById('addressBarangayCode').value = '';
 
-    // Clear message
     document.getElementById('addressFormMsg').textContent = '';
     document.getElementById('addressFormMsg').className = 'msg';
 
     openModal(modal);
 }
 
-// Expose to global scope for inline onclick handlers
 window.showAddressForm = showAddressForm;
 
-/**
- * Edit existing address
- */
 async function editAddress(addressId) {
-    console.log('✏️ Editing address:', addressId);
     const modal = document.getElementById('addressFormModal');
     const form = document.getElementById('addressManageForm');
     const title = document.getElementById('addressModalTitle');
@@ -524,7 +405,6 @@ async function editAddress(addressId) {
 
         const addr = data.address;
 
-        // Populate form
         document.getElementById('addressEditId').value = addr.id;
         document.getElementById('addressNickname').value = addr.address_nickname || '';
         document.getElementById('addressFullName').value = addr.full_name;
@@ -535,17 +415,14 @@ async function editAddress(addressId) {
         document.getElementById('addressPostal').value = addr.postal_code || '';
         document.getElementById('addressIsDefault').checked = addr.is_default == 1;
 
-        // Set province
         const provinceSelect = document.getElementById('addressProvince');
         provinceSelect.value = addr.province;
         document.getElementById('addressProvinceCode').value = addr.province_code || '';
 
-        // Trigger province change to load cities
         const provinceOption = provinceSelect.options[provinceSelect.selectedIndex];
         const provinceCode = provinceOption.dataset.code || addr.province_code;
 
         if (provinceCode) {
-            // Load cities
             const citySelect = document.getElementById('addressCity');
             citySelect.innerHTML = '<option value="">Loading...</option>';
 
@@ -557,7 +434,7 @@ async function editAddress(addressId) {
                     loadBarangaysForEdit(addr);
                 }, 100);
             } else {
-                const citiesResponse = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`, {}, 15000);
+                const citiesResponse = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=provinces/${provinceCode}/cities-municipalities`);
 
                 if (!citiesResponse.ok) {
                     console.error('Failed to load cities for edit:', citiesResponse.status);
@@ -592,12 +469,8 @@ async function editAddress(addressId) {
     }
 }
 
-// Expose to global scope for inline onclick handlers
 window.editAddress = editAddress;
 
-/**
- * Load barangays when editing address
- */
 async function loadBarangaysForEdit(addr) {
     const cityCode = addr.city_code;
     if (!cityCode) return;
@@ -606,23 +479,20 @@ async function loadBarangaysForEdit(addr) {
     barangaySelect.innerHTML = '<option value="">Loading...</option>';
 
     try {
-        // Try cities endpoint first
-        let response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`, {}, 15000);
+        let response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=cities/${cityCode}/barangays`);
         let barangays = [];
 
         if (response.ok) {
             barangays = await response.json();
         }
 
-        // If cities endpoint fails or returns empty, try municipalities endpoint
         if (!Array.isArray(barangays) || barangays.length === 0) {
-            response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`, {}, 15000);
+            response = await fetchWithTimeout(`/backend/api/psgc.php?endpoint=municipalities/${cityCode}/barangays`);
             if (response.ok) {
                 barangays = await response.json();
             }
         }
 
-        // Validate we got data
         if (!Array.isArray(barangays) || barangays.length === 0) {
             console.warn('No barangays found for edit mode, city:', cityCode);
             barangaySelect.innerHTML = '<option value="">No barangays found</option>';
@@ -642,9 +512,6 @@ async function loadBarangaysForEdit(addr) {
     }
 }
 
-/**
- * Save address (create or update)
- */
 async function saveAddress(e) {
     e.preventDefault();
 
@@ -653,7 +520,6 @@ async function saveAddress(e) {
     const btnSpinner = submitBtn.querySelector('.btn-spinner');
     const msgEl = document.getElementById('addressFormMsg');
 
-    // Disable button
     submitBtn.disabled = true;
     btnText.style.display = 'none';
     btnSpinner.style.display = 'inline-block';
@@ -663,7 +529,6 @@ async function saveAddress(e) {
     const addressId = document.getElementById('addressEditId').value;
     const isEdit = !!addressId;
 
-    // Phone number validation and composition
     const phoneLocal = document.getElementById('addressPhoneLocal').value.trim();
     if (!phoneLocal || phoneLocal.length !== 10) {
         msgEl.textContent = 'Please enter 10 digits after +63 (e.g., 9123456789)';
@@ -714,12 +579,10 @@ async function saveAddress(e) {
         msgEl.textContent = isEdit ? 'Address updated successfully!' : 'Address added successfully!';
         msgEl.className = 'msg success';
 
-        // Reload addresses and close modal
         setTimeout(() => {
             closeModal(document.getElementById('addressFormModal'));
             loadAddresses();
 
-            // Reset button state after successful save
             submitBtn.disabled = false;
             btnText.style.display = 'inline';
             btnSpinner.style.display = 'none';
@@ -730,23 +593,16 @@ async function saveAddress(e) {
         msgEl.textContent = error.message;
         msgEl.className = 'msg error';
 
-        // Re-enable button
         submitBtn.disabled = false;
         btnText.style.display = 'inline';
         btnSpinner.style.display = 'none';
     }
 }
 
-/**
- * Delete address with modal confirmation
- */
 function deleteAddress(addressId) {
     showDeleteConfirmModal(addressId);
 }
 
-/**
- * Show delete confirmation modal
- */
 function showDeleteConfirmModal(addressId) {
     const modal = document.createElement('div');
     modal.id = 'deleteConfirmModal';
@@ -774,9 +630,6 @@ function showDeleteConfirmModal(addressId) {
     });
 }
 
-/**
- * Perform actual delete operation
- */
 async function performDelete(addressId) {
     try {
         const formData = new FormData();
@@ -820,9 +673,6 @@ async function performDelete(addressId) {
     }
 }
 
-/**
- * Show success modal
- */
 function showSuccessModal(message) {
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -840,9 +690,6 @@ function showSuccessModal(message) {
     setTimeout(() => modal.remove(), 2000);
 }
 
-/**
- * Show error modal
- */
 function showErrorModal(message) {
     const modal = document.createElement('div');
     modal.className = 'modal';
@@ -858,12 +705,8 @@ function showErrorModal(message) {
     modal.classList.remove('hidden');
 }
 
-// Expose to global scope for inline onclick handlers
 window.deleteAddress = deleteAddress;
 
-/**
- * Set address as default
- */
 async function setDefaultAddress(addressId) {
     try {
         const formData = new FormData();
@@ -907,12 +750,8 @@ async function setDefaultAddress(addressId) {
     }
 }
 
-// Expose to global scope for inline onclick handlers
 window.setDefaultAddress = setDefaultAddress;
 
-/**
- * Modal helpers
- */
 function openModal(modal) {
     if (modal) {
         modal.classList.remove('hidden');
@@ -927,9 +766,6 @@ function closeModal(modal) {
     }
 }
 
-/**
- * Escape HTML to prevent XSS
- */
 function escapeHtml(text) {
     const map = {
         '&': '&amp;',
@@ -941,11 +777,4 @@ function escapeHtml(text) {
     return (text || '').replace(/[&<>"']/g, m => map[m]);
 }
 
-// Debug: Confirm script loaded and functions exposed
-console.log('✅ Address management script loaded v2.0');
-console.log('✅ Global functions exposed:', {
-    showAddressForm: typeof window.showAddressForm,
-    editAddress: typeof window.editAddress,
-    deleteAddress: typeof window.deleteAddress,
-    setDefaultAddress: typeof window.setDefaultAddress
-});
+console.log('Address management script loaded');
