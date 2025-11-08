@@ -306,7 +306,7 @@
               console.log('🔄 Setting barangay:', addr.barangay);
               barangaySelect.value = addr.barangay;
               barangaySelect.disabled = isReadOnly;
-              barangaySelect.dispatchEvent(new Event('change'))
+              barangaySelect.dispatchEvent(new Event('change'));
             }
           }
         }
@@ -674,12 +674,6 @@
         brgys.sort((a, b) => a.localeCompare(b)).map(n => `<option value="${n}">${n}</option>`).join('');
       brgySel.disabled = false;
     });
-
-    // ✅ BARANGAY CHANGE HANDLER
-    brgySel.addEventListener('change', () => {
-      const bv = brgySel.value;
-      if (bVal) bVal.value = bv;
-    });
   }
 
   // ===== Form Validation =====
@@ -690,11 +684,43 @@
     btn.addEventListener('click', () => {
       const form = $('#deliveryForm') || $('#pickupForm');
       if (!form) return;
-       // ✅ FIX: Only validate enabled, visible required fields
-      const invalids = Array.from(form.querySelectorAll('input:required, select:required'))
-        .filter(el => !el.disabled && !el.hidden && el.offsetParent !== null) // Skip disabled/hidden
-        .filter(el => !el.value || el.value.trim() === '');
 
+      // ✅ IMPROVED: Smart validation for delivery/pickup forms
+      const requiredFields = Array.from(form.querySelectorAll('input:required, select:required'));
+      const invalids = [];
+
+      requiredFields.forEach(el => {
+        // Skip validation for hidden inputs - they're synced from selects
+        if (el.type === 'hidden') return;
+
+        // Skip validation for disabled/hidden elements UNLESS they have a required hidden counterpart
+        if (el.disabled || el.offsetParent === null) {
+          // If this is a disabled select with a hidden input, validate the hidden input instead
+          if (el.tagName === 'SELECT' && el.id) {
+            const hiddenInput = $(`#${el.id}Val`);
+            if (hiddenInput && hiddenInput.required) {
+              const value = (hiddenInput.value || '').trim();
+              if (!value) {
+                invalids.push(el); // Highlight the select even though we're checking the hidden input
+              }
+            }
+          }
+          return;
+        }
+
+        // Validate enabled, visible fields
+        const value = (el.value || '').trim();
+        if (!value) {
+          invalids.push(el);
+        }
+      });
+
+      // Reset all field borders
+      requiredFields.forEach(el => {
+        if (el.type !== 'hidden') el.style.borderColor = '';
+      });
+
+      // Highlight invalid fields
       invalids.forEach(el => el.style.borderColor = '#ef4444');
 
       if (invalids.length) {
@@ -1014,7 +1040,7 @@
       if (amtLabel) amtLabel.textContent = '₱' + AMOUNT_DUE.toLocaleString('en-PH', { minimumFractionDigits: 2 });
 
       showStep('#qrModal');
-    });
+    }
 
     $('#btnIpaid')?.addEventListener('click', () => {
       showStep('#verifyModal');
@@ -1110,12 +1136,12 @@
     });
 
 
-    // ✅ T&C Modal Handlers
-    const termsCheckbox = $('#acceptTermsCheckbox');
+    // ✅ T&C Modal Handlers for Payment Verification
+    const verifyTermsCheckbox = $('#acceptTermsCheckbox');
     const btnAcceptTerms = $('#btnAcceptTerms');
 
-    if (termsCheckbox && btnAcceptTerms) {
-      termsCheckbox.addEventListener('change', (e) => {
+    if (verifyTermsCheckbox && btnAcceptTerms) {
+      verifyTermsCheckbox.addEventListener('change', (e) => {
         btnAcceptTerms.disabled = !e.target.checked;
         if (e.target.checked) {
           btnAcceptTerms.style.opacity = '1';
@@ -1174,7 +1200,7 @@
 
         setTimeout(() => {
           showStep('#finalNotice');
-          if (termsCheckbox) termsCheckbox.checked = false;
+          if (verifyTermsCheckbox) verifyTermsCheckbox.checked = false;
           btnAcceptTerms.disabled = true;
           btnAcceptTerms.textContent = 'Accept & Submit Payment';
         }, 2000);
@@ -1184,6 +1210,7 @@
         showModalAlert('Network Error', 'Could not submit payment verification.', 'error');
         btnAcceptTerms.disabled = false;
         btnAcceptTerms.textContent = 'Accept & Submit Payment';
+      }
     });
 
     $('#btnGoOrders')?.addEventListener('click', () => {
