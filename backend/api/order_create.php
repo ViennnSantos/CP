@@ -121,6 +121,7 @@ try {
     // ==========================================
     // STEP 2: CREATE ORDER
     // ==========================================
+    // Note: T&C will be accepted later before payment submission
     $stmt = $pdo->prepare("INSERT INTO orders
         (order_code, customer_id, mode, status, payment_status, subtotal, vat, total_amount, terms_agreed, order_date)
         VALUES (
@@ -129,14 +130,13 @@ try {
         )");
 
     $stmt->execute([
-    ':cid'  => $uid,
-    ':mode' => $mode,
-    ':sub'  => $subtotal,
-    ':vat'  => $vat,
-    ':tot'  => $total,
-    ':terms' => $terms_agreed
-]);
-
+        ':cid'  => $uid,
+        ':mode' => $mode,
+        ':sub'  => $subtotal,
+        ':vat'  => $vat,
+        ':tot'  => $total,
+        ':terms' => $terms_agreed
+    ]);
 $err = $stmt->errorInfo();
 if ($err[0] !== '00000') {
     throw new Exception('SQL Insert Error on orders: ' . implode(' | ', $err));

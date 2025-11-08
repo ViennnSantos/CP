@@ -56,10 +56,27 @@ $amount_paid     = (float)($_POST['amount_paid'] ?? 0.0);
 // @file_put_contents(__DIR__ . '/../logs/payment_submit_debug.log', date('[Y-m-d H:i:s] ') . "POST: " . json_encode($_POST) . PHP_EOL, FILE_APPEND);
 // @file_put_contents(__DIR__ . '/../logs/payment_submit_debug.log', date('[Y-m-d H:i:s] ') . "FILES: " . json_encode($_FILES) . PHP_EOL, FILE_APPEND);
 
+// ✅ IMPROVED: Better validation
 if (!$order_id) fail('Missing order_id.');
 if (!$account_name) fail('Account name is required.');
 if ($amount_paid <= 0) fail('Amount paid must be greater than zero.');
 if (!$reference) fail('Reference number is required.');
+
+// ✅ NEW: Validate account number format
+if (!empty($account_number)) {
+    // Remove common formatting
+    $cleanAccNum = preg_replace('/[\s\-]+/', '', $account_number);
+
+    // Check if it's a valid format (digits only, reasonable length)
+    if (!preg_match('/^\d{9,12}$/', $cleanAccNum) && !preg_match('/^(09|\+639)\d{9}$/', $cleanAccNum)) {
+        fail('Invalid account number format. Must be 9-12 digits for bank accounts or 11 digits for mobile (09XXXXXXXXX).');
+    }
+}
+
+// ✅ NEW: Validate reference number (alphanumeric, 6-20 chars)
+if (!preg_match('/^[A-Za-z0-9]{6,20}$/', $reference)) {
+    fail('Invalid reference number. Must be 6-20 alphanumeric characters.');
+}
 
 // verify order ownership
 try {
@@ -132,10 +149,8 @@ try {
         $minThisPayment = round($remaining * 0.30, 2);
     }
 
-    $payingFull = abs($amount_paid - $remaining) < 0.01;
-    if (!$payingFull && ($amount_paid + 0.0001) < $minThisPayment) {
-        fail('Minimum payment is ₱' . number_format($minThisPayment,2) . '. Remaining ₱' . number_format($remaining,2), 400);
-    }
+    if (abs($amount_paid - $remaining) >= 0.01) {
+        fail('Payment amount must exactly match the order total: ₱' . number_format($remaining,2), 400);
 } catch (Throwable $e) {
     local_log("Payment validation error: " . $e->getMessage());
     fail('Server validation error', 500);
@@ -300,6 +315,42 @@ try {
     } catch (Throwable $e) {
         // don't fail user if notifications table missing - just log
         local_log("Notification insert skipped or failed: " . $e->getMessage());
+ // ✅ Update T&C acceptance timestamp and IP (if columns exist)
+
+    try {
+        $colCheck = $pdo->prepare("
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+              AND table_name = 'orders'
+              AND column_name IN ('terms_agreed_at', 'terms_agreed_ip')
+        ");
+        $colCheck->execute();
+        $existingCols = $colCheck->fetchAll(PDO::FETCH_COLUMN);
+        $updates = [];
+        $updateParams = [':oid' => $order_id];
+
+        if (in_array('terms_agreed_at', $existingCols)) {
+            $updates[] = 'terms_agreed_at = NOW()';
+        }
+
+
+        if (in_array('terms_agreed_ip', $existingCols)) {
+            $updates[] = 'terms_agreed_ip = :ip';
+            $updateParams[':ip'] = $_SERVER['REMOTE_ADDR'] ?? null;
+        }
+
+
+        if (!empty($updates)) {
+            $updates[] = 'terms_agreed = 1';  // Ensure terms_agreed is set to 1
+            $sql = "UPDATE orders SET " . implode(', ', $updates) . " WHERE id = :oid";
+            $pdo->prepare($sql)->execute($updateParams);
+            error_log("T&C acceptance recorded for order {$order_id} at " . date('Y-m-d H:i:s'));
+        }
+    } catch (Throwable $e) {
+        local_log("T&C timestamp update error: " . $e->getMessage());
+        // Non-fatal: continue even if T&C tracking fails
+    }
     }
 
     $pdo->commit();

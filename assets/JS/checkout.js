@@ -306,6 +306,7 @@
               console.log('🔄 Setting barangay:', addr.barangay);
               barangaySelect.value = addr.barangay;
               barangaySelect.disabled = isReadOnly;
+              barangaySelect.dispatchEvent(new Event('change'))
             }
           }
         }
@@ -763,7 +764,71 @@
 
       PAYMENT_METHOD = method;
 
+      // ✅ NEW FLOW: Show T&C modal FIRST, before creating order
+      showStep('#termsModal');
+      console.log('📋 Showing Terms & Conditions before order creation');
+    });
+
+    // ✅ NEW: T&C acceptance triggers order creation + QR display
+    const termsCheckbox = $('#termsCheckbox');
+    const termsConfirm = $('#termsConfirm');
+    const termsCancel = $('#termsCancel');
+
+    if (termsCheckbox && termsConfirm) {
+      termsCheckbox.addEventListener('change', (e) => {
+        termsConfirm.disabled = !e.target.checked;
+        if (e.target.checked) {
+          termsConfirm.style.opacity = '1';
+          termsConfirm.style.cursor = 'pointer';
+          termsConfirm.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
+
+        } else {
+          termsConfirm.style.opacity = '0.5';
+          termsConfirm.style.cursor = 'not-allowed';
+          termsConfirm.style.background = '#9ca3af';
+        }
+      });
+    }
+
+    if (termsConfirm) {
+      termsConfirm.addEventListener('click', async () => {
+        const termsModal = $('#termsModal');
+        if (termsModal) termsModal.hidden = true;
+
+        // Record T&C acceptance
+        const termsAgreedInput = $('#termsAgreed');
+        if (termsAgreedInput) termsAgreedInput.value = '1';
+
+        console.log('✅ Terms & Conditions accepted — proceeding with order creation');
+
+
+        // Reset checkbox for next time
+        if (termsCheckbox) termsCheckbox.checked = false;
+        if (termsConfirm) termsConfirm.disabled = true;
+
+
+        // ✅ NOW create the order and show QR
+        await createOrderAndShowQR();
+      });
+    }
+
+    if (termsCancel) {
+      termsCancel.addEventListener('click', () => {
+        const termsModal = $('#termsModal');
+        if (termsModal) termsModal.hidden = true;
+        if (termsCheckbox) termsCheckbox.checked = false;
+        if (termsConfirm) termsConfirm.disabled = true;
+        console.log('❌ Terms & Conditions cancelled');
+      });
+    }
+
+ 
+
+    // ✅ Moved order creation logic into separate async function
+    async function createOrderAndShowQR() {
       const orderData = window.RT_ORDER || {};
+      const method = PAYMENT_METHOD;
+      const dep = parseInt($('#depositRate')?.value || '0', 10);
 
       if (!ORDER_ID) {
         try {
@@ -974,26 +1039,38 @@
       const accountNum = num.value.trim();
       const refNum = ref.value.trim();
 
-      if (!/^\d+$/.test(accountNum)) {
-        showModalAlert('Invalid Account Number', 'Account number must contain only digits.', 'error');
-        num.style.borderColor = '#ef4444';
-        return;
+      // ✅ IMPROVED: Better account number validation
+      // Support formats: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX
+      const cleanAccountNum = accountNum.replace(/\+63/, '09').replace(/\s+/g, '');
+
+      if (PAYMENT_METHOD === 'gcash') {
+        // GCash: 11 digits starting with 09
+        if (!/^09\d{9}$/.test(cleanAccountNum)) {
+          showModalAlert('Invalid GCash Number', 'GCash number must be 11 digits (09XXXXXXXXX).', 'error');
+          num.style.borderColor = '#ef4444';
+          return;
+        }
+      } else if (PAYMENT_METHOD === 'bpi') {
+        // BPI: 9-12 digits numeric only
+        if (!/^\d{9,12}$/.test(accountNum)) {
+          showModalAlert('Invalid BPI Account', 'BPI account number must be 9-12 digits.', 'error');
+          num.style.borderColor = '#ef4444';
+          return;
+        }
+      } else {
+
+        // Generic: digits only
+        if (!/^\d+$/.test(accountNum)) {
+          showModalAlert('Invalid Account Number', 'Account number must contain only digits.', 'error');
+          num.style.borderColor = '#ef4444';
+          return;
+        }
       }
 
-      if (PAYMENT_METHOD === 'gcash' && accountNum.length > 11) {
-        showModalAlert('Invalid GCash Account', 'GCash account number must be maximum 11 digits.', 'error');
-        num.style.borderColor = '#ef4444';
-        return;
-      }
+      // ✅ IMPROVED: Reference number validation (alphanumeric 6-20 chars)
 
-      if (!/^\d+$/.test(refNum)) {
-        showModalAlert('Invalid Reference Number', 'Reference number must contain only digits.', 'error');
-        ref.style.borderColor = '#ef4444';
-        return;
-      }
-
-      if (refNum.length > 30) {
-        showModalAlert('Invalid Reference Number', 'Reference number too long (max 30 digits).', 'error');
+      if (!/^[A-Za-z0-9]{6,20}$/.test(refNum)) {
+        showModalAlert('Invalid Reference Number', 'Reference number must be 6-20 alphanumeric characters.', 'error');
         ref.style.borderColor = '#ef4444';
         return;
       }
@@ -1011,19 +1088,24 @@
         return;
       }
 
+      // ✅ CORRECT FLOW: Show T&C modal before submitting to admin verification
       showStep('#termsModal');
 
+      // Store verification data to be used after T&C acceptance
       window.VERIFICATION_DATA = {
         account_name: name.value,
-        account_number: num.value,
-        reference_number: ref.value,
+        account_number: accountNum,
+        reference_number: refNum,
         amount_paid: amt.value,
         screenshot: shot.files[0] || null
       };
 
+ 
       console.log('✅ Verification data validated, showing T&C modal');
     });
 
+
+    // ✅ T&C Modal Handlers
     const termsCheckbox = $('#acceptTermsCheckbox');
     const btnAcceptTerms = $('#btnAcceptTerms');
 
@@ -1033,9 +1115,11 @@
         if (e.target.checked) {
           btnAcceptTerms.style.opacity = '1';
           btnAcceptTerms.style.cursor = 'pointer';
+          btnAcceptTerms.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
         } else {
           btnAcceptTerms.style.opacity = '0.5';
           btnAcceptTerms.style.cursor = 'not-allowed';
+          btnAcceptTerms.style.background = '#9ca3af';
         }
       });
     }
@@ -1069,7 +1153,7 @@
           body: form,
           credentials: 'same-origin'
         });
-
+		  
         const result = await r.json();
         console.log('📥 Verification response:', result);
 
@@ -1077,6 +1161,24 @@
           showModalAlert('Verification Failed', result?.message || 'Payment verification failed.', 'error');
           btnAcceptTerms.disabled = false;
           btnAcceptTerms.textContent = 'Accept & Submit Payment';
+          return;
+        }
+
+        console.log('✅ Payment verification submitted successfully!');
+        showModalAlert('Payment Submitted!', 'Your payment is under verification. Check your orders page for approval status.', 'success');
+
+        setTimeout(() => {
+          showStep('#finalNotice');
+          if (termsCheckbox) termsCheckbox.checked = false;
+          btnAcceptTerms.disabled = true;
+          btnAcceptTerms.textContent = 'Accept & Submit Payment';
+        }, 2000);
+
+      } catch (err) {
+        console.error('❌ Payment submit error:', err);
+        showModalAlert('Network Error', 'Could not submit payment verification.', 'error');
+        btnAcceptTerms.disabled = false;
+        btnAcceptTerms.textContent = 'Accept & Submit Payment';
           return;
         }
 
@@ -1173,52 +1275,6 @@
   });
 
   // ===== Initialize Everything =====
-  function setupTermsModal() {
-    const termsModal = $('#termsModal');
-    const termsCheckbox = $('#termsCheckbox');
-    const termsConfirm = $('#termsConfirm');
-    const termsCancel = $('#termsCancel');
-    const termsAgreedInput = $('#termsAgreed');
-
-    if (!termsModal) return;
-
-    if (termsCheckbox && termsConfirm) {
-      termsCheckbox.addEventListener('change', () => {
-        termsConfirm.disabled = !termsCheckbox.checked;
-      });
-    }
-	  
-    if (termsConfirm && termsAgreedInput) {
-      termsConfirm.addEventListener('click', () => {
-        termsAgreedInput.value = '1';
-        termsModal.hidden = true;
-        console.log('✅ Terms & Conditions accepted');
-        // Automatically retry payment flow
-        setTimeout(() => {
-          const btnPayNow = $('#btnPayNow');
-          if (btnPayNow) btnPayNow.click();
-        }, 100);
-      });
-    }
-
-    if (termsCancel) {
-      termsCancel.addEventListener('click', () => {
-        termsModal.hidden = true;
-        if (termsCheckbox) termsCheckbox.checked = false;
-        if (termsConfirm) termsConfirm.disabled = true;
-        console.log('❌ Terms & Conditions cancelled');
-      });
-    }
-
-    // Close modal on backdrop click
-    termsModal.querySelector('.rt-modal__backdrop')?.addEventListener('click', () => {
-      termsModal.hidden = true;
-      if (termsCheckbox) termsCheckbox.checked = false;
-      if (termsConfirm) termsConfirm.disabled = true;
-    });
-  }
-
-  // ===== Initialize Everything =====
   document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Checkout.js loading...');
 
@@ -1237,10 +1293,9 @@
     wireClear();
     wirePayment();
     setupNumericInputs();
-    setupTermsModal();
-
-    console.log('✅ Checkout.js COMPLETE FIXED VERSION loaded!');
-    console.log('✅ Features: NCR support, delivery/pickup auto-fill, active states, better errors, proper payload, T&C modal');
+	  
+    console.log('✅ Checkout.js loaded with T&C-first flow!');
+    console.log('✅ Features: T&C before QR, improved validation, NCR support, auto-fill');
   });
 
 })();

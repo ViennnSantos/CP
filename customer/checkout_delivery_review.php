@@ -792,7 +792,7 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
     </div>
     <div class="rt-actions" style="justify-content: space-between;">
       <button type="button" class="rt-btn" id="termsCancel" style="min-width: 120px;">Cancel</button>
-      <button type="button" class="rt-btn main" id="termsConfirm" style="min-width: 120px;" disabled>I Agree and Continue</button>
+      <button type="button" class="rt-btn main" id="termsConfirm" style="min-width: 120px; opacity: 0.5; cursor: not-allowed; background: #9ca3af;" disabled>I Agree and Continue</button>
     </div>
   </div>
 </div>
