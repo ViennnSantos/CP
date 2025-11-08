@@ -795,65 +795,12 @@
 
       PAYMENT_METHOD = method;
 
-      // ✅ NEW FLOW: Show T&C modal FIRST, before creating order
-      showStep('#termsModal');
-      console.log('📋 Showing Terms & Conditions before order creation');
+      // ✅ FIXED FLOW: Create order and show QR immediately (no T&C yet)
+      console.log('💳 Creating order and displaying QR code...');
+      await createOrderAndShowQR();
     });
 
-    // ✅ NEW: T&C acceptance triggers order creation + QR display
-    const termsCheckbox = $('#termsCheckbox');
-    const termsConfirm = $('#termsConfirm');
-    const termsCancel = $('#termsCancel');
 
-    if (termsCheckbox && termsConfirm) {
-      termsCheckbox.addEventListener('change', (e) => {
-        termsConfirm.disabled = !e.target.checked;
-        if (e.target.checked) {
-          termsConfirm.style.opacity = '1';
-          termsConfirm.style.cursor = 'pointer';
-          termsConfirm.style.background = 'linear-gradient(135deg, #2f5b88 0%, #1e3a5f 100%)';
-
-        } else {
-          termsConfirm.style.opacity = '0.5';
-          termsConfirm.style.cursor = 'not-allowed';
-          termsConfirm.style.background = '#9ca3af';
-        }
-      });
-    }
-
-    if (termsConfirm) {
-      termsConfirm.addEventListener('click', async () => {
-        const termsModal = $('#termsModal');
-        if (termsModal) termsModal.hidden = true;
-
-        // Record T&C acceptance
-        const termsAgreedInput = $('#termsAgreed');
-        if (termsAgreedInput) termsAgreedInput.value = '1';
-
-        console.log('✅ Terms & Conditions accepted — proceeding with order creation');
-
-
-        // Reset checkbox for next time
-        if (termsCheckbox) termsCheckbox.checked = false;
-        if (termsConfirm) termsConfirm.disabled = true;
-
-
-        // ✅ NOW create the order and show QR
-        await createOrderAndShowQR();
-      });
-    }
-
-    if (termsCancel) {
-      termsCancel.addEventListener('click', () => {
-        const termsModal = $('#termsModal');
-        if (termsModal) termsModal.hidden = true;
-        if (termsCheckbox) termsCheckbox.checked = false;
-        if (termsConfirm) termsConfirm.disabled = true;
-        console.log('❌ Terms & Conditions cancelled');
-      });
-    }
-
- 
 
     // ✅ Moved order creation logic into separate async function
     async function createOrderAndShowQR() {
