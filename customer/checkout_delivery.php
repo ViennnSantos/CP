@@ -146,32 +146,35 @@ $customerName = htmlspecialchars($user['name'] ?? $user['username'] ?? 'Customer
       width: 100%;
       padding: 12px 16px;
       font-size: 15px;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #2f5b88;
       border-radius: 10px;
       transition: all 0.2s ease;
       font-family: 'Poppins', sans-serif;
       background: white;
+      color: #111827;
     }
 
     .form-group input:focus,
     .form-group select:focus {
-      border-color: #2f5b88;
+      border-color: #1e3a5f;
       outline: none;
-      box-shadow: 0 0 0 4px rgba(47, 91, 136, 0.1);
+      box-shadow: 0 0 0 4px rgba(47, 91, 136, 0.15);
     }
 
     .form-group input:disabled,
     .form-group select:disabled {
       background: #f9fafb;
+      border-color: #d1d5db;
       color: #9ca3af;
       cursor: not-allowed;
     }
+ 
 
     /* ✅ FIXED: Read-only styling for autofilled fields */
     .form-group input:read-only {
       background: #f0f9ff;
-      border-color: #bae6fd;
-      color: #0369a1;
+      border-color: #2f5b88;
+      color: #111827;
     }
 
     .form-group input[type="text"]::placeholder {
