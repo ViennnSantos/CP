@@ -719,6 +719,22 @@ if ($img) {
         // Stop chat polling and clear active chat UI only
         document.dispatchEvent(new Event('customer_logout'));
 
+        // Sync cart to database before logout (safety measure)
+        try {
+          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          if (cart.length > 0) {
+            await fetch('/backend/api/cart.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'same-origin',
+              body: JSON.stringify({ cart })
+            });
+            console.log('✅ Cart synced to database before logout');
+          }
+        } catch (syncErr) {
+          console.warn('⚠️ Cart sync before logout failed:', syncErr);
+        }
+
         await fetch('/backend/api/auth.php?action=logout', {
           method: 'POST',
           credentials: 'same-origin'
