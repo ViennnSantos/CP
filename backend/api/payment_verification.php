@@ -351,6 +351,20 @@ function approvePayment(PDO $conn): void {
             send_json(['success' => true, 'message' => 'Already approved', 'order_id' => $orderId]);
         }
 
+        // ✅ NEW: Validate Terms & Conditions acceptance before approving
+        $orderCheck = $conn->prepare("SELECT terms_agreed FROM orders WHERE id = :oid LIMIT 1");
+        $orderCheck->execute([':oid' => $orderId]);
+        $orderData = $orderCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$orderData || empty($orderData['terms_agreed'])) {
+            $conn->rollBack();
+            send_json([
+                'success' => false,
+                'message' => 'Cannot approve payment. Customer has not accepted Terms & Conditions.',
+                'error_code' => 'TERMS_NOT_AGREED'
+            ], 400);
+        }
+
         // approver id from session
         $approverId = $_SESSION['staff']['id'] ?? $_SESSION['user']['id'] ?? 0;
 
