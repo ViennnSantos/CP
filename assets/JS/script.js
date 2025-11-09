@@ -2656,15 +2656,6 @@ async function viewPaymentDetails(verificationId) {
           <p style="margin:.25rem 0;"><strong>Deposit Rate:</strong> ${pct(payment.deposit_rate)}</p>
           <p style="margin:.25rem 0;"><strong>Amount Due:</strong> ${money(payment.amount_due ?? (payment.total_amount - (payment.amount_paid || 0)))}</p>
           <p style="margin:.25rem 0;"><strong>Status:</strong> <span class="badge badge-${(payment.status || 'PENDING').toLowerCase()}">${escapeHtml(payment.status || 'PENDING')}</span></p>
-          <p style="grid-column: 1 / -1;margin:.5rem 0;">
-            <strong>Terms & Conditions:</strong>
-            <span style="display: inline-flex; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
-              ${payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed ?
-                '<span class="material-symbols-rounded" style="color:#10b981;font-size:1.3rem;">check_circle</span><span style="color:#10b981;font-weight:600;">Agreed</span>' :
-                '<span class="material-symbols-rounded" style="color:#ef4444;font-size:1.3rem;">cancel</span><span style="color:#ef4444;font-weight:600;">Not Agreed</span>'
-              }
-            </span>
-          </p>
         </div>
       </div>
     `;
@@ -2685,7 +2676,6 @@ async function viewPaymentDetails(verificationId) {
         const rejectBtn = document.getElementById('btnRejectPayment');
         const status = (payment.status || '').toUpperCase();
         const hasProof = !!proofSrc;
-        const hasAgreedTerms = !!(payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed);
 
         if (approveBtn && rejectBtn) {
             // Remove any previous event listeners by cloning
@@ -2710,15 +2700,10 @@ async function viewPaymentDetails(verificationId) {
                 newRejectBtn.textContent = 'Reject Payment';
             }
 
-            // Disable approve if no proof OR if terms not agreed
-            if ((!hasProof || !hasAgreedTerms) && status === 'PENDING') {
+            // Disable approve if no proof
+            if (!hasProof && status === 'PENDING') {
                 newApproveBtn.disabled = true;
-                if (!hasProof) {
-                    newApproveBtn.title = 'Payment proof required to approve';
-
-                } else if (!hasAgreedTerms) {
-                    newApproveBtn.title = 'Customer must agree to Terms & Conditions before approval';
-                }
+                newApproveBtn.title = 'Payment proof required to approve';
                 newApproveBtn.style.opacity = '0.5';
                 newApproveBtn.style.cursor = 'not-allowed';
 
@@ -2740,14 +2725,12 @@ async function viewPaymentDetails(verificationId) {
             newApproveBtn.addEventListener('click', () => {
                 showApprovalConfirmModal(verificationId);
             });
-			
+
             newRejectBtn.addEventListener('click', () => {
-                const reason = prompt('Enter rejection reason (required):');
-                if (reason && reason.trim()) {
-                    rejectPayment(verificationId, reason.trim());
-                } else if (reason !== null) {
-                    showNotification('Rejection reason is required', 'error');
-                }
+                // Open reject modal instead of prompt
+                document.getElementById('btnConfirmReject').dataset.verificationId = verificationId;
+                document.getElementById('rejectReason').value = '';
+                openModal('rejectReasonModal');
             });
         }
 
@@ -2854,9 +2837,22 @@ async function rejectPayment(verificationId, reason) {
         catch (e) { throw new Error('Invalid JSON response from server: ' + text.slice(0, 300)); }
 
         if (result.success) {
-            showNotification(result.message || 'Payment rejected', 'success');
+            // Close modals
             closeModal('rejectReasonModal');
             closeModal('paymentDetailsModal');
+
+            // Display success modal
+            const successTitle = document.getElementById('successTitle');
+            const successMessage = document.getElementById('successMessage');
+            const successDetails = document.getElementById('successDetails');
+
+            if (successTitle) successTitle.textContent = 'Payment Rejected';
+            if (successMessage) successMessage.textContent = result.message || 'The payment has been rejected successfully.';
+            if (successDetails) successDetails.innerHTML = '';
+
+            openModal('successModal');
+
+            // Reload payment verifications list
             loadPaymentVerifications();
         } else {
             showNotification(result.message || 'Failed to reject payment', 'error');
@@ -2900,14 +2896,15 @@ document.getElementById('btnConfirmReject')?.addEventListener('click', function 
         showNotification('Please provide a reason for rejection', 'error');
         return;
     }
-	
-    document.getElementById('btnConfirmApprove')?.addEventListener('click', async function () {
+
+    rejectPayment(parseInt(verificationId), reason);
+});
+
+document.getElementById('btnConfirmApprove')?.addEventListener('click', async function () {
     const verificationId = this.dataset.verificationId;
     if (!verificationId) return;
     closeModal('approvePaymentModal');
     await approvePayment(parseInt(verificationId));
-});
-    rejectPayment(parseInt(verificationId), reason);
 });
 
 // Customer-delete feedback handler (attach once)
