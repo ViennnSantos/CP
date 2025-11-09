@@ -112,8 +112,8 @@ function get_stats(PDO $pdo)
         $downPayments = $q5->fetch(PDO::FETCH_ASSOC);
         $totalDownPayments = (float)($downPayments['total_down_payments'] ?? 0);
 
-        // Incoming Sales: remaining balance on active orders (unpaid portion)
-        // This is the total amount of active orders minus what's been paid on them
+        // Incoming Sales: remaining balance on non-fully-paid orders
+        // This is calculated as: total amount of active orders minus what's been paid on them
         $q6a = $pdo->query("
             SELECT COALESCE(SUM(total_amount), 0) AS total_active
             FROM orders
