@@ -816,8 +816,15 @@ async function viewAdminOrderDetails(orderId) {
             // If calculated is close to 12%, use 12%; otherwise use calculated (for historical data)
             taxPercentage = (Math.abs(calculated - 12) < 1) ? 12 : Math.round(calculated);
         }
-        const remainingBalance = parseFloat(order.remaining_balance || 0);
+        // Calculate remaining balance properly - if Fully Paid, force to 0
+        let remainingBalance = parseFloat(order.remaining_balance || 0);
         const paymentStatusText = order.payment_status_text || 'Pending';
+
+        // If payment status is Fully Paid, ensure remaining balance is exactly 0
+        if (paymentStatusText === 'Fully Paid') {
+            remainingBalance = 0;
+        }
+
         const deliveryAddress = order.delivery_address || 'N/A';
         const modalHtml = `
             <div class="modal" id="adminOrderDetailsModal" style="display: flex;">
@@ -853,7 +860,7 @@ async function viewAdminOrderDetails(orderId) {
                                 </div>
                                 <div>
                                     <p><strong>Amount Paid:</strong> ₱${parseFloat(order.amount_paid || 0).toLocaleString()}</p>
-                                    <p><strong>Remaining Balance:</strong> <span style="color: ${remainingBalance > 0 ? 'var(--danger-color)' : 'var(--success-color)'}; font-weight: 600;">₱${remainingBalance.toLocaleString()}</span></p>
+                                    <p><strong>Remaining Balance:</strong> <span style="color: ${remainingBalance > 0 ? 'var(--danger-color)' : 'var(--success-color)'}; font-weight: 600;">₱${remainingBalance.toFixed(2).replace(/\.00$/, '.00')}</span></p>
                                 </div>
                             </div>
                         </div>
@@ -879,15 +886,11 @@ async function viewAdminOrderDetails(orderId) {
                                         </tr>
                                     `).join('')}
                                     <tr style="border-top: 2px solid var(--brand);">
-                                        td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
+                                        <td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
                                         <td style="text-align: right; padding: 0.5rem; font-weight: 700; font-size: 1.2rem; color: var(--brand);">₱${parseFloat(order.total_amount).toLocaleString()}</td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                        <!-- ✅ FIXED: Removed "Edit Order" button - Only Close button remains -->
-                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button onclick="closeAdminOrderModal()" class="btn-secondary">Close</button>
                         </div>
                 </div>
             </div>
@@ -1185,7 +1188,7 @@ function updateOrderStatus(orderId, currentStatus) {
                         <!-- Payment Status Update (if Owner/Admin) -->
                         ${(['Owner', 'Admin'].includes(currentUserRole)) ? `
                             <div style="margin: 1.5rem 0;">
-                                <label for="new-payment-status" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Status (Optional):</label>
+                                <label for="new-payment-status" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Status:</label>
                                 <select id="new-payment-status" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
                                     <option value="">Keep current: ${paymentStatusText}</option>
                                     <option value="Pending">Pending</option>
@@ -1198,9 +1201,9 @@ function updateOrderStatus(orderId, currentStatus) {
                             </div>
                         ` : ''}
 
-                        <div style="background: #e8f4f8; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                            <p style="margin: 0; font-size: 0.9rem; color: #2f5b88;">
-                                <strong>Note:</strong> Changing the order status will notify the customer and update their order tracking.
+                        <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin: 1rem 0; border: 1px solid #ffc107;">
+                            <p style="margin: 0; font-size: 0.9rem; color: #856404;">
+                                <strong>Note:</strong> Order cannot be completed until payment is fully approved and settled.
                             </p>
                         </div>
 
@@ -1283,15 +1286,23 @@ async function handleStatusUpdate(e) {
             });
 
             const paymentStatusResult = await paymentStatusResponse.json();
-            
+
             if (!paymentStatusResult.success) {
                 showNotification('Order status updated, but payment status update failed', 'warning');
+            } else {
+                showNotification('Payment Status updated successfully and synced with dashboard.', 'success');
             }
+        } else {
+            showNotification('Order status updated successfully!', 'success');
         }
 
-        showNotification('Order status updated successfully!', 'success');
         closeUpdateStatusModal();
-        loadOrders(); // Reload orders table
+
+        // Reload orders table and refresh dashboard metrics
+        await loadOrders();
+        if (typeof loadDashboardMetrics === 'function') {
+            await loadDashboardMetrics();
+        }
 
     } catch (error) {
         console.error('Error updating order status:', error);
@@ -2611,53 +2622,54 @@ async function viewPaymentDetails(verificationId) {
             ? `<img id="pv-proof-img" src="${escapeHtml(proofSrc)}" alt="payment proof" style="max-width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div style=\\'color:#6b7280;\\'>Payment proof not available</div>');">`
             : `<div style="color:#6b7280;">Payment proof not available</div>`;
 
-         // --- render content with improved layout: left details, right proof ---
+         // --- render content with improved layout: left details (65%), right proof (35%) ---
         content.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div style="display:grid;grid-template-columns:65fr 35fr;gap:2rem;">
         <!-- LEFT SIDE: Order & Customer Info -->
         <div>
-          <h3 style="margin-bottom:.75rem;color:var(--brand);font-size:1.1rem;">Order Information</h3>
+          <h3 style="margin-top:0;margin-bottom:.75rem;color:#2f5b88;font-size:1.1rem;font-weight:600;">Order Information</h3>
           <p style="margin:.5rem 0;"><strong>Order Code:</strong> ${text(payment.order_code)}</p>
           <p style="margin:.5rem 0;"><strong>Order Date:</strong> ${payment.order_date ? formatDate(payment.order_date) : 'N/A'}</p>
           <p style="margin:.5rem 0;"><strong>Total Amount:</strong> ${money(payment.total_amount)}</p>
           <p style="margin:.5rem 0;"><strong>Items:</strong> ${escapeHtml(payment.items || payment.order_name || 'N/A')}</p>
           <p style="margin:.5rem 0;"><strong>Delivery Mode:</strong> ${escapeHtml(payment.delivery_mode || 'N/A')}</p>
-          <h3 style="margin:1.5rem 0 .75rem 0;color:var(--brand);font-size:1.1rem;">Customer Information</h3>
+
+          <h3 style="margin-top:1.5rem;margin-bottom:.75rem;color:#2f5b88;font-size:1.1rem;font-weight:600;">Customer Information</h3>
           <p style="margin:.5rem 0;"><strong>Name:</strong> ${text(payment.customer_name || payment.full_name || payment.name)}</p>
           <p style="margin:.5rem 0;"><strong>Email:</strong> ${text(payment.customer_email || payment.email)}</p>
           <p style="margin:.5rem 0;"><strong>Phone:</strong> ${text(payment.customer_phone || payment.phone)}</p>
-          <p style="margin:.5rem 0;"><strong>Address:</strong><br>${addressHtml}</p>
+          <p style="margin:.5rem 0;"><strong>Delivery Address:</strong><br><span style="display:block;margin-top:0.25rem;line-height:1.6;">${addressHtml}</span></p>
+
+          <h3 style="margin-top:1.5rem;margin-bottom:.75rem;color:#2f5b88;font-size:1.1rem;font-weight:600;">Payment Details</h3>
+          <div style="background:#f7fafc;padding:1rem;border-radius:8px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+              <p style="margin:.25rem 0;"><strong>Payment Method:</strong> ${text((payment.method || '').toUpperCase())}</p>
+              <p style="margin:.25rem 0;"><strong>Account Name:</strong> ${text(payment.account_name)}</p>
+              <p style="margin:.25rem 0;"><strong>Account Number:</strong> ${text(payment.account_number)}</p>
+              <p style="margin:.25rem 0;"><strong>Reference Number:</strong> ${text(payment.reference_number)}</p>
+              <p style="margin:.25rem 0;"><strong>Amount Reported:</strong> ${money(payment.amount_reported || payment.amount_paid)}</p>
+              <p style="margin:.25rem 0;"><strong>Deposit Rate:</strong> ${pct(payment.deposit_rate)}</p>
+              <p style="margin:.25rem 0;"><strong>Amount Due:</strong> ${money(payment.amount_due ?? (payment.total_amount - (payment.amount_paid || 0)))}</p>
+              <p style="margin:.25rem 0;"><strong>Status:</strong> <span class="badge badge-${(payment.status || 'PENDING').toLowerCase()}">${escapeHtml(payment.status || 'PENDING')}</span></p>
+              <p style="grid-column:1/-1;margin:.5rem 0;">
+                <strong>Terms & Conditions:</strong>
+                <span style="display:inline-flex;align-items:center;gap:0.5rem;margin-left:0.5rem;">
+                  ${payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed ?
+                    '<span class="material-symbols-rounded" style="color:#10b981;font-size:1.3rem;">check_circle</span><span style="color:#10b981;font-weight:600;">Agreed</span>' :
+                    '<span class="material-symbols-rounded" style="color:#ef4444;font-size:1.3rem;">cancel</span><span style="color:#ef4444;font-weight:600;">Not Agreed</span>'
+                  }
+                </span>
+              </p>
+            </div>
+          </div>
         </div>
 
         <!-- RIGHT SIDE: Proof of Payment -->
-        <div>
-          <h3 style="margin-bottom:.75rem;color:var(--brand);font-size:1.1rem;">Proof of Payment</h3>
-          <div style="background:#f9fafb;border:2px solid #e5e7eb;border-radius:8px;padding:1rem;min-height:300px;display:flex;align-items:center;justify-content:center;">
+        <div style="position:sticky;top:0;">
+          <h3 style="margin-top:0;margin-bottom:.75rem;color:#2f5b88;font-size:1.1rem;font-weight:600;text-align:center;">Proof of Payment</h3>
+          <div style="background:#f9fafb;border:2px solid #e5e7eb;border-radius:8px;padding:1rem;display:flex;align-items:center;justify-content:center;">
             ${imgHtml}
           </div>
-        </div>
-      </div>
-
-      <div style="background:#f7fafc;padding:1.25rem;border-radius:8px;margin-top:1.5rem;">
-        <h4 style="margin:0 0 1rem 0;color:var(--brand);font-size:1.1rem;">Payment Details</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
-          <p style="margin:.25rem 0;"><strong>Payment Method:</strong> ${text((payment.method || '').toUpperCase())}</p>
-          <p style="margin:.25rem 0;"><strong>Account Name:</strong> ${text(payment.account_name)}</p>
-          <p style="margin:.25rem 0;"><strong>Account Number:</strong> ${text(payment.account_number)}</p>
-          <p style="margin:.25rem 0;"><strong>Reference Number:</strong> ${text(payment.reference_number)}</p>
-          <p style="margin:.25rem 0;"><strong>Amount Reported:</strong> ${money(payment.amount_reported || payment.amount_paid)}</p>
-          <p style="margin:.25rem 0;"><strong>Deposit Rate:</strong> ${pct(payment.deposit_rate)}</p>
-          <p style="margin:.25rem 0;"><strong>Amount Due:</strong> ${money(payment.amount_due ?? (payment.total_amount - (payment.amount_paid || 0)))}</p>
-          <p style="margin:.25rem 0;"><strong>Status:</strong> <span class="badge badge-${(payment.status || 'PENDING').toLowerCase()}">${escapeHtml(payment.status || 'PENDING')}</span></p>
-          <p style="grid-column: 1 / -1;margin:.5rem 0;">
-            <strong>Terms & Conditions:</strong>
-            <span style="display: inline-flex; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
-              ${payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed ?
-                '<span class="material-symbols-rounded" style="color:#10b981;font-size:1.3rem;">check_circle</span><span style="color:#10b981;font-weight:600;">Agreed</span>' :
-                '<span class="material-symbols-rounded" style="color:#ef4444;font-size:1.3rem;">cancel</span><span style="color:#ef4444;font-weight:600;">Not Agreed</span>'
-              }
-            </span>
-          </p>
         </div>
       </div>
     `;
