@@ -231,7 +231,7 @@ class AdminOrdersAPI {
         }
 
         try {
-            $sql = "SELECT 
+            $sql = "SELECT
                         o.*,
                         c.full_name as customer_name,
                         c.email as customer_email,
@@ -275,10 +275,12 @@ class AdminOrdersAPI {
                         c.email as customer_email,
                         c.phone as customer_phone,
                         COALESCE((SELECT SUM(p2.amount_paid) FROM payments p2 WHERE p2.order_id = o.id AND UPPER(COALESCE(p2.status,'')) IN ('VERIFIED','APPROVED')),0) AS amount_paid,
-                        pv.status as payment_verification_status
+                        pv.status as payment_verification_status,
+                        p.method as payment_method
                     FROM orders o
                     JOIN customers c ON o.customer_id = c.id
                     LEFT JOIN payment_verifications pv ON pv.order_id = o.id
+                    LEFT JOIN payments p ON p.order_id = o.id
                     WHERE o.id = ?
                     LIMIT 1";
             $stmt = $this->conn->prepare($sql);
@@ -294,8 +296,105 @@ class AdminOrdersAPI {
             $itemsStmt->execute([$orderId]);
             $items = $itemsStmt->fetchAll(PDO::FETCH_ASSOC);
 
+            // Calculate items subtotal and tax
+            $itemsSubtotal = 0;
+            foreach ($items as &$item) {
+                $itemTotal = !empty($item['line_total']) ? (float)$item['line_total'] : (float)$item['subtotal'];
+                if ($itemTotal <= 0) {
+                    $itemTotal = (float)$item['unit_price'] * (float)$item['qty'];
+                }
+                $item['item_total'] = $itemTotal;
+                $itemsSubtotal += $itemTotal;
+            }
+            unset($item);
+
+            $totalAmount = (float)($order['total_amount'] ?? 0);
+            $taxAmount = max(0, $totalAmount - $itemsSubtotal);
+            $taxPercentage = $itemsSubtotal > 0 ? (($taxAmount / $itemsSubtotal) * 100) : 0;
+
+            // Get delivery address
+            $addressSql = "SELECT
+                                first_name,
+                                last_name,
+                                phone,
+                                email,
+                                street,
+                                barangay,
+                                city,
+                                province,
+                                postal,
+                                type
+                            FROM order_addresses
+                            WHERE order_id = ?
+                            ORDER BY
+                                CASE
+                                    WHEN LOWER(TRIM(type)) = 'delivery' THEN 1
+                                    WHEN LOWER(TRIM(type)) = 'pickup' THEN 2
+                                    ELSE 3
+                                END
+                            LIMIT 1";
+            $addressStmt = $this->conn->prepare($addressSql);
+            $addressStmt->execute([$orderId]);
+            $address = $addressStmt->fetch(PDO::FETCH_ASSOC);
+
+            $deliveryAddress = 'N/A';
+            if ($address) {
+                $addrType = strtolower(trim($address['type'] ?? ''));
+                if ($addrType === 'pickup') {
+                    $deliveryAddress = 'For Pickup';
+                } else {
+                    $parts = [];
+                    if (!empty(trim($address['street'] ?? ''))) $parts[] = trim($address['street']);
+                    if (!empty(trim($address['barangay'] ?? ''))) $parts[] = trim($address['barangay']);
+                    if (!empty(trim($address['city'] ?? ''))) $parts[] = trim($address['city']);
+                    if (!empty(trim($address['province'] ?? ''))) $parts[] = trim($address['province']);
+                    if (!empty(trim($address['postal'] ?? ''))) $parts[] = trim($address['postal']);
+
+                    $addressLine = !empty($parts) ? implode(', ', $parts) : '';
+
+                    $contact = [];
+                    $firstName = trim($address['first_name'] ?? '');
+                    $lastName = trim($address['last_name'] ?? '');
+                    if (!empty($firstName) || !empty($lastName)) {
+                        $name = trim($firstName . ' ' . $lastName);
+                        if (!empty($name)) $contact[] = $name;
+                    }
+                    if (!empty(trim($address['phone'] ?? ''))) $contact[] = trim($address['phone']);
+
+                    $result = '';
+                    if (!empty($contact)) {
+                        $result = implode(' - ', $contact);
+                        if (!empty($addressLine)) {
+                            $result .= "\n" . $addressLine;
+                        }
+                    } else {
+                        $result = $addressLine;
+                    }
+
+                    if (!empty(trim($result))) {
+                        $deliveryAddress = $result;
+                    }
+                }
+            }
+
             $order['items'] = $items;
-            $order['remaining_balance'] = number_format(max(0, (float)$order['total_amount'] - (float)$order['amount_paid']), 2, '.', '');
+            $$order['items_subtotal'] = $itemsSubtotal;
+            $order['tax_amount'] = $taxAmount;
+            $order['tax_percentage'] = $taxPercentage;
+            $order['delivery_address'] = $deliveryAddress;
+
+            $amountPaid = (float)$order['amount_paid'];
+            $remainingBalance = max(0, $totalAmount - $amountPaid);
+            $order['remaining_balance'] = number_format($remainingBalance, 2, '.', '');
+
+            // Compute friendly payment status
+            if ($remainingBalance <= 0.01) {
+                $order['payment_status_text'] = 'Fully Paid';
+            } elseif ($amountPaid > 0) {
+                $order['payment_status_text'] = 'With Balance';
+            } else {
+                $order['payment_status_text'] = 'Pending';
+            }
 
             $this->send(true, 'Order details retrieved successfully', [
                 'order' => $order,
@@ -325,13 +424,46 @@ class AdminOrdersAPI {
             $this->send(false, 'Invalid status value', null, 400);
         }
         try {
-            $stmt = $this->conn->prepare('SELECT id, status FROM orders WHERE id = ? LIMIT 1');
+            // Get order details including payment info
+            $stmt = $this->conn->prepare('
+                SELECT
+                    o.id,
+                    o.status,
+                    o.total_amount,
+                    COALESCE((
+                        SELECT SUM(p2.amount_paid)
+                        FROM payments p2
+                        WHERE p2.order_id = o.id
+                        AND UPPER(COALESCE(p2.status,\'\')) IN (\'VERIFIED\',\'APPROVED\')
+                    ), 0) AS amount_paid
+                FROM orders o
+                WHERE o.id = ?
+                LIMIT 1
+            ');
             $stmt->execute([$orderId]);
             $order = $stmt->fetch(PDO::FETCH_ASSOC);
             if (!$order) $this->send(false, 'Order not found', null, 404);
 
+            // Calculate remaining balance
+            $totalAmount = (float)($order['total_amount'] ?? 0);
+            $amountPaid = (float)($order['amount_paid'] ?? 0);
+            $remainingBalance = max(0, $totalAmount - $amountPaid);
+
+            // BUSINESS RULE: Cannot set status to Completed if remaining balance > 0
+            if ($newStatus === 'Completed' && $remainingBalance > 0.01) {
+                $this->send(false, "Cannot set status to Completed — remaining balance ₱" . number_format($remainingBalance, 2) . ". Approve payments first.", null, 400);
+            }
+
             $stmt = $this->conn->prepare('UPDATE orders SET status = ? WHERE id = ?');
             $stmt->execute([$newStatus, $orderId]);
+            // Add audit log entry
+            $logStmt = $this->conn->prepare('
+                INSERT INTO order_status_history (order_id, status, changed_by, notes, changed_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ');
+            $adminId = $this->currentUser['id'] ?? 0;
+            $notes = "Status changed from '{$order['status']}' to '{$newStatus}' by {$this->currentRole}";
+            $logStmt->execute([$orderId, $newStatus, $adminId, $notes]);
             $this->send(true, 'Order status updated successfully', [
                 'order_id' => $orderId,
                 'old_status' => $order['status'],
@@ -373,6 +505,15 @@ class AdminOrdersAPI {
             $stmt = $this->conn->prepare('UPDATE orders SET payment_status = ? WHERE id = ?');
             $stmt->execute([$newPaymentStatus, $orderId]);
 
+            // Add audit log entry
+            $logStmt = $this->conn->prepare('
+                INSERT INTO order_status_history (order_id, status, changed_by, notes, changed_at)
+                VALUES (?, ?, ?, ?, NOW())
+            ');
+            $adminId = $this->currentUser['id'] ?? 0;
+            $notes = "Payment status changed from '{$order['payment_status']}' to '{$newPaymentStatus}' by {$this->currentRole}";
+            $logStmt->execute([$orderId, $newPaymentStatus, $adminId, $notes]);
+            
             $this->send(true, 'Payment status updated successfully', [
                 'order_id' => $orderId,
                 'old_payment_status' => $order['payment_status'],
