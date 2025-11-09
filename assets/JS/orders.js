@@ -214,21 +214,31 @@ function renderOrderDetails(order) {
     const itemsSubtotal = parseFloat(order.items_subtotal || 0);
     const totalAmount = parseFloat(order.total_amount || 0);
     const taxAmount = parseFloat(order.tax_amount || 0);
-    
-    // Calculate tax percentage
-    const taxPercentage = itemsSubtotal > 0 ? ((taxAmount / itemsSubtotal) * 100) : 0;
-    
+
+    // Use stored tax_rate if available, otherwise default to 12%
+    // This allows historical orders with different rates to show correctly
+    let taxPercentage = 12; // Default to 12%
+
+    if (order.tax_rate !== undefined && order.tax_rate !== null) {
+        taxPercentage = parseFloat(order.tax_rate);
+    } else if (itemsSubtotal > 0.01 && taxAmount > 0.01) {
+        // If no stored rate, calculate from amounts but round to nearest whole number
+        const calculated = ((taxAmount / itemsSubtotal) * 100);
+        // If calculated is close to 12%, use 12%; otherwise use calculated (for historical data)
+        taxPercentage = (Math.abs(calculated - 12) < 1) ? 12 : Math.round(calculated);
+    }
+
     // Build table rows with new format
     const itemsRows = items.map(item => {
         const itemPrice = parseFloat(item.price || 0);
         const itemQty = parseInt(item.quantity || 0);
-        
+
         return `
             <tr>
                 <td>${escapeHtml(item.name)}</td>
                 <td>${itemQty}</td>
                 <td>₱${formatNumber(itemPrice)}</td>
-                <td>${taxPercentage.toFixed(0)}%</td>
+                <td>${taxPercentage}%</td>
             </tr>
         `;
     }).join('');
