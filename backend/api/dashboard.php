@@ -96,23 +96,24 @@ function get_stats(PDO $pdo)
             FROM payments p
             INNER JOIN orders o ON p.order_id = o.id
             WHERE o.status = 'Cancelled'
-            AND p.status = 'VERIFIED'
+            AND UPPER(COALESCE(p.status,'')) IN ('VERIFIED','APPROVED')
         ");
         $cancelledPaid = $q4->fetch(PDO::FETCH_ASSOC);
 
         $totalSales = (float)($activeSales['active_sales'] ?? 0) + (float)($cancelledPaid['cancelled_paid'] ?? 0);
 
-        // Total Down Payments: sum of all verified payments
+        // Total Down Payments: sum of all verified/approved payments
+        // (regardless of deposit_rate; all approved payments count)
         $q5 = $pdo->query("
             SELECT COALESCE(SUM(amount_paid), 0) AS total_down_payments
             FROM payments
-            WHERE status = 'VERIFIED'
+            WHERE UPPER(COALESCE(status,'')) IN ('VERIFIED','APPROVED')
         ");
         $downPayments = $q5->fetch(PDO::FETCH_ASSOC);
         $totalDownPayments = (float)($downPayments['total_down_payments'] ?? 0);
 
-        // Incoming Sales: remaining balance on active orders (unpaid portion)
-        // This is the total amount of active orders minus what's been paid on them
+        // Incoming Sales: remaining balance on non-fully-paid orders
+        // This is calculated as: total amount of active orders minus what's been paid on them
         $q6a = $pdo->query("
             SELECT COALESCE(SUM(total_amount), 0) AS total_active
             FROM orders
@@ -125,11 +126,11 @@ function get_stats(PDO $pdo)
             FROM payments p
             INNER JOIN orders o ON p.order_id = o.id
             WHERE o.status != 'Cancelled'
-            AND p.status = 'VERIFIED'
+            AND UPPER(COALESCE(p.status,'')) IN ('VERIFIED','APPROVED')
         ");
         $totalPaidActive = $q6b->fetch(PDO::FETCH_ASSOC);
 
-        $incomingSales = (float)($totalActive['total_active'] ?? 0) - (float)($totalPaidActive['total_paid_active'] ?? 0);
+        $incomingSales = max(0, (float)($totalActive['total_active'] ?? 0) - (float)($totalPaidActive['total_paid_active'] ?? 0));
 
         echo json_encode([
             'success' => true,
