@@ -2751,6 +2751,16 @@ async function viewPaymentDetails(verificationId) {
 
 
 // Approve payment (robust fetch + error handling)
+// Show approval confirmation modal with styled confirm dialog
+function showApprovalConfirmModal(verificationId) {
+    showConfirm({
+        title: 'Approve Payment',
+        message: 'Are you sure you want to approve this payment? This will update the order balance and payment status.',
+        okText: 'Approve',
+        onConfirm: () => approvePayment(verificationId)
+    });
+}
+
 async function approvePayment(verificationId) {
     try {
         const response = await fetch('/backend/api/payment_verification.php?action=approve', {
@@ -2780,7 +2790,14 @@ async function approvePayment(verificationId) {
         if (result.success) {
             showNotification(result.message || 'Payment approved successfully!', 'success');
             closeModal('paymentDetailsModal');
+
+            // Reload payment verifications list
             loadPaymentVerifications();
+
+            // Reload orders list to reflect updated balance and payment status
+            if (typeof loadOrders === 'function') {
+                loadOrders();
+            }
         } else {
             showNotification(result.message || 'Failed to approve payment', 'error');
         }
@@ -2830,28 +2847,6 @@ async function rejectPayment(verificationId, reason) {
         showNotification('Failed to reject payment: ' + error.message, 'error');
     }
 }
-
-
-// Event listeners for payment actions
-document.getElementById('btnApprovePayment')?.addEventListener('click', function () {
-    const verificationId = this.dataset.verificationId;
-    if (!verificationId) return;
-
-    showConfirm({
-        title: 'Approve Payment',
-        message: 'Are you sure you want to approve this payment? The order will be moved to Processing status.',
-        okText: 'Approve',
-        onConfirm: () => approvePayment(parseInt(verificationId))
-    });
-});
-
-document.getElementById('btnRejectPayment')?.addEventListener('click', function () {
-    const verificationId = this.dataset.verificationId;
-    if (!verificationId) return;
-
-    document.getElementById('btnConfirmReject').dataset.verificationId = verificationId;
-    openModal('rejectReasonModal');
-});
 
 document.getElementById('btnConfirmReject')?.addEventListener('click', function () {
     const verificationId = this.dataset.verificationId;
