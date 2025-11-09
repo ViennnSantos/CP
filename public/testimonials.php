@@ -239,13 +239,17 @@ if ($isCustomer) {
 
         .testimonial-card {
             background: #fff;
-            padding: 2rem;
+            padding: 2.5rem 2rem;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,.08);
             transition: all .3s ease;
-            position: relative;
             border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
+            min-height: 280px;
         }
 
         .testimonial-card:hover {
@@ -256,10 +260,8 @@ if ($isCustomer) {
 
         .rating {
             display: flex;
-            gap: .3rem;
-            margin-bottom: 12px;
-            position: relative;
-            z-index: 1;
+            gap: .4rem;
+            margin-bottom: 18px;
             justify-content: center;
         }
 
@@ -274,45 +276,45 @@ if ($isCustomer) {
         }
 
         .product-name-display {
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             font-weight: 600;
             color: #4a6fa5;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
             text-align: center;
-            position: relative;
-            z-index: 1;
+            line-height: 1.4;
         }
 
         .product-name-display .material-symbols-rounded {
-            font-size: 18px;
+            font-size: 20px;
             vertical-align: middle;
-            margin-right: 4px;
+            margin-right: 6px;
         }
 
         .comment {
             color: #495057;
             line-height: 1.7;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             font-style: italic;
             white-space: pre-wrap;
-            position: relative;
-            z-index: 1;
-            font-size: .9rem;
+            font-size: .95rem;
             text-align: center;
+            max-width: 90%;
         }
 
         .customer-info {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: .8rem;
-            padding-top: 1rem;
+            gap: .75rem;
+            padding-top: 18px;
+            margin-top: auto;
             border-top: 1px solid #e9ecef;
+            width: 100%;
         }
 
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
@@ -320,25 +322,31 @@ if ($isCustomer) {
             background: linear-gradient(135deg, #4a6fa5, #6b8cce);
             color: #fff;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: .95rem;
             box-shadow: 0 2px 8px rgba(74,111,165,.3);
+            flex-shrink: 0;
         }
 
         .customer-details {
-            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            font-size: .8rem;
+            color: #868e96;
         }
 
         .customer-name {
             font-weight: 500;
             color: #2c3e50;
-            display: block;
-            margin-bottom: 2px;
-            font-size: .85rem;
         }
 
         .customer-date {
-            font-size: .75rem;
             color: #868e96;
+        }
+
+        .customer-date::before {
+            content: '•';
+            margin-right: .5rem;
         }
 
         .empty-state {
@@ -371,15 +379,21 @@ if ($isCustomer) {
             .container {
                 padding: 2rem 1rem;
             }
-            
+
             .page-header h1 {
                 font-size: 2rem;
             }
-            
+
             .testimonials-grid {
                 grid-template-columns: 1fr;
+                gap: 1.5rem;
             }
-            
+
+            .testimonial-card {
+                min-height: auto;
+                padding: 2rem 1.5rem;
+            }
+
             .summary-bar {
                 flex-direction: column;
                 gap: 1rem;
@@ -387,6 +401,18 @@ if ($isCustomer) {
 
             .header-content {
                 padding: 0 1rem;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
