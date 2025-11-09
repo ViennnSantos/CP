@@ -829,8 +829,8 @@ window.RT_ORDER = <?= json_encode([
       ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 console.log('✅ RT_ORDER:', window.RT_ORDER);
-// ✅ FIX: Sync T&C checkbox with hidden field
 
+// ✅ FIX: Sync T&C checkbox with hidden field
 document.addEventListener('DOMContentLoaded', function() {
   const termsCheckbox = document.getElementById('termsCheckbox');
   const termsAgreedField = document.getElementById('termsAgreed');
@@ -838,7 +838,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (termsCheckbox && termsAgreedField) {
     termsCheckbox.addEventListener('change', function() {
-
       // Update hidden field value when checkbox changes
       termsAgreedField.value = this.checked ? '1' : '0';
       console.log('✅ T&C checkbox changed: terms_agreed =', termsAgreedField.value);
