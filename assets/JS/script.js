@@ -878,11 +878,13 @@ async function viewAdminOrderDetails(orderId) {
                                             <td style="text-align: right; padding: 0.5rem;">${taxPercentage}%</td>
                                         </tr>
                                     `).join('')}
-                                    <tr style="border-top: 2px solid var(--brand);">
-                                         <td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
-                                        <td style="text-align: right; padding: 0.5rem; font-weight: 700; font-size: 1.2rem; color: var(--brand);">₱${parseFloat(order.total_amount).toLocaleString()}</td>
-                                    </tr>
                                 </tbody>
+                                <tfoot>
+                                    <tr style="border-top: 2px solid var(--brand);">
+                                        <td colspan="3" style="text-align: right; padding: 0.75rem; font-weight: 700; font-size: 1.05rem;">TOTAL AMOUNT</td>
+                                        <td style="text-align: right; padding: 0.75rem; font-weight: 700; font-size: 1.2rem; color: var(--brand);">₱${parseFloat(order.total_amount).toLocaleString()}</td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
                      </div>
@@ -996,6 +998,14 @@ function closeOrderEditPanel() {
     if (modal) {
         modal.style.display = 'none';
         modal.remove();
+    }
+}
+
+function closeSuccessModal() {
+    closeModal('successModal');
+    // Refresh order list to show updated payment status
+    if (typeof loadOrders === 'function') {
+        loadOrders();
     }
 }
 
@@ -2778,8 +2788,37 @@ async function approvePayment(verificationId) {
         }
 
         if (result.success) {
-            showNotification(result.message || 'Payment approved successfully!', 'success');
+            // Close payment details modal
             closeModal('paymentDetailsModal');
+
+            // Display success modal with order details
+            const order = result.data?.order;
+            const successTitle = document.getElementById('successTitle');
+            const successMessage = document.getElementById('successMessage');
+            const successDetails = document.getElementById('successDetails');
+
+            if (successTitle) successTitle.textContent = 'Payment Approved Successfully!';
+            if (successMessage) successMessage.textContent = result.message || 'The payment has been approved and the order has been updated.';
+
+            if (successDetails && order) {
+                const totalAmount = parseFloat(order.total_amount || 0);
+                const amountPaid = parseFloat(order.amount_paid || 0);
+                const remainingBalance = parseFloat(order.remaining_balance || 0);
+                const paymentStatus = order.payment_status || 'Pending';
+                const orderStatus = order.status || 'Pending';
+
+                successDetails.innerHTML = `
+                    <p style="margin: 0.5rem 0;"><strong>Order Status:</strong> ${orderStatus}</p>
+                    <p style="margin: 0.5rem 0;"><strong>Payment Status:</strong> <span style="color: ${paymentStatus === 'Fully Paid' ? '#10b981' : '#f59e0b'};">${paymentStatus}</span></p>
+                    <p style="margin: 0.5rem 0;"><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                    <p style="margin: 0.5rem 0;"><strong>Amount Paid:</strong> ₱${amountPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                    <p style="margin: 0.5rem 0;"><strong>Remaining Balance:</strong> <span style="color: ${remainingBalance === 0 ? '#10b981' : '#ef4444'};">₱${remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></p>
+                `;
+            }
+
+            openModal('successModal');
+
+            // Reload payment verifications list
             loadPaymentVerifications();
         } else {
             showNotification(result.message || 'Failed to approve payment', 'error');
@@ -2837,12 +2876,14 @@ document.getElementById('btnApprovePayment')?.addEventListener('click', function
     const verificationId = this.dataset.verificationId;
     if (!verificationId) return;
 
-    showConfirm({
-        title: 'Approve Payment',
-        message: 'Are you sure you want to approve this payment? The order will be moved to Processing status.',
-        okText: 'Approve',
-        onConfirm: () => approvePayment(parseInt(verificationId))
-    });
+    // Store verification ID for the confirm button
+    const confirmBtn = document.getElementById('btnConfirmApprove');
+    if (confirmBtn) {
+        confirmBtn.dataset.verificationId = verificationId;
+    }
+
+    // Open custom approval modal instead of browser confirm
+    openModal('approvePaymentModal');
 });
 
 document.getElementById('btnRejectPayment')?.addEventListener('click', function () {
@@ -2851,6 +2892,15 @@ document.getElementById('btnRejectPayment')?.addEventListener('click', function 
 
     document.getElementById('btnConfirmReject').dataset.verificationId = verificationId;
     openModal('rejectReasonModal');
+});
+
+// Handle confirm approve button click
+document.getElementById('btnConfirmApprove')?.addEventListener('click', async function () {
+    const verificationId = this.dataset.verificationId;
+    if (!verificationId) return;
+
+    closeModal('approvePaymentModal');
+    await approvePayment(parseInt(verificationId));
 });
 
 document.getElementById('btnConfirmReject')?.addEventListener('click', function () {
