@@ -879,16 +879,13 @@ async function viewAdminOrderDetails(orderId) {
                                         </tr>
                                     `).join('')}
                                     <tr style="border-top: 2px solid var(--brand);">
-                                        td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
+                                         <td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
                                         <td style="text-align: right; padding: 0.5rem; font-weight: 700; font-size: 1.2rem; color: var(--brand);">₱${parseFloat(order.total_amount).toLocaleString()}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <!-- ✅ FIXED: Removed "Edit Order" button - Only Close button remains -->
-                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button onclick="closeAdminOrderModal()" class="btn-secondary">Close</button>
-                        </div>
+                     </div>
                 </div>
             </div>
         `;
@@ -2677,8 +2674,8 @@ async function viewPaymentDetails(verificationId) {
         const approveBtn = document.getElementById('btnApprovePayment');
         const rejectBtn = document.getElementById('btnRejectPayment');
         const status = (payment.status || '').toUpperCase();
-
         const hasProof = !!proofSrc;
+        const hasAgreedTerms = !!(payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed);
 
         if (approveBtn && rejectBtn) {
             // Remove any previous event listeners by cloning
@@ -2692,7 +2689,8 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') {
                 newApproveBtn.textContent = 'Re-approve';
                 newRejectBtn.textContent = 'Reject (change)';
-				
+
+
             } else if (status === 'REJECTED') {
                 newApproveBtn.textContent = 'Approve (change)';
                 newRejectBtn.textContent = 'Re-reject';
@@ -2702,10 +2700,15 @@ async function viewPaymentDetails(verificationId) {
                 newRejectBtn.textContent = 'Reject Payment';
             }
 
-            // Disable approve if no proof (unless admin override - for now just disable)
-            if (!hasProof && status === 'PENDING') {
+            // Disable approve if no proof OR if terms not agreed
+            if ((!hasProof || !hasAgreedTerms) && status === 'PENDING') {
                 newApproveBtn.disabled = true;
-                newApproveBtn.title = 'Payment proof required to approve';
+                if (!hasProof) {
+                    newApproveBtn.title = 'Payment proof required to approve';
+
+                } else if (!hasAgreedTerms) {
+                    newApproveBtn.title = 'Customer must agree to Terms & Conditions before approval';
+                }
                 newApproveBtn.style.opacity = '0.5';
                 newApproveBtn.style.cursor = 'not-allowed';
 
@@ -2724,12 +2727,10 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') newApproveBtn.classList.add('muted'); else newApproveBtn.classList.remove('muted');
             if (status === 'REJECTED') newRejectBtn.classList.add('muted'); else newRejectBtn.classList.remove('muted');
 
-            // Add click handlers with confirmation
             newApproveBtn.addEventListener('click', () => {
-                if (confirm('Are you sure you want to approve this payment? This will update the order balance and cannot be easily undone.')) {
-                    approvePayment(verificationId);
-                }
+                showApprovalConfirmModal(verificationId);
             });
+			
             newRejectBtn.addEventListener('click', () => {
                 const reason = prompt('Enter rejection reason (required):');
                 if (reason && reason.trim()) {
