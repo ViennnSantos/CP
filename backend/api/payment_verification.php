@@ -330,8 +330,14 @@ function approvePayment(PDO $conn): void {
     try {
         $conn->beginTransaction();
 
-        // load verification
-        $s = $conn->prepare("SELECT id, order_id, amount_reported, status, method FROM payment_verifications WHERE id = :id LIMIT 1");
+        // load verification with order T&C status
+        $s = $conn->prepare("
+            SELECT pv.id, pv.order_id, pv.amount_reported, pv.status, pv.method,
+                   o.terms_agreed, o.total_amount
+            FROM payment_verifications pv
+            JOIN orders o ON pv.order_id = o.id
+            WHERE pv.id = :id LIMIT 1
+        ");
         $s->execute([':id' => $pv_id]);
         $pv = $s->fetch(PDO::FETCH_ASSOC);
         if (!$pv) {
@@ -342,10 +348,17 @@ function approvePayment(PDO $conn): void {
         $orderId = (int)$pv['order_id'];
         $amt = (float)$pv['amount_reported'];
         $cur = strtoupper(trim((string)$pv['status'] ?? ''));
+        $termsAgreed = (bool)($pv['terms_agreed'] ?? false);
+
+        // Validate T&C agreement
+        if (!$termsAgreed) {
+            $conn->rollBack();
+            send_json(['success' => false, 'message' => 'Cannot approve payment. Customer has not accepted the Terms & Conditions.'], 400);
+        }
 
         if (in_array($cur, ['APPROVED','VERIFIED'], true)) {
             $conn->rollBack();
-            send_json(['success' => true, 'message' => 'Already approved', 'order_id' => $orderId]);
+            send_json(['success' => true, 'message' => 'Already approved', 'data' => ['order_id' => $orderId]]);
         }
 
         // approver id from session
@@ -383,8 +396,44 @@ function approvePayment(PDO $conn): void {
         // recalc order's payment_status
         recalc_order_payment($conn, $orderId);
 
+        // Fetch updated order data for return
+        $orderStmt = $conn->prepare("
+            SELECT
+                o.total_amount,
+                o.payment_status,
+                COALESCE((SELECT SUM(p2.amount_paid) FROM payments p2 WHERE p2.order_id = o.id AND UPPER(COALESCE(p2.status,'')) IN ('VERIFIED','APPROVED')), 0) AS amount_paid
+            FROM orders o
+            WHERE o.id = :oid LIMIT 1
+        ");
+        $orderStmt->execute([':oid' => $orderId]);
+        $orderData = $orderStmt->fetch(PDO::FETCH_ASSOC);
+
+        $totalAmount = (float)($orderData['total_amount'] ?? 0);
+        $amountPaid = (float)($orderData['amount_paid'] ?? 0);
+        $remainingBalance = max(0, $totalAmount - $amountPaid);
+
+        // Determine payment status text
+        if ($remainingBalance <= 0.01) {
+            $paymentStatusText = 'Fully Paid';
+        } elseif ($amountPaid > 0) {
+            $paymentStatusText = 'With Balance';
+        } else {
+            $paymentStatusText = 'Pending';
+        }
+
         $conn->commit();
-        send_json(['success' => true, 'data' => ['order_id' => $orderId, 'pv_id' => $pv_id, 'message' => 'Approved']]);
+        send_json([
+            'success' => true,
+            'message' => 'Payment approved successfully',
+            'data' => [
+                'order_id' => $orderId,
+                'pv_id' => $pv_id,
+                'remaining_balance' => number_format($remainingBalance, 2, '.', ''),
+                'amount_paid' => number_format($amountPaid, 2, '.', ''),
+                'payment_status' => $orderData['payment_status'] ?? $paymentStatusText,
+                'payment_status_text' => $paymentStatusText
+            ]
+        ]);
     } catch (Throwable $e) {
         if ($conn->inTransaction()) $conn->rollBack();
         local_log("approvePayment error: " . $e->getMessage());

@@ -1352,6 +1352,42 @@ function getPaymentBadgeClass(paymentStatus) {
     }
 }
 
+// Update a specific order row in the table after payment approval
+async function updateOrderRow(orderId, paymentData) {
+    try {
+        // Fetch fresh order details from the server
+        const response = await fetch(`/backend/api/admin_orders.php?action=details&id=${orderId}`, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) return;
+
+        const result = await response.json();
+        if (!result.success || !result.data || !result.data.order) return;
+
+        const order = result.data.order;
+
+        // Find the row in the table
+        const row = document.querySelector(`tr[data-order-id="${orderId}"]`);
+        if (!row) return; // Row not visible in current view
+
+        // Update remaining balance cell (if exists)
+        const cells = row.querySelectorAll('td');
+        if (cells.length >= 6) {
+            // Update payment status badge (typically column 5, 0-indexed)
+            const paymentStatusCell = cells[5];
+            const paymentStatus = order.payment_status_text || order.payment_status || 'Pending';
+            paymentStatusCell.innerHTML = `<span class="badge badge-${getPaymentBadgeClass(paymentStatus)}">${paymentStatus}</span>`;
+        }
+
+        console.log(`Order row ${orderId} updated with new payment status`);
+    } catch (error) {
+        console.error('Error updating order row:', error);
+        // Silently fail - this is a UI enhancement, not critical
+    }
+}
+
 function formatDate(dateString) {
     if (!dateString) return 'N/A';
     try {
@@ -2163,6 +2199,11 @@ function showConfirm({ title = 'Confirm', message = 'Are you sure?', okText = 'O
     openModal('confirmModal');
 }
 
+// Wrapper for showConfirm with positional arguments
+function showConfirmModal(title, message, onConfirm, okText = 'OK', cancelText = 'Cancel') {
+    showConfirm({ title, message, okText, onConfirm });
+}
+
 function escapeHtml(text) {
     if (!text) return '';
     const div = document.createElement('div');
@@ -2679,6 +2720,8 @@ async function viewPaymentDetails(verificationId) {
         const status = (payment.status || '').toUpperCase();
 
         const hasProof = !!proofSrc;
+        // Check T&C agreement - support multiple field names
+        const termsAgreed = !!(payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed);
 
         if (approveBtn && rejectBtn) {
             // Remove any previous event listeners by cloning
@@ -2692,7 +2735,7 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') {
                 newApproveBtn.textContent = 'Re-approve';
                 newRejectBtn.textContent = 'Reject (change)';
-				
+
             } else if (status === 'REJECTED') {
                 newApproveBtn.textContent = 'Approve (change)';
                 newRejectBtn.textContent = 'Re-reject';
@@ -2702,13 +2745,19 @@ async function viewPaymentDetails(verificationId) {
                 newRejectBtn.textContent = 'Reject Payment';
             }
 
-            // Disable approve if no proof (unless admin override - for now just disable)
+            // Disable approve if no proof OR T&C not agreed
+            let disableReason = '';
             if (!hasProof && status === 'PENDING') {
+                disableReason = 'Payment proof required to approve';
+            } else if (!termsAgreed) {
+                disableReason = 'Cannot approve payment. Customer has not accepted the Terms & Conditions.';
+            }
+
+            if (disableReason) {
                 newApproveBtn.disabled = true;
-                newApproveBtn.title = 'Payment proof required to approve';
+                newApproveBtn.title = disableReason;
                 newApproveBtn.style.opacity = '0.5';
                 newApproveBtn.style.cursor = 'not-allowed';
-
             } else {
                 newApproveBtn.disabled = false;
                 newApproveBtn.title = '';
@@ -2724,11 +2773,19 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') newApproveBtn.classList.add('muted'); else newApproveBtn.classList.remove('muted');
             if (status === 'REJECTED') newRejectBtn.classList.add('muted'); else newRejectBtn.classList.remove('muted');
 
-            // Add click handlers with confirmation
+            // Add click handlers with styled modal confirmation
             newApproveBtn.addEventListener('click', () => {
-                if (confirm('Are you sure you want to approve this payment? This will update the order balance and cannot be easily undone.')) {
-                    approvePayment(verificationId);
+                if (newApproveBtn.disabled) {
+                    showNotification(disableReason, 'error');
+                    return;
                 }
+                showConfirmModal(
+                    'Approve Payment',
+                    'Are you sure you want to approve this payment? This will update the order balance.',
+                    () => approvePayment(verificationId, payment.order_id),
+                    'Approve',
+                    'Cancel'
+                );
             });
             newRejectBtn.addEventListener('click', () => {
                 const reason = prompt('Enter rejection reason (required):');
@@ -2750,7 +2807,7 @@ async function viewPaymentDetails(verificationId) {
 
 
 // Approve payment (robust fetch + error handling)
-async function approvePayment(verificationId) {
+async function approvePayment(verificationId, orderId) {
     try {
         const response = await fetch('/backend/api/payment_verification.php?action=approve', {
             method: 'POST',
@@ -2779,7 +2836,14 @@ async function approvePayment(verificationId) {
         if (result.success) {
             showNotification(result.message || 'Payment approved successfully!', 'success');
             closeModal('paymentDetailsModal');
+
+            // Reload payment verifications list
             loadPaymentVerifications();
+
+            // Update Order Management table if it's visible and we have updated data
+            if (orderId && result.data) {
+                updateOrderRow(orderId, result.data);
+            }
         } else {
             showNotification(result.message || 'Failed to approve payment', 'error');
         }
