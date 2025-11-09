@@ -901,15 +901,6 @@ if (!$isLoggedIn) {
                 </div>
                 <div style="padding:16px">
                     <p style="margin-bottom: 1rem;"><strong>Are you sure you want to approve this payment?</strong></p>
-                    <div style="background: #f0f9ff; padding: 12px; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #3b82f6;">
-                        <p style="margin: 0.5rem 0; font-size: 0.9rem;">After confirmation, the system will:</p>
-                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem;">
-                            <li>Update payment status to <strong>APPROVED</strong></li>
-                            <li>Deduct reported amount from order balance</li>
-                            <li>Update order payment status (Fully Paid if balance = ₱0.00)</li>
-                            <li>Set order status to <strong>Processing</strong> if fully paid</li>
-                        </ul>
-                    </div>
                     <p style="font-size: 0.85rem; color: #666; margin: 0;">This action cannot be undone.</p>
                 </div>
                 <div class="modal-actions">

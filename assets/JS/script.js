@@ -2800,8 +2800,11 @@ async function approvePayment(verificationId) {
             }
             openModal('successModal');
 
-            // Reload payment verifications list
+            // Reload both payment verifications and orders lists
             loadPaymentVerifications();
+            if (typeof loadOrders === 'function') {
+                loadOrders();
+            }
         } else {
             showNotification(result.message || 'Failed to approve payment', 'error');
         }
@@ -2852,8 +2855,11 @@ async function rejectPayment(verificationId, reason) {
 
             openModal('successModal');
 
-            // Reload payment verifications list
+            // Reload both payment verifications and orders lists
             loadPaymentVerifications();
+            if (typeof loadOrders === 'function') {
+                loadOrders();
+            }
         } else {
             showNotification(result.message || 'Failed to reject payment', 'error');
         }
