@@ -829,6 +829,37 @@ window.RT_ORDER = <?= json_encode([
       ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
 console.log('✅ RT_ORDER:', window.RT_ORDER);
+// ✅ FIX: Sync T&C checkbox with hidden field
+
+document.addEventListener('DOMContentLoaded', function() {
+  const termsCheckbox = document.getElementById('termsCheckbox');
+  const termsAgreedField = document.getElementById('termsAgreed');
+  const termsConfirmBtn = document.getElementById('termsConfirm');
+
+  if (termsCheckbox && termsAgreedField) {
+    termsCheckbox.addEventListener('change', function() {
+
+      // Update hidden field value when checkbox changes
+      termsAgreedField.value = this.checked ? '1' : '0';
+      console.log('✅ T&C checkbox changed: terms_agreed =', termsAgreedField.value);
+
+      // Enable/disable confirm button
+      if (termsConfirmBtn) {
+        if (this.checked) {
+          termsConfirmBtn.disabled = false;
+          termsConfirmBtn.style.opacity = '1';
+          termsConfirmBtn.style.cursor = 'pointer';
+          termsConfirmBtn.style.background = '#2c5f8d';
+        } else {
+          termsConfirmBtn.disabled = true;
+          termsConfirmBtn.style.opacity = '0.5';
+          termsConfirmBtn.style.cursor = 'not-allowed';
+          termsConfirmBtn.style.background = '#9ca3af';
+        }
+      }
+    });
+  }
+});
 </script>
 <script src="/assets/JS/checkout.js" defer></script>
 </body>
