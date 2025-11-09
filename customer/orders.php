@@ -351,7 +351,7 @@ $customerId = $_SESSION['user']['id'] ?? 0;
                 submitBtn.innerHTML = '<span class="material-symbols-rounded">hourglass_empty</span> Submitting...';
 
                 try {
-                    const res = await fetch('/backend/api/feedback/create.php', {
+                    const res = await fetch('/backend/api/mark_received.php', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -373,7 +373,7 @@ $customerId = $_SESSION['user']['id'] ?? 0;
                     }
 
                     closeFeedbackModal();
-                    alert('Thank you! Your feedback has been submitted and is pending approval.');
+                    alert('Thank you! Your feedback has been published and is now live!');
 
                     // Refresh orders to show updated feedback status
                     if (typeof loadCustomerOrders === 'function') {

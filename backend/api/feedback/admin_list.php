@@ -88,8 +88,9 @@ try {
 
     // Main query to fetch all feedback with related data
     // FIXED: Uses c.full_name directly since customers table doesn't have first_name/last_name
+    // FIXED: Added product names via JOIN with order_items
     $sql = "
-        SELECT 
+        SELECT
             f.id,
             f.rating,
             f.comment,
@@ -100,10 +101,13 @@ try {
             o.id AS order_id,
             o.order_code,
             c.id AS customer_id,
-            COALESCE(c.full_name, 'Customer') AS customer_name
+            COALESCE(c.full_name, 'Customer') AS customer_name,
+            GROUP_CONCAT(oi.name SEPARATOR ', ') AS product_names
         FROM feedback f
         INNER JOIN orders o ON o.id = f.order_id
         INNER JOIN customers c ON c.id = f.customer_id
+        LEFT JOIN order_items oi ON oi.order_id = f.order_id
+        GROUP BY f.id
         ORDER BY f.created_at DESC
     ";
     

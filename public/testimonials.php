@@ -64,18 +64,21 @@ if ($pdo instanceof PDO) {
         $stats['count'] = (int)($statsRow['cnt'] ?? 0);
         $stats['avg'] = (float)($statsRow['avg_rating'] ?? 0);
 
-        // ✅ FIXED: Simpler query without product details for public page
+        // ✅ FIXED: Query includes product names via JOIN with order_items
         $stmt = $pdo->prepare("
-            SELECT 
+            SELECT
                 f.id as feedback_id,
                 f.rating,
                 f.comment,
                 f.created_at,
                 f.customer_id,
-                COALESCE(c.full_name, 'Customer') AS customer_name
+                COALESCE(c.full_name, 'Customer') AS customer_name,
+                GROUP_CONCAT(oi.name SEPARATOR ', ') AS product_names
             FROM feedback f
             INNER JOIN customers c ON c.id = f.customer_id
+            LEFT JOIN order_items oi ON oi.order_id = f.order_id
             WHERE f.is_released = 1 {$deletedFilter}
+            GROUP BY f.id
             ORDER BY COALESCE(f.released_at, f.created_at) DESC
             LIMIT 50
         ");
@@ -466,6 +469,13 @@ if ($isCustomer) {
                                 <span class="star <?php echo $i <= $rating ? '' : 'empty'; ?>">★</span>
                             <?php endfor; ?>
                         </div>
+
+                        <?php if (!empty($t['product_names'])): ?>
+                            <div style="font-size: 0.85rem; color: #4a6fa5; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.5rem;">
+                                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">shopping_cart</span>
+                                <?php echo e($t['product_names']); ?>
+                            </div>
+                        <?php endif; ?>
 
                         <?php if ($comment !== ''): ?>
                             <div class="comment">
