@@ -240,11 +240,12 @@ if ($isCustomer) {
         .testimonial-card {
             background: #fff;
             padding: 2rem;
-            border-radius: 16px;
+            border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,.08);
             transition: all .3s ease;
             position: relative;
             border: 1px solid #e9ecef;
+            text-align: center;
         }
 
         .testimonial-card:hover {
@@ -253,23 +254,13 @@ if ($isCustomer) {
             border-color: #4a6fa5;
         }
 
-        .testimonial-card::before {
-            content: '"';
-            position: absolute;
-            top: -5px;
-            left: 15px;
-            font-size: 80px;
-            color: rgba(74,111,165,.08);
-            font-family: Georgia, serif;
-            line-height: 1;
-        }
-
         .rating {
             display: flex;
             gap: .3rem;
-            margin-bottom: 1rem;
+            margin-bottom: 12px;
             position: relative;
             z-index: 1;
+            justify-content: center;
         }
 
         .star {
@@ -282,28 +273,46 @@ if ($isCustomer) {
             color: #dee2e6;
         }
 
+        .product-name-display {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #4a6fa5;
+            margin-bottom: 16px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .product-name-display .material-symbols-rounded {
+            font-size: 18px;
+            vertical-align: middle;
+            margin-right: 4px;
+        }
+
         .comment {
             color: #495057;
             line-height: 1.7;
-            margin: 1rem 0 1.5rem;
+            margin-bottom: 20px;
             font-style: italic;
             white-space: pre-wrap;
             position: relative;
             z-index: 1;
-            font-size: .95rem;
+            font-size: .9rem;
+            text-align: center;
         }
 
         .customer-info {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: .8rem;
             padding-top: 1rem;
-            border-top: 2px solid #f1f3f5;
+            border-top: 1px solid #e9ecef;
         }
 
         .avatar {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
@@ -311,24 +320,24 @@ if ($isCustomer) {
             background: linear-gradient(135deg, #4a6fa5, #6b8cce);
             color: #fff;
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 1rem;
             box-shadow: 0 2px 8px rgba(74,111,165,.3);
         }
 
         .customer-details {
-            flex: 1;
+            text-align: left;
         }
 
         .customer-name {
-            font-weight: 600;
-            color: #4a6fa5;
+            font-weight: 500;
+            color: #2c3e50;
             display: block;
             margin-bottom: 2px;
-            font-size: .95rem;
+            font-size: .85rem;
         }
 
         .customer-date {
-            font-size: .85rem;
+            font-size: .75rem;
             color: #868e96;
         }
 
@@ -471,9 +480,8 @@ if ($isCustomer) {
                         </div>
 
                         <?php if (!empty($t['product_names'])): ?>
-                            <div style="font-size: 0.85rem; color: #4a6fa5; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.5rem;">
-                                <span class="material-symbols-rounded" style="font-size: 18px; vertical-align: middle;">shopping_cart</span>
-                                <?php echo e($t['product_names']); ?>
+                            <div class="product-name-display">
+                                <span class="material-symbols-rounded">shopping_cart</span><?php echo e($t['product_names']); ?>
                             </div>
                         <?php endif; ?>
 
