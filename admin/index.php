@@ -881,6 +881,7 @@ if (!$isLoggedIn) {
     <div class="modal-content" style="max-width:1000px;">
         <div class="modal-header">
             <h2>Payment Verification Details</h2>
+            <button class="modal-close" onclick="closeModal('paymentDetailsModal')">×</button>
         </div>
         <div class="modal-body-scrollable" id="paymentDetailsContent">
             <!-- populated by JS -->

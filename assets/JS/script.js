@@ -2700,20 +2700,11 @@ async function viewPaymentDetails(verificationId) {
                 newRejectBtn.textContent = 'Reject Payment';
             }
 
-            // Disable approve if no proof
-            if (!hasProof && status === 'PENDING') {
-                newApproveBtn.disabled = true;
-                newApproveBtn.title = 'Payment proof required to approve';
-                newApproveBtn.style.opacity = '0.5';
-                newApproveBtn.style.cursor = 'not-allowed';
-
-            } else {
-                newApproveBtn.disabled = false;
-                newApproveBtn.title = '';
-                newApproveBtn.style.opacity = '1';
-                newApproveBtn.style.cursor = 'pointer';
-            }
-
+            // Always enable buttons (no restrictions)
+            newApproveBtn.disabled = false;
+            newApproveBtn.title = '';
+            newApproveBtn.style.opacity = '1';
+            newApproveBtn.style.cursor = 'pointer';
 
             newApproveBtn.style.display = 'inline-block';
             newRejectBtn.style.display = 'inline-block';
@@ -2722,8 +2713,17 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') newApproveBtn.classList.add('muted'); else newApproveBtn.classList.remove('muted');
             if (status === 'REJECTED') newRejectBtn.classList.add('muted'); else newRejectBtn.classList.remove('muted');
 
+            // Store verification ID in button dataset for approval modal
+            newApproveBtn.dataset.verificationId = verificationId;
+            newRejectBtn.dataset.verificationId = verificationId;
+
             newApproveBtn.addEventListener('click', () => {
-                showApprovalConfirmModal(verificationId);
+                // Open approval confirmation modal
+                const confirmBtn = document.getElementById('btnConfirmApprove');
+                if (confirmBtn) {
+                    confirmBtn.dataset.verificationId = verificationId;
+                }
+                openModal('approvePaymentModal');
             });
 
             newRejectBtn.addEventListener('click', () => {
