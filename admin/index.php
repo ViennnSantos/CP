@@ -878,20 +878,19 @@ if (!$isLoggedIn) {
 
         <!-- Payment Details Modal -->
         <div class="modal" id="paymentDetailsModal">
-            <div class="modal-content" style="max-width:1000px;">
-                <div class="modal-header">
-                    <h2>Payment Verification Details</h2><button class="modal-close" onclick="closeModal('paymentDetailsModal')">×</button>
-                </div>
-                <div class="modal-body-scrollable" id="paymentDetailsContent">
-
-                    <!-- populated by JS -->
-                </div>
-                <div class="modal-actions">
-                    <button id="btnRejectPayment" class="btn-danger">Reject</button>
-                    <button id="btnApprovePayment" class="btn-primary">Approve</button>
-                </div>
-            </div>
+    <div class="modal-content" style="max-width:1000px;">
+        <div class="modal-header">
+            <h2>Payment Verification Details</h2>
         </div>
+        <div class="modal-body-scrollable" id="paymentDetailsContent">
+            <!-- populated by JS -->
+        </div>
+        <div class="modal-actions">
+            <button id="btnRejectPayment" class="btn-danger">Reject</button>
+            <button id="btnApprovePayment" class="btn-primary">Approve</button>
+        </div>
+    </div>
+</div>
 
         <!-- Approve Payment Confirmation Modal -->
         <div class="modal" id="approvePaymentModal">

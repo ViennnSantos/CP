@@ -350,6 +350,11 @@ function approvePayment(PDO $conn): void {
             $conn->rollBack();
             send_json(['success' => true, 'message' => 'Already approved', 'order_id' => $orderId]);
         }
+		
+// ✅ NEW: Validate Terms & Conditions acceptance before approving
+        $orderCheck = $conn->prepare("SELECT terms_agreed FROM orders WHERE id = :oid LIMIT 1");
+        $orderCheck->execute([':oid' => $orderId]);
+        $orderData = $orderCheck->fetch(PDO::FETCH_ASSOC);
 
         // ✅ NEW: Validate Terms & Conditions acceptance before approving
         $orderCheck = $conn->prepare("SELECT terms_agreed FROM orders WHERE id = :oid LIMIT 1");
@@ -400,8 +405,36 @@ function approvePayment(PDO $conn): void {
         // recalc order's payment_status
         recalc_order_payment($conn, $orderId);
 
+        // Fetch updated order details to return fresh data
+        $orderStmt = $conn->prepare("
+            SELECT
+                id,
+                total_amount,
+                remaining_balance,
+                payment_status,
+                status,
+                COALESCE((
+                    SELECT SUM(p2.amount_paid)
+                    FROM payments p2
+                    WHERE p2.order_id = o.id
+                    AND UPPER(COALESCE(p2.status,'')) IN ('VERIFIED','APPROVED')
+                ), 0) AS amount_paid
+            FROM orders o
+            WHERE id = :oid
+            LIMIT 1
+        ");
+        $orderStmt->execute([':oid' => $orderId]);
+        $updatedOrder = $orderStmt->fetch(PDO::FETCH_ASSOC);
         $conn->commit();
-        send_json(['success' => true, 'data' => ['order_id' => $orderId, 'pv_id' => $pv_id, 'message' => 'Approved']]);
+        send_json([
+            'success' => true,
+            'message' => 'Payment approved successfully',
+            'data' => [
+                'order_id' => $orderId,
+                'pv_id' => $pv_id,
+                'order' => $updatedOrder
+            ]
+        ]);
     } catch (Throwable $e) {
         if ($conn->inTransaction()) $conn->rollBack();
         local_log("approvePayment error: " . $e->getMessage());
