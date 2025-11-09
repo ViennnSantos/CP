@@ -893,6 +893,32 @@ if (!$isLoggedIn) {
             </div>
         </div>
 
+        <!-- Approve Payment Confirmation Modal -->
+        <div class="modal" id="approvePaymentModal">
+            <div class="modal-content" style="max-width:500px;">
+                <div class="modal-header">
+                    <h2>Approve Payment</h2><button class="modal-close" onclick="closeModal('approvePaymentModal')">×</button>
+                </div>
+                <div style="padding:16px">
+                    <p style="margin-bottom: 1rem;"><strong>Are you sure you want to approve this payment?</strong></p>
+                    <div style="background: #f0f9ff; padding: 12px; border-radius: 6px; margin-bottom: 1rem; border-left: 4px solid #3b82f6;">
+                        <p style="margin: 0.5rem 0; font-size: 0.9rem;">After confirmation, the system will:</p>
+                        <ul style="margin: 0.5rem 0; padding-left: 1.5rem; font-size: 0.9rem;">
+                            <li>Update payment status to <strong>APPROVED</strong></li>
+                            <li>Deduct reported amount from order balance</li>
+                            <li>Update order payment status (Fully Paid if balance = ₱0.00)</li>
+                            <li>Set order status to <strong>Processing</strong> if fully paid</li>
+                        </ul>
+                    </div>
+                    <p style="font-size: 0.85rem; color: #666; margin: 0;">This action cannot be undone.</p>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('approvePaymentModal')">Cancel</button>
+                    <button id="btnConfirmApprove" class="btn-primary">Confirm Approval</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Reject Reason Modal -->
         <div class="modal" id="rejectReasonModal">
             <div class="modal-content" style="max-width:500px;">
@@ -910,6 +936,21 @@ if (!$isLoggedIn) {
             </div>
         </div>
 
+        <!-- Success Notification Modal -->
+        <div class="modal" id="successModal">
+            <div class="modal-content" style="max-width:400px; text-align:center;">
+                <div style="padding: 2rem 1rem;">
+                    <div style="width: 64px; height: 64px; margin: 0 auto 1rem; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <span class="material-symbols-rounded" style="font-size: 40px; color: white;">check_circle</span>
+
+                    </div>
+                    <h2 id="successTitle" style="margin-bottom: 0.5rem; color: #059669;">Success!</h2>
+                    <p id="successMessage" style="color: #666;">Payment approved successfully</p>
+                    <div id="successDetails" style="background: #f0fdf4; padding: 1rem; border-radius: 6px; margin: 1rem 0; text-align: left; font-size: 0.9rem;"></div>
+                     <button class="btn-primary" onclick="closeSuccessModal()" style="margin-top: 1rem;">Close</button>
+                </div>
+            </div>
+        </div>
         <!-- Edit Profile Modal -->
         <div class="modal" id="editProfileModal">
             <div class="modal-content">
