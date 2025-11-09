@@ -807,7 +807,16 @@ async function viewAdminOrderDetails(orderId) {
             existingModal.remove();
         }
 
-        const taxPercentage = parseFloat(order.tax_percentage || 0);
+        // Use stored tax_rate if available, otherwise default to 12%
+        let taxPercentage = 12; // Default to 12%
+        if (order.tax_rate !== undefined && order.tax_rate !== null) {
+            taxPercentage = parseFloat(order.tax_rate);
+        } else if (order.tax_percentage !== undefined && order.tax_percentage !== null) {
+            const calculated = parseFloat(order.tax_percentage);
+            // If calculated is close to 12%, use 12%; otherwise use calculated (for historical data)
+            taxPercentage = (Math.abs(calculated - 12) < 1) ? 12 : Math.round(calculated);
+        }
+
         const remainingBalance = parseFloat(order.remaining_balance || 0);
         const paymentStatusText = order.payment_status_text || 'Pending';
         const deliveryAddress = order.delivery_address || 'N/A';
@@ -872,7 +881,7 @@ async function viewAdminOrderDetails(orderId) {
                                             <td style="padding: 0.5rem;">${escapeHtml(item.name)}</td>
                                             <td style="text-align: center; padding: 0.5rem;">${item.qty || item.quantity}</td>
                                             <td style="text-align: right; padding: 0.5rem;">₱${parseFloat(item.unit_price).toLocaleString()}</td>
-                                            <td style="text-align: right; padding: 0.5rem;">${taxPercentage.toFixed(0)}%</td>
+                                            <td style="text-align: right; padding: 0.5rem;">${taxPercentage}%</td>
                                         </tr>
                                     `).join('')}
                                     <tr style="border-top: 2px solid var(--brand);">
@@ -884,35 +893,14 @@ async function viewAdminOrderDetails(orderId) {
                         </div>
                     </div>
 
-                    ${(['Owner', 'Admin'].includes(currentUserRole)) ? `
-                        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px solid #e3e3e3;">
-                            <h3 style="color: var(--brand); margin-bottom: 1rem;">Update Status</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-                                <div>
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Order Status</label>
-                                    <select id="admin-order-status-${order.id}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
-                                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                                        <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''} ${remainingBalance > 0 ? 'disabled' : ''}>Completed</option>
-                                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                                    </select>
-                                    ${remainingBalance > 0 ? '<p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--danger-color);"><strong>Note:</strong> Cannot set to Completed while balance > ₱0.00</p>' : ''}
-                                    <button onclick="handleAdminOrderStatusUpdate(${order.id})" class="btn-primary" style="margin-top: 0.75rem; width: 100%;">Update Order Status</button>
-                                </div>
-                                <div>
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Status</label>
-                                    <select id="admin-payment-status-${order.id}" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
-                                        <option value="Pending" ${paymentStatusText === 'Pending' ? 'selected' : ''}>Pending</option>
-                                        <option value="With Balance" ${paymentStatusText === 'With Balance' ? 'selected' : ''}>With Balance</option>
-                                        <option value="Fully Paid" ${paymentStatusText === 'Fully Paid' ? 'selected' : ''}>Fully Paid</option>
-                                    </select>
-                                    <button onclick="handleAdminPaymentStatusUpdate(${order.id})" class="btn-primary" style="margin-top: 0.75rem; width: 100%;">Update Payment Status</button>
-                                </div>
-                            </div>
-                        </div>
-                    ` : ''}
                     <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
                         <button onclick="closeAdminOrderModal()" class="btn-secondary">Close</button>
+                        ${(['Owner', 'Admin'].includes(currentUserRole)) ? `
+                            <button onclick="openOrderEditPanel(${order.id})" class="btn-primary">
+                                <span class="material-symbols-rounded" style="vertical-align: middle; margin-right: 0.25rem;">edit</span>
+                                Edit Order
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -934,18 +922,112 @@ function closeAdminOrderModal() {
     }
 }
 
-async function handleAdminOrderStatusUpdate(orderId) {
-    const selectEl = document.getElementById(`admin-order-status-${orderId}`);
-    if (!selectEl) return;
+async function openOrderEditPanel(orderId) {
+    // Close the details modal first
+    closeAdminOrderModal();
 
-    const newStatus = selectEl.value;
-    if (!newStatus) {
-        showNotification('Please select a status', 'error');
+    try {
+        // Fetch order details to populate the edit form
+        const response = await fetch(`/backend/api/admin_orders.php?action=details&id=${orderId}`, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Failed to load order details');
+        }
+
+        const { order } = result.data;
+        const totalAmount = parseFloat(order.total_amount || 0);
+        const amountPaid = parseFloat(order.amount_paid || 0);
+        const remainingBalance = parseFloat(order.remaining_balance || 0);
+        const paymentStatusText = order.payment_status_text || 'Pending';
+
+        // Create edit modal
+        const existingModal = document.getElementById('orderEditModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modalHtml = `
+            <div class="modal" id="orderEditModal" style="display: flex;">
+                <div class="modal-content" style="max-width: 700px;">
+                    <button class="modal-close" onclick="closeOrderEditPanel()">×</button>
+                    <h2>Edit Order - ${escapeHtml(order.order_code)}</h2>
+
+                    <div style="background: #f7fafc; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                        <h3 style="margin: 0 0 0.5rem 0; color: var(--brand);">Current Order Summary</h3>
+                        <p style="margin: 0.25rem 0;"><strong>Order Status:</strong> ${escapeHtml(order.status)}</p>
+                        <p style="margin: 0.25rem 0;"><strong>Payment Status:</strong> ${paymentStatusText}</p>
+                        <p style="margin: 0.25rem 0;"><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
+                        <p style="margin: 0.25rem 0;"><strong>Amount Paid:</strong> ₱${amountPaid.toLocaleString()}</p>
+                        <p style="margin: 0.25rem 0;"><strong>Remaining Balance:</strong> <span style="color: ${remainingBalance > 0 ? 'var(--danger-color)' : 'var(--success-color)'}; font-weight: 600;">₱${remainingBalance.toLocaleString()}</span></p>
+                    </div>
+
+                    <div style="margin: 1.5rem 0;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Order Status</label>
+                        <select id="edit-order-status" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''} ${remainingBalance > 0 ? 'disabled' : ''}>Completed${remainingBalance > 0 ? ' (Balance must be ₱0.00)' : ''}</option>
+                            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                        ${remainingBalance > 0 ? `<p style="margin-top: 0.5rem; font-size: 0.875rem; color: var(--danger-color);"><strong>Note:</strong> Order cannot be marked as Completed while remaining balance is ₱${remainingBalance.toFixed(2)}. Approve payments first.</p>` : ''}
+                    </div>
+
+                    <div style="margin: 1.5rem 0;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Status</label>
+                        <select id="edit-payment-status" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem;">
+                            <option value="Pending" ${paymentStatusText === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="With Balance" ${paymentStatusText === 'With Balance' ? 'selected' : ''}>With Balance / Partially Paid</option>
+                            <option value="Fully Paid" ${paymentStatusText === 'Fully Paid' ? 'selected' : ''}>Fully Paid</option>
+                        </select>
+                    </div>
+
+                    <div style="margin: 1.5rem 0;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Admin Notes (optional)</label>
+                        <textarea id="edit-admin-notes" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; min-height: 80px;" placeholder="Add any notes about this status change..."></textarea>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.5rem;">
+                        <button onclick="closeOrderEditPanel()" class="btn-secondary">Cancel</button>
+                        <button onclick="saveOrderChanges(${order.id})" class="btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    } catch (error) {
+        console.error('Error opening order edit panel:', error);
+        showNotification('Failed to open order edit panel: ' + error.message, 'error');
+    }
+}
+
+function closeOrderEditPanel() {
+    const modal = document.getElementById('orderEditModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
+    }
+}
+
+async function saveOrderChanges(orderId) {
+    const newOrderStatus = document.getElementById('edit-order-status')?.value;
+    const newPaymentStatus = document.getElementById('edit-payment-status')?.value;
+    const adminNotes = document.getElementById('edit-admin-notes')?.value || '';
+
+    if (!newOrderStatus || !newPaymentStatus) {
+        showNotification('Please select both order status and payment status', 'error');
         return;
     }
 
     try {
-        const response = await fetch('/backend/api/admin_orders.php?action=update_status', {
+        // Update order status first
+        const orderStatusResponse = await fetch('/backend/api/admin_orders.php?action=update_status', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -954,37 +1036,20 @@ async function handleAdminOrderStatusUpdate(orderId) {
             },
             body: JSON.stringify({
                 order_id: orderId,
-                status: newStatus
+                status: newOrderStatus,
+                notes: adminNotes
             })
         });
 
-        const result = await response.json();
+        const orderStatusResult = await orderStatusResponse.json();
 
-        if (result.success) {
-            showNotification('Order status updated successfully!', 'success');
-            closeAdminOrderModal();
-            loadOrders(); // Reload orders table
-        } else {
-            showNotification(result.message || 'Failed to update order status', 'error');
+        if (!orderStatusResult.success) {
+            showNotification(orderStatusResult.message || 'Failed to update order status', 'error');
+            return;
         }
-    } catch (error) {
-        console.error('Error updating order status:', error);
-        showNotification('Failed to update order status: ' + error.message, 'error');
-    }
-}
 
-async function handleAdminPaymentStatusUpdate(orderId) {
-    const selectEl = document.getElementById(`admin-payment-status-${orderId}`);
-    if (!selectEl) return;
-
-    const newPaymentStatus = selectEl.value;
-    if (!newPaymentStatus) {
-        showNotification('Please select a payment status', 'error');
-        return;
-    }
-
-    try {
-        const response = await fetch('/backend/api/admin_orders.php?action=update_payment', {
+        // Update payment status
+        const paymentStatusResponse = await fetch('/backend/api/admin_orders.php?action=update_payment', {
             method: 'POST',
             credentials: 'same-origin',
             headers: {
@@ -997,18 +1062,20 @@ async function handleAdminPaymentStatusUpdate(orderId) {
             })
         });
 
-        const result = await response.json();
+        const paymentStatusResult = await paymentStatusResponse.json();
 
-        if (result.success) {
-            showNotification('Payment status updated successfully!', 'success');
-            closeAdminOrderModal();
-            loadOrders(); // Reload orders table
-        } else {
-            showNotification(result.message || 'Failed to update payment status', 'error');
+        if (!paymentStatusResult.success) {
+            showNotification(paymentStatusResult.message || 'Failed to update payment status', 'error');
+            return;
         }
+
+        showNotification('Order updated successfully!', 'success');
+        closeOrderEditPanel();
+        loadOrders(); // Reload orders table
+
     } catch (error) {
-        console.error('Error updating payment status:', error);
-        showNotification('Failed to update payment status: ' + error.message, 'error');
+        console.error('Error saving order changes:', error);
+        showNotification('Failed to save changes: ' + error.message, 'error');
     }
 }
 
@@ -2431,52 +2498,55 @@ async function viewPaymentDetails(verificationId) {
             ? `<img id="pv-proof-img" src="${escapeHtml(proofSrc)}" alt="payment proof" style="max-width:100%;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend','<div style=\\'color:#6b7280;\\'>Payment proof not available</div>');">`
             : `<div style="color:#6b7280;">Payment proof not available</div>`;
 
-        // --- render content (safe; addressHtml already escaped) ---
+        // --- render content with improved layout: left details, right proof ---
         content.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+        <!-- LEFT SIDE: Order & Customer Info -->
         <div>
-          <h3 style="margin-bottom:.5rem;color:var(--brand);">Order Information</h3>
-          <p><strong>Order Code:</strong> ${text(payment.order_code || payment.order_code)}</p>
-          <p><strong>Order Date:</strong> ${payment.order_date ? formatDate(payment.order_date) : 'N/A'}</p>
-          <p><strong>Total Amount:</strong> ${money(payment.total_amount)}</p>
-          <p><strong>Items:</strong> ${escapeHtml(payment.items || payment.order_name || 'N/A')}</p>
-          <p><strong>Delivery Mode:</strong> ${escapeHtml(payment.delivery_mode || 'N/A')}</p>
+          <h3 style="margin-bottom:.75rem;color:var(--brand);font-size:1.1rem;">Order Information</h3>
+          <p style="margin:.5rem 0;"><strong>Order Code:</strong> ${text(payment.order_code)}</p>
+          <p style="margin:.5rem 0;"><strong>Order Date:</strong> ${payment.order_date ? formatDate(payment.order_date) : 'N/A'}</p>
+          <p style="margin:.5rem 0;"><strong>Total Amount:</strong> ${money(payment.total_amount)}</p>
+          <p style="margin:.5rem 0;"><strong>Items:</strong> ${escapeHtml(payment.items || payment.order_name || 'N/A')}</p>
+          <p style="margin:.5rem 0;"><strong>Delivery Mode:</strong> ${escapeHtml(payment.delivery_mode || 'N/A')}</p>
+
+          <h3 style="margin:1.5rem 0 .75rem 0;color:var(--brand);font-size:1.1rem;">Customer Information</h3>
+          <p style="margin:.5rem 0;"><strong>Name:</strong> ${text(payment.customer_name || payment.full_name || payment.name)}</p>
+          <p style="margin:.5rem 0;"><strong>Email:</strong> ${text(payment.customer_email || payment.email)}</p>
+          <p style="margin:.5rem 0;"><strong>Phone:</strong> ${text(payment.customer_phone || payment.phone)}</p>
+          <p style="margin:.5rem 0;"><strong>Address:</strong><br>${addressHtml}</p>
         </div>
+
+        <!-- RIGHT SIDE: Proof of Payment -->
         <div>
-          <h3 style="margin-bottom:.5rem;color:var(--brand);">Customer Information</h3>
-          <p><strong>Name:</strong> ${text(payment.customer_name || payment.full_name || payment.name)}</p>
-          <p><strong>Email:</strong> ${text(payment.customer_email || payment.email)}</p>
-          <p><strong>Phone:</strong> ${text(payment.customer_phone || payment.phone)}</p>
-          <p><strong>Address:</strong><br>${addressHtml}</p>
+          <h3 style="margin-bottom:.75rem;color:var(--brand);font-size:1.1rem;">Proof of Payment</h3>
+          <div style="background:#f9fafb;border:2px solid #e5e7eb;border-radius:8px;padding:1rem;min-height:300px;display:flex;align-items:center;justify-content:center;">
+            ${imgHtml}
+          </div>
         </div>
       </div>
 
-      <div style="background:#f7fafc;padding:1rem;border-radius:8px;margin-top:1rem;">
-        <h4 style="margin:0 0 .5rem 0;color:var(--brand);">Payment Details</h4>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;">
-          <p><strong>Payment Method:</strong> ${text((payment.method || '').toUpperCase())}</p>
-          <p><strong>Account Name:</strong> ${text(payment.account_name)}</p>
-          <p><strong>Account Number:</strong> ${text(payment.account_number)}</p>
-          <p><strong>Reference Number:</strong> ${text(payment.reference_number)}</p>
-          <p><strong>Amount Paid:</strong> ${money(payment.amount_reported || payment.amount_paid)}</p>
-          <p><strong>Deposit Rate:</strong> ${pct(payment.deposit_rate)}</p>
-          <p><strong>Amount Due:</strong> ${money(payment.amount_due ?? (payment.total_amount - (payment.amount_paid || 0)))}</p>
-          <p><strong>Status:</strong> <span class="badge badge-${(payment.status || 'PENDING').toLowerCase()}">${escapeHtml(payment.status || 'PENDING')}</span></p>
-          <p style="grid-column: 1 / -1;">
+      <div style="background:#f7fafc;padding:1.25rem;border-radius:8px;margin-top:1.5rem;">
+        <h4 style="margin:0 0 1rem 0;color:var(--brand);font-size:1.1rem;">Payment Details</h4>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+          <p style="margin:.25rem 0;"><strong>Payment Method:</strong> ${text((payment.method || '').toUpperCase())}</p>
+          <p style="margin:.25rem 0;"><strong>Account Name:</strong> ${text(payment.account_name)}</p>
+          <p style="margin:.25rem 0;"><strong>Account Number:</strong> ${text(payment.account_number)}</p>
+          <p style="margin:.25rem 0;"><strong>Reference Number:</strong> ${text(payment.reference_number)}</p>
+          <p style="margin:.25rem 0;"><strong>Amount Reported:</strong> ${money(payment.amount_reported || payment.amount_paid)}</p>
+          <p style="margin:.25rem 0;"><strong>Deposit Rate:</strong> ${pct(payment.deposit_rate)}</p>
+          <p style="margin:.25rem 0;"><strong>Amount Due:</strong> ${money(payment.amount_due ?? (payment.total_amount - (payment.amount_paid || 0)))}</p>
+          <p style="margin:.25rem 0;"><strong>Status:</strong> <span class="badge badge-${(payment.status || 'PENDING').toLowerCase()}">${escapeHtml(payment.status || 'PENDING')}</span></p>
+          <p style="grid-column: 1 / -1;margin:.5rem 0;">
             <strong>Terms & Conditions:</strong>
-            <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
+            <span style="display: inline-flex; align-items: center; gap: 0.5rem; margin-left: 0.5rem;">
               ${payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed ?
-                '<span class="material-symbols-rounded" style="color: var(--success-color); font-size: 1.2rem;">check_circle</span> <span style="color: var(--success-color);">Agreed</span>' :
-                '<span class="material-symbols-rounded" style="color: var(--danger-color); font-size: 1.2rem;">cancel</span> <span style="color: var(--danger-color);">Not Agreed</span>'
+                '<span class="material-symbols-rounded" style="color:#10b981;font-size:1.3rem;">check_circle</span><span style="color:#10b981;font-weight:600;">Agreed</span>' :
+                '<span class="material-symbols-rounded" style="color:#ef4444;font-size:1.3rem;">cancel</span><span style="color:#ef4444;font-weight:600;">Not Agreed</span>'
               }
             </span>
           </p>
         </div>
-      </div>
-
-      <div style="margin-top:1rem;">
-        <h4 style="margin:0 0 .5rem 0;color:var(--brand);">Payment Proof</h4>
-        ${imgHtml}
       </div>
     `;
 
@@ -2494,25 +2564,63 @@ async function viewPaymentDetails(verificationId) {
         // --- approve/reject button wiring + labels ---
         const approveBtn = document.getElementById('btnApprovePayment');
         const rejectBtn = document.getElementById('btnRejectPayment');
-        if (approveBtn) approveBtn.dataset.verificationId = verificationId;
-        if (rejectBtn) rejectBtn.dataset.verificationId = verificationId;
 
         const status = (payment.status || '').toUpperCase();
+        const hasProof = !!proofSrc;
+
         if (approveBtn && rejectBtn) {
+            // Remove any previous event listeners by cloning
+            const newApproveBtn = approveBtn.cloneNode(true);
+            const newRejectBtn = rejectBtn.cloneNode(true);
+            approveBtn.replaceWith(newApproveBtn);
+            rejectBtn.replaceWith(newRejectBtn);
+
+            // Set button text based on status
             if (status === 'APPROVED') {
-                approveBtn.textContent = 'Re-approve';
-                rejectBtn.textContent = 'Reject (change)';
+                newApproveBtn.textContent = 'Re-approve';
+                newRejectBtn.textContent = 'Reject (change)';
             } else if (status === 'REJECTED') {
-                approveBtn.textContent = 'Approve (change)';
-                rejectBtn.textContent = 'Re-reject';
+                newApproveBtn.textContent = 'Approve (change)';
+                newRejectBtn.textContent = 'Re-reject';
             } else {
-                approveBtn.textContent = 'Approve';
-                rejectBtn.textContent = 'Reject';
+                newApproveBtn.textContent = 'Approve Payment';
+                newRejectBtn.textContent = 'Reject Payment';
             }
-            approveBtn.style.display = 'inline-block';
-            rejectBtn.style.display = 'inline-block';
-            if (status === 'APPROVED') approveBtn.classList.add('muted'); else approveBtn.classList.remove('muted');
-            if (status === 'REJECTED') rejectBtn.classList.add('muted'); else rejectBtn.classList.remove('muted');
+
+            // Disable approve if no proof (unless admin override - for now just disable)
+            if (!hasProof && status === 'PENDING') {
+                newApproveBtn.disabled = true;
+                newApproveBtn.title = 'Payment proof required to approve';
+                newApproveBtn.style.opacity = '0.5';
+                newApproveBtn.style.cursor = 'not-allowed';
+            } else {
+                newApproveBtn.disabled = false;
+                newApproveBtn.title = '';
+                newApproveBtn.style.opacity = '1';
+                newApproveBtn.style.cursor = 'pointer';
+            }
+
+            newApproveBtn.style.display = 'inline-block';
+            newRejectBtn.style.display = 'inline-block';
+
+            if (status === 'APPROVED') newApproveBtn.classList.add('muted'); else newApproveBtn.classList.remove('muted');
+            if (status === 'REJECTED') newRejectBtn.classList.add('muted'); else newRejectBtn.classList.remove('muted');
+
+            // Add click handlers with confirmation
+            newApproveBtn.addEventListener('click', () => {
+                if (confirm('Are you sure you want to approve this payment? This will update the order balance and cannot be easily undone.')) {
+                    approvePayment(verificationId);
+                }
+            });
+
+            newRejectBtn.addEventListener('click', () => {
+                const reason = prompt('Enter rejection reason (required):');
+                if (reason && reason.trim()) {
+                    rejectPayment(verificationId, reason.trim());
+                } else if (reason !== null) {
+                    showNotification('Rejection reason is required', 'error');
+                }
+            });
         }
 
         openModal('paymentDetailsModal');

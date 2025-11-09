@@ -66,7 +66,7 @@ function listPaymentVerifications(PDO $conn): void {
     try {
         // Get filter parameters
         $search = $_GET['search'] ?? '';
-        $status = $_GET['status'] ?? '';
+        $status = $_GET['payment_status'] ?? $_GET['status'] ?? '';
         
         $sql = "
             SELECT 
