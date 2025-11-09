@@ -879,16 +879,13 @@ async function viewAdminOrderDetails(orderId) {
                                         </tr>
                                     `).join('')}
                                     <tr style="border-top: 2px solid var(--brand);">
-                                        td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
+                                        <td colspan="3" style="text-align: right; padding: 0.5rem; font-weight: 700;">TOTAL AMOUNT</td>
                                         <td style="text-align: right; padding: 0.5rem; font-weight: 700; font-size: 1.2rem; color: var(--brand);">₱${parseFloat(order.total_amount).toLocaleString()}</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <!-- ✅ FIXED: Removed "Edit Order" button - Only Close button remains -->
-                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button onclick="closeAdminOrderModal()" class="btn-secondary">Close</button>
-                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -2679,6 +2676,7 @@ async function viewPaymentDetails(verificationId) {
         const status = (payment.status || '').toUpperCase();
 
         const hasProof = !!proofSrc;
+        const hasAgreedTerms = !!(payment.agreed_terms || payment.terms_agreed || payment.order_terms_agreed);
 
         if (approveBtn && rejectBtn) {
             // Remove any previous event listeners by cloning
@@ -2692,7 +2690,7 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') {
                 newApproveBtn.textContent = 'Re-approve';
                 newRejectBtn.textContent = 'Reject (change)';
-				
+
             } else if (status === 'REJECTED') {
                 newApproveBtn.textContent = 'Approve (change)';
                 newRejectBtn.textContent = 'Re-reject';
@@ -2702,10 +2700,14 @@ async function viewPaymentDetails(verificationId) {
                 newRejectBtn.textContent = 'Reject Payment';
             }
 
-            // Disable approve if no proof (unless admin override - for now just disable)
-            if (!hasProof && status === 'PENDING') {
+            // Disable approve if no proof OR if terms not agreed
+            if ((!hasProof || !hasAgreedTerms) && status === 'PENDING') {
                 newApproveBtn.disabled = true;
-                newApproveBtn.title = 'Payment proof required to approve';
+                if (!hasProof) {
+                    newApproveBtn.title = 'Payment proof required to approve';
+                } else if (!hasAgreedTerms) {
+                    newApproveBtn.title = 'Customer must agree to Terms & Conditions before approval';
+                }
                 newApproveBtn.style.opacity = '0.5';
                 newApproveBtn.style.cursor = 'not-allowed';
 
@@ -2724,11 +2726,9 @@ async function viewPaymentDetails(verificationId) {
             if (status === 'APPROVED') newApproveBtn.classList.add('muted'); else newApproveBtn.classList.remove('muted');
             if (status === 'REJECTED') newRejectBtn.classList.add('muted'); else newRejectBtn.classList.remove('muted');
 
-            // Add click handlers with confirmation
+            // Add click handlers with modal confirmation
             newApproveBtn.addEventListener('click', () => {
-                if (confirm('Are you sure you want to approve this payment? This will update the order balance and cannot be easily undone.')) {
-                    approvePayment(verificationId);
-                }
+                showApprovalConfirmModal(verificationId);
             });
             newRejectBtn.addEventListener('click', () => {
                 const reason = prompt('Enter rejection reason (required):');
@@ -2777,7 +2777,8 @@ async function approvePayment(verificationId) {
         }
 
         if (result.success) {
-            showNotification(result.message || 'Payment approved successfully!', 'success');
+            showApprovalSuccessModal();
+            closeModal('approvalConfirmModal');
             closeModal('paymentDetailsModal');
             loadPaymentVerifications();
         } else {
@@ -2787,6 +2788,82 @@ async function approvePayment(verificationId) {
     } catch (error) {
         console.error('Error approving payment:', error);
         showNotification('Failed to approve payment: ' + error.message, 'error');
+    }
+}
+
+// Show approval confirmation modal
+function showApprovalConfirmModal(verificationId) {
+    const existingModal = document.getElementById('approvalConfirmModal');
+    if (existingModal) existingModal.remove();
+
+    const modalHtml = `
+        <div class="modal" id="approvalConfirmModal" style="display: flex;">
+            <div class="modal-content" style="max-width: 500px; text-align: center;">
+                <h2 style="color: var(--brand); margin-bottom: 1rem;">Approve Payment</h2>
+                <p style="margin: 1.5rem 0; font-size: 1rem; color: #555;">
+                    Are you sure you want to approve this payment?<br>
+                    This will update the order balance and payment status.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+                    <button onclick="closeApprovalConfirmModal()" class="btn-secondary" style="padding: 0.75rem 1.5rem;">Cancel</button>
+                    <button onclick="confirmApprovePayment(${verificationId})" class="btn-primary" style="padding: 0.75rem 1.5rem;">Confirm Approval</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+// Close approval confirmation modal
+function closeApprovalConfirmModal() {
+    const modal = document.getElementById('approvalConfirmModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
+    }
+}
+
+// Confirm and execute payment approval
+function confirmApprovePayment(verificationId) {
+    closeApprovalConfirmModal();
+    approvePayment(verificationId);
+}
+
+// Show approval success modal
+function showApprovalSuccessModal() {
+    const existingModal = document.getElementById('approvalSuccessModal');
+    if (existingModal) existingModal.remove();
+
+    const modalHtml = `
+        <div class="modal" id="approvalSuccessModal" style="display: flex;">
+            <div class="modal-content" style="max-width: 450px; text-align: center;">
+                <div style="margin: 1rem 0;">
+                    <span class="material-symbols-rounded" style="font-size: 4rem; color: #10b981;">check_circle</span>
+                </div>
+                <h2 style="color: #10b981; margin: 1rem 0;">Payment Approved Successfully</h2>
+                <p style="margin: 1rem 0; color: #555;">
+                    The payment has been approved and the order balance has been updated.
+                </p>
+                <button onclick="closeApprovalSuccessModal()" class="btn-primary" style="margin-top: 1.5rem; padding: 0.75rem 2rem;">OK</button>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Auto-close after 3 seconds
+    setTimeout(() => {
+        closeApprovalSuccessModal();
+    }, 3000);
+}
+
+// Close approval success modal
+function closeApprovalSuccessModal() {
+    const modal = document.getElementById('approvalSuccessModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.remove();
     }
 }
 

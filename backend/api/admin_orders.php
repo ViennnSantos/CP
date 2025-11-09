@@ -379,11 +379,7 @@ class AdminOrdersAPI {
             }
 
             $order['items'] = $items;
-<<<<<<< HEAD
-            $$order['items_subtotal'] = $itemsSubtotal;
-=======
             $order['items_subtotal'] = $itemsSubtotal;
->>>>>>> 23d49805d95925ad078edd67fb5ff08e20100576
             $order['tax_amount'] = $taxAmount;
             $order['tax_percentage'] = $taxPercentage;
             $order['delivery_address'] = $deliveryAddress;
@@ -459,15 +455,10 @@ class AdminOrdersAPI {
                 $this->send(false, "Cannot set status to Completed — remaining balance ₱" . number_format($remainingBalance, 2) . ". Approve payments first.", null, 400);
             }
 
-<<<<<<< HEAD
-            $stmt = $this->conn->prepare('UPDATE orders SET status = ? WHERE id = ?');
-            $stmt->execute([$newStatus, $orderId]);
-=======
             // Update order status
             $stmt = $this->conn->prepare('UPDATE orders SET status = ? WHERE id = ?');
             $stmt->execute([$newStatus, $orderId]);
 
->>>>>>> 23d49805d95925ad078edd67fb5ff08e20100576
             // Add audit log entry
             $logStmt = $this->conn->prepare('
                 INSERT INTO order_status_history (order_id, status, changed_by, notes, changed_at)
@@ -476,10 +467,7 @@ class AdminOrdersAPI {
             $adminId = $this->currentUser['id'] ?? 0;
             $notes = "Status changed from '{$order['status']}' to '{$newStatus}' by {$this->currentRole}";
             $logStmt->execute([$orderId, $newStatus, $adminId, $notes]);
-<<<<<<< HEAD
-=======
 
->>>>>>> 23d49805d95925ad078edd67fb5ff08e20100576
             $this->send(true, 'Order status updated successfully', [
                 'order_id' => $orderId,
                 'old_status' => $order['status'],
@@ -529,11 +517,7 @@ class AdminOrdersAPI {
             $adminId = $this->currentUser['id'] ?? 0;
             $notes = "Payment status changed from '{$order['payment_status']}' to '{$newPaymentStatus}' by {$this->currentRole}";
             $logStmt->execute([$orderId, $newPaymentStatus, $adminId, $notes]);
-<<<<<<< HEAD
-            
-=======
 
->>>>>>> 23d49805d95925ad078edd67fb5ff08e20100576
             $this->send(true, 'Payment status updated successfully', [
                 'order_id' => $orderId,
                 'old_payment_status' => $order['payment_status'],

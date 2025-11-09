@@ -301,10 +301,14 @@ function recalc_order_payment(PDO $conn, int $orderId): void {
 
         $newStatus = 'Pending';
         if ($paid >= $total - 0.01) $newStatus = 'Fully Paid';
-        elseif ($paid > 0) $newStatus = 'Partially Paid';
+        elseif ($paid > 0) $newStatus = 'With Balance';
         else $newStatus = 'Pending';
 
-        $conn->prepare("UPDATE orders SET payment_status = :ps WHERE id = :oid")->execute([':ps'=>$newStatus, ':oid'=>$orderId]);
+        // Update payment_status and remaining_balance
+        $remainingBalance = max(0, $total - $paid);
+        $conn->prepare("UPDATE orders SET payment_status = :ps, remaining_balance = :rb WHERE id = :oid")
+            ->execute([':ps'=>$newStatus, ':rb'=>$remainingBalance, ':oid'=>$orderId]);
+
         if ($newStatus === 'Fully Paid') {
             $conn->prepare("UPDATE orders SET status = 'Processing' WHERE id = :oid")->execute([':oid'=>$orderId]);
         }
